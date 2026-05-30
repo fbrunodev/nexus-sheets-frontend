@@ -43,6 +43,7 @@ export interface Sheet {
   cost_bot: number;
   cost_fintech: number;
   salary: number;
+  goal: number;
   created_at: string;
   updated_at: string;
   lines: SheetLine[];
