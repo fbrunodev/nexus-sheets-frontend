@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -172,6 +173,13 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
+          <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#6060a0" }}>
+          Não tem conta?{" "}
+          <Link href="/register" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: "500" }}>
+            Criar conta
+          </Link>
+        </p>
+
       </div>
     </div>
   );
