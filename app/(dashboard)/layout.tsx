@@ -25,14 +25,14 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, hasHydrated } = useAuthStore();
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (hasHydrated && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, router]);
 
   useEffect(() => {
     const date = new Date().toLocaleDateString("pt-BR", {
@@ -42,6 +42,14 @@ export default function DashboardLayout({
     });
     setCurrentDate(date);
   }, []);
+
+  if (!hasHydrated) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#080810" }}>
+        <p style={{ color: "#6060a0", fontSize: "14px" }}>Carregando...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 
