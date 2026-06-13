@@ -34,6 +34,8 @@ export default function SheetsPage() {
   const [search, setSearch] = useState("");
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const [platforms, setPlatforms] = useState<any[]>([]);
+  const [selectedPlatform, setSelectedPlatform] = useState("");
 
   useEffect(() => { fetchSheets(); }, []);
 
@@ -55,13 +57,32 @@ export default function SheetsPage() {
     }
   }
 
+
+  useEffect(() => {
+    fetchPlatforms();
+  }, []);
+
+  async function fetchPlatforms() {
+    try {
+      const { data } = await api.get("/platforms/");
+      setPlatforms(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+
   async function handleCreate() {
-    if (!newName.trim()) return;
+    if (!selectedPlatform) return;
     setCreating(true);
     try {
+      // Encontra a plataforma escolhida para usar o nome dela
+      const platform = platforms.find((p) => p.id === selectedPlatform);
+
       const payload: any = {
-        name: newName,
+        name: platform ? platform.name : "Sem nome",
         goal: newGoal,
+        platform_id: selectedPlatform,
       };
 
       if (pasteMode) {
@@ -78,7 +99,7 @@ export default function SheetsPage() {
       const { data } = await api.post("/sheets/", payload);
       setSheets((prev) => [data, ...prev]);
       setShowModal(false);
-      setNewName("");
+      setSelectedPlatform("");
       setNewLines(10);
       setNewGoal(0);
       setPasteText("");
@@ -90,6 +111,7 @@ export default function SheetsPage() {
       setCreating(false);
     }
   }
+
   function fmt(value: number) {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   }
@@ -283,8 +305,18 @@ export default function SheetsPage() {
             <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px" }}>Nova Planilha</h2>
 
             <div style={{ marginBottom: "14px" }}>
-              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Nome</label>
-              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: Operação 60dp" autoFocus style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Plataforma</label>
+              <select
+                value={selectedPlatform}
+                onChange={(e) => setSelectedPlatform(e.target.value)}
+                autoFocus
+                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: selectedPlatform ? "#fff" : "#6060a0", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", cursor: "pointer" }}
+              >
+                <option value="" disabled>Selecione a plataforma</option>
+                {platforms.map((p) => (
+                  <option key={p.id} value={p.id} style={{ color: "#fff" }}>{p.name}</option>
+                ))}
+              </select>
             </div>
 
             <div style={{ marginBottom: "14px" }}>
@@ -317,7 +349,7 @@ export default function SheetsPage() {
 
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancelar</button>
-              <button onClick={handleCreate} disabled={creating || !newName.trim()} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || !newName.trim() ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || !newName.trim() ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
+               <button onClick={handleCreate} disabled={creating || !selectedPlatform} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || !selectedPlatform ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || !selectedPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
                 {creating ? "Criando..." : "Criar"}
               </button>
             </div>

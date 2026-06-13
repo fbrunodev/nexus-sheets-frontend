@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
-import { Key, Users, Copy, Check, ShieldAlert } from "lucide-react";
+import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus } from "lucide-react";
 
 interface ActivationKey {
   id: string;
@@ -29,7 +29,9 @@ interface UserAdmin {
 export default function AdminPage() {
   const { user } = useAuthStore();
   const router = useRouter();
-
+  const [platforms, setPlatforms] = useState<any[]>([]);
+  const [newPlatform, setNewPlatform] = useState("")
+  const [creatingPlatform, setCreatingPlatform] = useState(false)
   const [keys, setKeys] = useState<ActivationKey[]>([]);
   const [users, setUsers] = useState<UserAdmin[]>([]);
   const [loadingKeys, setLoadingKeys] = useState(true);
@@ -37,7 +39,7 @@ export default function AdminPage() {
   const [generating, setGenerating] = useState(false);
   const [keyType, setKeyType] = useState("LIFETIME");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"keys" | "users">("keys");
+  const [activeTab, setActiveTab] = useState<"keys" | "users"| "platforms">("keys");
 
   // Redireciona se não for admin
   useEffect(() => {
@@ -49,7 +51,19 @@ export default function AdminPage() {
   useEffect(() => {
     fetchKeys();
     fetchUsers();
+    fetchPlatforms();
   }, []);
+
+
+  async function fetchPlatforms(){
+    try {
+      const {data} = await api.get("/platforms/")
+      setPlatforms(data)
+    }catch(err) {
+      console.error(err)
+    }
+  }
+
 
   async function fetchKeys() {
     try {
@@ -74,6 +88,32 @@ export default function AdminPage() {
     }
   }
 
+  async function createPlatform() {
+    if (!newPlatform.trim()) return;
+    setCreatingPlatform(true) 
+    
+    try {
+      const { data } = await api.post("/platforms/", { name: newPlatform });
+      setPlatforms((prev) => [...prev, data]);
+      setNewPlatform("");
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Erro ao criar plataforma.");
+    } finally {
+      setCreatingPlatform(false);
+    }
+    
+  }
+
+  async function deletePlatform(platformId: string) {
+    if (!confirm("Remover esta plataforma?")) return;
+    try {
+      await api.delete(`/platforms/${platformId}`);
+      setPlatforms((prev) => prev.filter((p) => p.id !== platformId));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
   async function generateKey() {
     setGenerating(true);
     try {
@@ -136,6 +176,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
         {[
+          {id: "platforms", label:"Plataformas", icon: FileSpreadsheet},
           { id: "keys", label: "Activation Keys", icon: Key },
           { id: "users", label: "Usuários", icon: Users },
         ].map((tab) => {
@@ -318,6 +359,55 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+
+      {/* Tab: Plataformas */}
+      {activeTab === "platforms" && (
+        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Plataformas
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                value={newPlatform}
+                onChange={(e) => setNewPlatform(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && createPlatform()}
+                placeholder="Nome da plataforma"
+                style={{ background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "8px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }}
+              />
+              <button
+                onClick={createPlatform}
+                disabled={creatingPlatform}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: creatingPlatform ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "8px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                <Plus size={14} />
+                {creatingPlatform ? "Criando..." : "Adicionar"}
+              </button>
+            </div>
+          </div>
+
+          {platforms.length === 0 ? (
+            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+              Nenhuma plataforma cadastrada.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
+              {platforms.map((p) => (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#141422", borderRadius: "10px", padding: "12px 16px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: "500" }}>{p.name}</span>
+                  <button
+                    onClick={() => deletePlatform(p.id)}
+                    style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

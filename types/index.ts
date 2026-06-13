@@ -16,7 +16,12 @@ export interface AuthTokens {
   token_type: string;
   user: User;
 }
-
+// -------Platforms--------------------------------------------
+export interface Platform{
+  id: string;
+  name: string;
+  created_at: string;
+}
 // ─── SHEETS ───────────────────────────────────────────────────
 
 export type SheetStatus = "NOT_STARTED" | "IN_PROGRESS" | "FINISHED";
