@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Sidebar from "@/components/layout/Sidebar";
-import { Bell, Plus, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -13,9 +12,6 @@ const pageTitles: Record<string, string> = {
   "/operators": "Operadores",
   "/settings": "Configurações",
   "/admin": "Painel Admin",
-  "/notes": "Anotações",
-  "/activities": "Atividades",
-  "/chat": "Chat",
 };
 
 export default function DashboardLayout({
@@ -25,8 +21,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, hasHydrated } = useAuthStore();
+  const { isAuthenticated, hasHydrated } = useAuthStore();
   const [currentDate, setCurrentDate] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (hasHydrated && !isAuthenticated) {
@@ -59,8 +56,10 @@ export default function DashboardLayout({
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#080810" }}>
-      <Sidebar />
-      <div style={{ marginLeft: "200px", flex: 1, display: "flex", flexDirection: "column" }}>
+      {/* Sidebar — só renderiza se aberta, e recebe a função de fechar */}
+      {sidebarOpen && <Sidebar onClose={() => setSidebarOpen(false)} />}
+
+      <div style={{ marginLeft: sidebarOpen ? "200px" : "0", flex: 1, display: "flex", flexDirection: "column", transition: "margin-left 0.2s" }}>
 
         {/* Topbar */}
         <div
@@ -77,14 +76,24 @@ export default function DashboardLayout({
             zIndex: 10,
           }}
         >
-          {/* Título da página */}
-          <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff" }}>
-            {pageTitle}
+          {/* Esquerda: botão menu (só quando sidebar fechada) + título */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                title="Mostrar menu"
+              >
+                <Menu size={18} />
+              </button>
+            )}
+            <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff" }}>
+              {pageTitle}
+            </div>
           </div>
 
-          {/* Direita */}
+          {/* Direita: data + sino */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Data */}
             <div
               style={{
                 display: "flex",
@@ -96,36 +105,12 @@ export default function DashboardLayout({
                 padding: "6px 12px",
                 fontSize: "12px",
                 color: "#6060a0",
-                cursor: "pointer",
               }}
             >
               {currentDate}
               <ChevronDown size={12} color="#6060a0" />
             </div>
 
-            {/* Nova planilha */}
-            <Link
-              href="/sheets"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "#3b82f6",
-                border: "none",
-                borderRadius: "8px",
-                padding: "7px 14px",
-                color: "#fff",
-                fontSize: "12px",
-                fontWeight: "600",
-                textDecoration: "none",
-                transition: "background 0.15s",
-              }}
-            >
-              <Plus size={14} />
-              Nova Planilha
-            </Link>
-
-            {/* Sino */}
             <div
               style={{
                 width: "32px",

@@ -9,10 +9,8 @@ import {
   Users,
   Settings,
   LogOut,
-  Activity,
-  MessageSquare,
-  BookOpen,
   ShieldAlert,
+  ChevronLeft,
 } from "lucide-react";
 
 const navItems = [
@@ -23,7 +21,7 @@ const navItems = [
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose: () => void })  {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
@@ -54,31 +52,41 @@ export default function Sidebar() {
           height: "52px",
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           padding: "0 16px",
           borderBottom: "1px solid #1a1a2e",
         }}
       >
-        <div
-          style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "8px",
-            background: "#3b82f6",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "14px",
-            fontWeight: "800",
-            color: "#fff",
-            marginRight: "10px",
-            flexShrink: 0,
-          }}
-        >
-          N
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "8px",
+              background: "#3b82f6",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "14px",
+              fontWeight: "800",
+              color: "#fff",
+              marginRight: "10px",
+              flexShrink: 0,
+            }}
+          >
+            N
+          </div>
+          <span style={{ fontSize: "15px", fontWeight: "700", color: "#fff" }}>
+            Nexus
+          </span>
         </div>
-        <span style={{ fontSize: "15px", fontWeight: "700", color: "#fff" }}>
-          Nexus
-        </span>
+        <button
+          onClick={onClose}
+          style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
+          title="Esconder menu"
+        >
+          <ChevronLeft size={18} />
+        </button>
       </div>
 
       {/* Nav */}
