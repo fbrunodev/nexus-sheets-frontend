@@ -78,3 +78,81 @@ html, body {
 * {
   box-sizing: border-box;
 }
+
+
+
+/* ===== RESPONSIVIDADE (mobile ≤767px) ===== */
+
+/* Breakpoint base */
+:root {
+  --mobile-max: 767px;
+}
+
+/* --- Layout: sidebar e menu inferior --- */
+.app-sidebar { display: block; }
+.app-mobile-nav { display: none; }
+.app-content { margin-left: 200px; transition: margin-left 0.2s; }
+.app-main { padding: 24px; }
+.topbar-menu-btn { display: flex; }
+
+@media (max-width: 767px) {
+  .app-sidebar { display: none !important; }
+  .app-mobile-nav { display: flex !important; }
+  .app-content { margin-left: 0 !important; }
+  .app-main { padding: 16px 16px 90px !important; }
+  .topbar-menu-btn { display: none !important; }
+  .date-long { display: none; }
+  .date-short { display: inline; }
+}
+
+/* Mostrar data curta só no mobile */
+.date-short { display: none; }
+.date-long { display: inline; }
+
+/* --- Grids responsivos --- */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.grid-2cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+@media (max-width: 767px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-6 { grid-template-columns: repeat(2, 1fr); }
+  .grid-5 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2cols { grid-template-columns: 1fr; }
+  .grid-cards { grid-template-columns: 1fr; }
+}
+
+/* --- Header da página (busca + ações) --- */
+.page-header { display: flex; justify-content: space-between; align-items: center; gap: 0; }
+@media (max-width: 767px) {
+  .page-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .page-header-search { width: 100% !important; }
+  .page-header-actions { width: 100%; }
+}
+
+/* --- Tabs com scroll horizontal no mobile --- */
+.tabs-row { display: flex; gap: 6px; }
+@media (max-width: 767px) {
+  .tabs-row { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .tabs-row > * { flex-shrink: 0; white-space: nowrap; }
+}
+
+/* --- Barra sticky da planilha interna --- */
+.sheet-topbar { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 0; }
+.sheet-topbar-metrics { display: flex; align-items: center; gap: 22px; }
+@media (max-width: 767px) {
+  .sheet-topbar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .sheet-topbar-metrics { gap: 14px; flex-wrap: wrap; justify-content: space-between; }
+}
+
+/* --- Tabela de operações: mostra/esconde versão certa --- */
+.row-desktop { display: grid; }
+.row-mobile { display: none; }
+.table-header-desktop { display: grid; }
+@media (max-width: 767px) {
+  .row-desktop { display: none !important; }
+  .row-mobile { display: block !important; }
+  .table-header-desktop { display: none !important; }
+}

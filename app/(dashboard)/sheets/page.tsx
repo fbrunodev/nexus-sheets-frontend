@@ -14,7 +14,7 @@ import {
   Clock,
 } from "lucide-react";
 
-import { useIsMobile } from "@/hooks/useIsMobile";
+
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   NOT_STARTED: { label: "Não iniciada", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", dot: "#fbbf24" },
@@ -24,7 +24,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; d
 
 export default function SheetsPage() {
   const router = useRouter();
-  const isMobile = useIsMobile();
+
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [filtered, setFiltered] = useState<Sheet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,21 +199,20 @@ export default function SheetsPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? "10px" : "0", marginBottom: "20px" }}>        
-                <div style={{ position: "relative", width: isMobile ? "100%" : "auto" }}>
+      <div className="page-header" style={{ marginBottom: "20px" }}>        
+                <div className="page-header-search" style={{ position: "relative" }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar planilha..."
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 12px 7px 32px", color: "#fff", fontSize: "12px", outline: "none", width: isMobile ? "100%" : "200px", fontFamily: "Inter, sans-serif" }}
-          />
+            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 12px 7px 32px", color: "#fff", fontSize: "12px", outline: "none", width: "100%", fontFamily: "Inter, sans-serif" }}          />
           <svg style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)" }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6060a0" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", width: isMobile ? "100%" : "auto" }}>
-          <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "8px", padding: "7px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "8px", padding: "7px 14px", display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "center" }}>
             <FileSpreadsheet size={13} color="#3b82f6" />
             <span style={{ fontSize: "12px", color: "#6060a0" }}>Total Geral</span>
             <span style={{ fontSize: "13px", fontWeight: "700", color: grandTotal >= 0 ? "#22d3a5" : "#f87171" }}>{fmt(grandTotal)}</span>
@@ -229,7 +228,7 @@ export default function SheetsPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", overflowX: isMobile ? "auto" : "visible", paddingBottom: isMobile ? "4px" : "0", WebkitOverflowScrolling: "touch" }}>
+      <div className="tabs-row" style={{ marginBottom: "16px" }}>        
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -245,7 +244,7 @@ export default function SheetsPage() {
       </div>
 
        {/* Contadores */}
-       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "10px", marginBottom: "20px" }}>
+       <div className="grid-4" style={{ marginBottom: "20px" }}>
       {[
           { label: "Total", value: totalSheets, color: "#fff", icon: <FileSpreadsheet size={16} color="#6060a0" /> },
           { label: "Não Iniciadas", value: notStarted, color: "#fbbf24", icon: <Clock size={16} color="#fbbf24" /> },
@@ -271,7 +270,7 @@ export default function SheetsPage() {
           <p style={{ fontSize: "13px" }}>Nenhuma planilha encontrada</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
+        <div className="grid-cards">
           {filtered.map((sheet) => {
             const total = calcTotal(sheet);
             const status = statusConfig[sheet.status];

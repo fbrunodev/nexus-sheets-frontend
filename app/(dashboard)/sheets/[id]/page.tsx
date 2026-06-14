@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
 import { ArrowLeft, Check, Plus, Trash2, X } from "lucide-react";
-import { useIsMobile } from "@/hooks/useIsMobile";
+
 
 
 export default function SheetPage() {
@@ -16,7 +16,6 @@ export default function SheetPage() {
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
-  const isMobile = useIsMobile();
 
   useEffect(() => { fetchSheet(); }, [id]);
 
@@ -143,7 +142,7 @@ export default function SheetPage() {
   return (
     <div>
       {/* Barra sticky */}
-       <div style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "14px 20px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: isMobile ? "12px" : "0", marginBottom: "20px", position: "sticky", top: "0", zIndex: 20 }}>
+       <div className="sheet-topbar" style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "14px 20px", marginBottom: "20px", position: "sticky", top: "0", zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button onClick={() => router.push("/sheets")} style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center" }}>
             <ArrowLeft size={18} />
@@ -153,7 +152,7 @@ export default function SheetPage() {
             <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
           </div>
         </div>
-         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "14px" : "22px", flexWrap: isMobile ? "wrap" : "nowrap", justifyContent: isMobile ? "space-between" : "flex-end" }}>
+         <div className="sheet-topbar-metrics">
           <div style={{ textAlign: "right" }}>
             <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em" }}>Saldo</p>
             <p style={{ fontSize: "15px", fontWeight: "700", color: finalResult >= 0 ? "#3b82f6" : "#f87171" }}>{fmt(finalResult)}</p>
@@ -190,7 +189,7 @@ export default function SheetPage() {
       {/* Faixa Descontos & Salário */}
       <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "18px 20px", marginBottom: "16px" }}>
         <p style={{ fontSize: "11px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "14px" }}>Descontos & Salário</p>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: "12px" }}>
+        <div className="grid-5">
           {[
             { label: "Proxy", field: "cost_proxy" },
             { label: "SMS", field: "cost_sms" },
@@ -210,7 +209,7 @@ export default function SheetPage() {
       </div>
 
       {/* Cards de totais */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(6, 1fr)", gap: "12px", marginBottom: "20px" }}>
+      <div className="grid-6" style={{ marginBottom: "20px" }}>
         {[
           { label: "Total Depositado", value: totalDeposited, color: "#f87171" },
           { label: "Total Recebido", value: totalReceived, color: "#22d3a5" },
@@ -246,8 +245,7 @@ export default function SheetPage() {
 
       {/* Tabela */}
       <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", overflow: "hidden" }}>
-        {!isMobile && (
-        <div style={{ display: "grid", gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #1a1a2e" }}>
+        <div className="table-header-desktop" style={{ gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #1a1a2e" }}>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "center" }}>#</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>DEPÓSITO</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>SAQUE</span>
@@ -255,13 +253,12 @@ export default function SheetPage() {
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
           <span></span>
         </div>
-        )}
+        
 
         {sheet.lines.map((line, index) => (
-          isMobile ? (
-            // ===== Layout MOBILE: card =====
-            <div key={line.id} style={{ padding: "14px 16px", borderBottom: "1px solid #141422" }}>
-              {/* Topo do card: número + resultado + remover */}
+          <div key={line.id}>
+            {/* ===== Layout MOBILE: card ===== */}
+            <div className="row-mobile" style={{ padding: "14px 16px", borderBottom: "1px solid #141422" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                 <span style={{ fontSize: "12px", color: "#6060a0", fontWeight: "600" }}>Operação #{line.line_number}</span>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -275,7 +272,6 @@ export default function SheetPage() {
                   )}
                 </div>
               </div>
-              {/* Inputs: depósito, saque, baú */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {[
                   { field: "deposit", label: "Depósito" },
@@ -304,15 +300,15 @@ export default function SheetPage() {
                 ))}
               </div>
             </div>
-          ) : (
-            // ===== Layout DESKTOP: linha em grid =====
-            <div key={line.id} style={{ display: "grid", gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "8px 20px", borderBottom: "1px solid #141422" }}>
+
+            {/* ===== Layout DESKTOP: linha em grid ===== */}
+            <div className="row-desktop" style={{ gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "8px 20px", borderBottom: "1px solid #141422" }}>
               <span style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center" }}>{line.line_number}</span>
               {["deposit", "withdrawal", "chest"].map((field) => (
                 <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 12px", maxWidth: "180px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input
-                    ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
+                    ref={(el) => { inputRefs.current[`${line.id}-${field}-desktop`] = el; }}
                     type="number"
                     defaultValue={(line as any)[field] || ""}
                     disabled={isFinished}
@@ -334,7 +330,7 @@ export default function SheetPage() {
                 </button>
               ) : <span />}
             </div>
-          )
+          </div>
         ))}
       </div>
     </div>
