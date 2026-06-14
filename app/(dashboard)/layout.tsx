@@ -6,6 +6,9 @@ import { useAuthStore } from "@/store/authStore";
 import Sidebar from "@/components/layout/Sidebar";
 import { Bell, ChevronDown, Menu } from "lucide-react";
 
+import { useIsMobile } from "@/hooks/useIsMobile";
+import MobileNav from "@/components/layout/MobileNav";
+
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/sheets": "Planilhas",
@@ -24,20 +27,22 @@ export default function DashboardLayout({
   const { isAuthenticated, hasHydrated } = useAuthStore();
   const [currentDate, setCurrentDate] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const isMobile = useIsMobile();
   useEffect(() => {
     if (hasHydrated && !isAuthenticated) {
       router.push("/login");
     }
   }, [hasHydrated, isAuthenticated, router]);
 
+  const [currentDateShort, setCurrentDateShort] = useState("");
   useEffect(() => {
-    const date = new Date().toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-    setCurrentDate(date);
+    const now = new Date();
+    setCurrentDate(
+      now.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+    );
+    setCurrentDateShort(
+      now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+    );
   }, []);
 
   if (!hasHydrated) {
@@ -56,10 +61,10 @@ export default function DashboardLayout({
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#080810" }}>
-      {/* Sidebar — só renderiza se aberta, e recebe a função de fechar */}
-      {sidebarOpen && <Sidebar onClose={() => setSidebarOpen(false)} />}
+      {/* Sidebar — só no desktop e quando aberta */}
+      {!isMobile && sidebarOpen && <Sidebar onClose={() => setSidebarOpen(false)} />}
 
-      <div style={{ marginLeft: sidebarOpen ? "200px" : "0", flex: 1, display: "flex", flexDirection: "column", transition: "margin-left 0.2s" }}>
+      <div style={{ marginLeft: !isMobile && sidebarOpen ? "200px" : "0", flex: 1, display: "flex", flexDirection: "column", transition: "margin-left 0.2s" }}>
 
         {/* Topbar */}
         <div
@@ -78,7 +83,7 @@ export default function DashboardLayout({
         >
           {/* Esquerda: botão menu (só quando sidebar fechada) + título */}
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            {!sidebarOpen && (
+            {!isMobile && !sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
                 style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
@@ -107,7 +112,7 @@ export default function DashboardLayout({
                 color: "#6060a0",
               }}
             >
-              {currentDate}
+              {isMobile ? currentDateShort : currentDate}
               <ChevronDown size={12} color="#6060a0" />
             </div>
 
@@ -130,10 +135,12 @@ export default function DashboardLayout({
         </div>
 
         {/* Conteúdo */}
-        <main style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
+         <main style={{ flex: 1, padding: isMobile ? "16px 16px 90px" : "24px", overflowY: "auto" }}>
           {children}
         </main>
       </div>
+      {/* Menu inferior flutuante — só no mobile */}
+      {isMobile && <MobileNav />}
     </div>
   );
 }
