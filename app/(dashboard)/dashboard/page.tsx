@@ -48,8 +48,8 @@ export default function DashboardPage() {
 
   async function fetchSheets() {
     try {
-      const { data } = await api.get("/sheets/");
-      setSheets(data.slice(0, 5)); // últimas 5
+      const { data } = await api.get("/sheets/?limit=5&offset=0");
+      setSheets(data.items); // últimas 5 (já paginado no backend)
     } catch (err) {
       console.error(err);
     }

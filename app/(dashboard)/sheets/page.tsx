@@ -36,8 +36,14 @@ export default function SheetsPage() {
   const [pasteText, setPasteText] = useState("");
   const [platforms, setPlatforms] = useState<any[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+  const LIMIT = 20;
 
-  useEffect(() => { fetchSheets(); }, []);
+
+
 
   useEffect(() => {
     let result = sheets;
@@ -46,14 +52,45 @@ export default function SheetsPage() {
     setFiltered(result);
   }, [sheets, activeStatus, search]);
 
+ useEffect(() => {
+    fetchSheets();
+    fetchStats();
+  }, []);
+
   async function fetchSheets() {
+    setLoading(true);
     try {
-      const { data } = await api.get("/sheets/");
-      setSheets(data);
+      const { data } = await api.get(`/sheets/?limit=${LIMIT}&offset=0`);
+      setSheets(data.items);
+      setOffset(data.items.length);
+      setHasMore(data.has_more);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const { data } = await api.get(`/sheets/?limit=${LIMIT}&offset=${offset}`);
+      setSheets((prev) => [...prev, ...data.items]);
+      setOffset((prev) => prev + data.items.length);
+      setHasMore(data.has_more);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function fetchStats() {
+    try {
+      const { data } = await api.get("/sheets/stats");
+      setStats(data);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -98,6 +135,7 @@ export default function SheetsPage() {
 
       const { data } = await api.post("/sheets/", payload);
       setSheets((prev) => [data, ...prev]);
+      fetchStats();
       setShowModal(false);
       setSelectedPlatform("");
       setNewLines(10);
@@ -142,13 +180,14 @@ export default function SheetsPage() {
       .filter((num) => !isNaN(num));
   }
 
-  const grandTotal = sheets.reduce((acc, s) => acc + calcTotal(s), 0);
-  const notStarted = sheets.filter((s) => s.status === "NOT_STARTED").length;
-  const inProgress = sheets.filter((s) => s.status === "IN_PROGRESS").length;
-  const finished = sheets.filter((s) => s.status === "FINISHED").length;
+  const grandTotal = stats?.grand_total ?? 0;
+  const notStarted = stats?.not_started ?? 0;
+  const inProgress = stats?.in_progress ?? 0;
+  const finished = stats?.finished ?? 0;
+  const totalSheets = stats?.total ?? 0;
 
   const tabs = [
-    { label: "Todas", value: "all", count: sheets.length },
+     { label: "Todas", value: "all", count: totalSheets },
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
     { label: "Iniciada", value: "IN_PROGRESS", count: inProgress },
     { label: "Finalizada", value: "FINISHED", count: finished },
@@ -205,7 +244,7 @@ export default function SheetsPage() {
       {/* Contadores */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "20px" }}>
         {[
-          { label: "Total", value: sheets.length, color: "#fff", icon: <FileSpreadsheet size={16} color="#6060a0" /> },
+          { label: "Total", value: totalSheets, color: "#fff", icon: <FileSpreadsheet size={16} color="#6060a0" /> },
           { label: "Não Iniciadas", value: notStarted, color: "#fbbf24", icon: <Clock size={16} color="#fbbf24" /> },
           { label: "Iniciadas", value: inProgress, color: "#3b82f6", icon: <TrendingUp size={16} color="#3b82f6" /> },
           { label: "Finalizadas", value: finished, color: "#22d3a5", icon: <Trophy size={16} color="#22d3a5" /> },
@@ -289,6 +328,30 @@ export default function SheetsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Botão Carregar mais — só quando não há busca/filtro ativo */}
+      {!loading && hasMore && activeStatus === "all" && !search.trim() && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              background: "#0f0f1a",
+              border: "1px solid #1a1a2e",
+              borderRadius: "8px",
+              padding: "10px 24px",
+              color: loadingMore ? "#3a3a5c" : "#3b82f6",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: loadingMore ? "not-allowed" : "pointer",
+              fontFamily: "Inter, sans-serif",
+              transition: "all 0.15s",
+            }}
+          >
+            {loadingMore ? "Carregando..." : "Carregar mais"}
+          </button>
         </div>
       )}
 
