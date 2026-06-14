@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
+
 
 interface ActivationKey {
   id: string;
@@ -40,7 +42,7 @@ export default function AdminPage() {
   const [keyType, setKeyType] = useState("LIFETIME");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"keys" | "users"| "platforms">("keys");
-
+  const isMobile = useIsMobile();
   // Redireciona se não for admin
   useEffect(() => {
     if (user && user.role !== "ADMIN") {
@@ -157,7 +159,7 @@ export default function AdminPage() {
       </div>
 
       {/* Métricas */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+      <div style={{ display: "grid",gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
         {[
           { label: "Total de keys", value: keys.length, color: "#fff" },
           { label: "Keys disponíveis", value: availableKeys, color: "#22d3a5" },
