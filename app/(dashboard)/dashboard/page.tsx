@@ -23,6 +23,9 @@ import {
   Activity,
 } from "lucide-react";
 
+import { useIsMobile } from "@/hooks/useIsMobile";
+
+
 const periods = [
   { label: "Todos", value: "all" },
   { label: "Mês", value: "month" },
@@ -31,6 +34,7 @@ const periods = [
 ];
 
 export default function DashboardPage() {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [period, setPeriod] = useState("all");
@@ -87,9 +91,9 @@ export default function DashboardPage() {
   const pieColors = ["#3b82f6", "#22d3a5", "#fbbf24", "#f87171"];
 
   return (
-    <div>
+    <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden" }}>
       {/* Filtros */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+      <div style={{ display: "flex", justifyContent: isMobile ? "flex-start" : "flex-end", marginBottom: "16px", overflowX: isMobile ? "auto" : "visible" }}>
         <div style={{ display: "flex", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", overflow: "hidden" }}>
           {periods.map((p) => (
             <button
@@ -121,7 +125,7 @@ export default function DashboardPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
               gap: "10px",
               marginBottom: "16px",
             }}
@@ -176,7 +180,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Gráficos lado a lado */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
             {/* Performance mensal */}
             <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
