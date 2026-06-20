@@ -91,8 +91,22 @@ html, body {
 /* --- Layout: sidebar e menu inferior --- */
 .app-sidebar { display: block; }
 .app-mobile-nav { display: none; }
-.app-content { margin-left: 200px; transition: margin-left 0.2s; }
-.app-main { padding: 24px; }
+
+.app-content {
+  margin-left: 200px;
+  transition: margin-left 0.2s;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-main {
+  padding: 24px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .topbar-menu-btn { display: flex; }
 
 @media (max-width: 767px) {
