@@ -14,7 +14,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -28,6 +29,7 @@ export default function LoginPage() {
       setError(
         err.response?.data?.detail || "Erro ao fazer login. Tente novamente."
       );
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,38 @@ export default function LoginPage() {
             Criar conta
           </Link>
         </p>
-
+        {/* Pop-up de erro */}
+        {showErrorModal && (
+          <div
+            onClick={() => setShowErrorModal(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "20px" }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#0f0f1a", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "360px", textAlign: "center" }}
+            >
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "8px" }}>
+                Não foi possível entrar
+              </h3>
+              <p style={{ fontSize: "14px", color: "#9090b0", marginBottom: "22px", lineHeight: "1.5" }}>
+                {error}
+              </p>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                style={{ width: "100%", background: "#3b82f6", border: "none", borderRadius: "10px", padding: "11px", color: "#fff", fontSize: "14px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        )}    
       </div>
     </div>
   );
