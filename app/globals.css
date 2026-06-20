@@ -156,3 +156,19 @@ html, body {
   .row-mobile { display: block !important; }
   .table-header-desktop { display: none !important; }
 }
+
+
+/* ===== REFORÇOS ===== */
+.grid-4 > *, .grid-6 > *, .grid-5 > *, .grid-2cols > *, .grid-cards > * {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .page-header-actions { width: 100% !important; }
+  .page-header-actions button { flex-shrink: 0; white-space: nowrap; }
+  .grid-cards > * { max-width: 100%; }
+}
+
+/* Trava global contra overflow horizontal */
+html, body { overflow-x: hidden; max-width: 100%; }
+* { box-sizing: border-box; }
