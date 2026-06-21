@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { registerPushSubscription } from "@/lib/push";
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -19,40 +20,7 @@ export default function SheetPage() {
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
-  useEffect(() => { requestNotificationPermission(); }, []);
-
-  function requestNotificationPermission() {
-    console.log("requestNotificationPermission chamado", typeof Notification !== "undefined" ? Notification.permission : "undefined");
-    if (typeof Notification === "undefined") return;
-    if (Notification.permission === "default") Notification.requestPermission();
-  }
-
-  function notifySheetFinished(name: string, result: number) {
-    console.log("notifySheetFinished chamado", { name, result, permission: typeof Notification !== "undefined" ? Notification.permission : "undefined" });
-    if (typeof Notification === "undefined") return;
-    if (Notification.permission !== "granted") return;
-
-    const body = `${name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`;
-
-    // Tenta via Service Worker (funciona em Android/PWA)
-    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification("Nexus Sheets", {
-          body,
-          icon: "/icon-192.png",
-          badge: "/icon-192.png",
-        });
-      });
-      return;
-    }
-
-    // Fallback para desktop (browser normal)
-    new Notification("Nexus Sheets", {
-      body,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-    });
-  }
+  useEffect(() => { registerPushSubscription(); }, []);
 
   async function fetchSheet() {
     try {
@@ -126,8 +94,6 @@ export default function SheetPage() {
       const result = totalR - totalD + totalC + (data.salary || 0);
       setFinishModal({ visible: true, name: data.name, result });
       setTimeout(() => setFinishModal({ visible: false, name: "", result: 0 }), 3000);
-      console.log("finishSheet sucesso, chamando notify", data.name, result);
-      notifySheetFinished(data.name, result);
     } catch (err) { console.error(err); }
   }
 
