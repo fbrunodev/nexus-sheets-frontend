@@ -21,17 +21,19 @@ export default function SheetPage() {
   useEffect(() => { requestNotificationPermission(); }, []);
 
   function requestNotificationPermission() {
+    console.log("requestNotificationPermission chamado", typeof Notification !== "undefined" ? Notification.permission : "undefined");
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "default") Notification.requestPermission();
   }
 
   function notifySheetFinished(name: string, result: number) {
+    console.log("notifySheetFinished chamado", { name, result, permission: typeof Notification !== "undefined" ? Notification.permission : "undefined" });
     if (typeof Notification === "undefined") return;
     if (Notification.permission !== "granted") return;
     new Notification("Nexus Sheets", {
       body: `${name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
     });
   }
 
@@ -104,6 +106,7 @@ export default function SheetPage() {
       const totalR = data.lines.reduce((acc: number, l: any) => acc + l.withdrawal, 0);
       const totalD = data.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
       const totalC = data.lines.reduce((acc: number, l: any) => acc + l.chest, 0);
+      console.log("finishSheet sucesso, chamando notify", data.name, totalR - totalD + totalC + (data.salary || 0));
       notifySheetFinished(data.name, totalR - totalD + totalC + (data.salary || 0));
     } catch (err) { console.error(err); }
   }
