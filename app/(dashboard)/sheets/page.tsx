@@ -12,6 +12,8 @@ import {
   TrendingDown,
   Minus,
   Clock,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 
 
@@ -43,6 +45,9 @@ export default function SheetsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const LIMIT = 20;
 
 
@@ -136,6 +141,7 @@ export default function SheetsPage() {
         payload.initial_lines = newLines;
       }
 
+
       const { data } = await api.post("/sheets/", payload);
       setSheets((prev) => [data, ...prev]);
       fetchStats();
@@ -153,6 +159,23 @@ export default function SheetsPage() {
     }
   }
 
+  async function handleDelete() {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        try {
+          await api.delete(`/sheets/${deleteTarget.id}`);
+          // Remove da lista local
+          setSheets((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+          // Atualiza os contadores
+          fetchStats();
+          setDeleteTarget(null);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setDeleting(false);
+        }
+  }
+  
   function fmt(value: number) {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   }
@@ -301,8 +324,48 @@ export default function SheetsPage() {
                     <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: status.dot }} />
                     {status.label}
                   </span>
+                  <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(menuOpen === sheet.id ? null : sheet.id);
+                      }}
+                      title="Opções"
+                      style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px", borderRadius: "4px", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#9090b0"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "#3a3a5c"; }}
+                    >
+                      <MoreVertical size={16} />
+                    </button>
                 </div>
-
+                 {/* Dropdown de opções */}
+                {menuOpen === sheet.id && (
+                  <>
+                    {/* Overlay invisível para fechar ao clicar fora */}
+                    <div
+                      onClick={(e) => { e.stopPropagation(); setMenuOpen(null); }}
+                      style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    />
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ position: "absolute", top: "48px", right: "16px", background: "#141422", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "4px", minWidth: "140px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", zIndex: 41 }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(null);
+                          setDeleteTarget(sheet);
+                        }}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", borderRadius: "7px", background: "transparent", border: "none", color: "#f87171", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "background 0.15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(248,113,113,0.08)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <Trash2 size={14} />
+                        Excluir
+                      </button>
+                    </div>
+                  </>
+                )}
+      
                 {/* Métricas */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                   <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
@@ -421,6 +484,45 @@ export default function SheetsPage() {
           </div>
         </div>
       )}
+      {/* Pop-up de confirmação de exclusão */}
+      {deleteTarget && (
+        <div
+          onClick={() => !deleting && setDeleteTarget(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: "20px" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#0f0f1a", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "360px", textAlign: "center" }}
+          >
+            <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Trash2 size={22} color="#f87171" />
+            </div>
+            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "8px" }}>
+              Excluir planilha?
+            </h3>
+            <p style={{ fontSize: "14px", color: "#9090b0", marginBottom: "22px", lineHeight: "1.5" }}>
+              A planilha <strong style={{ color: "#fff" }}>{deleteTarget.name}</strong> será removida da sua lista. Esta ação pode ser revertida pelo suporte.
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "14px", fontWeight: "600", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: deleting ? "#1a1a2e" : "#f87171", border: "none", color: "#fff", fontSize: "14px", fontWeight: "600", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                {deleting ? "Excluindo..." : "Excluir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
