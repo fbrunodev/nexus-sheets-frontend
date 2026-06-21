@@ -15,6 +15,7 @@ export default function SheetPage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [editingSalary, setEditingSalary] = useState(false);
   const [salaryValue, setSalaryValue] = useState(0);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
@@ -26,12 +27,33 @@ export default function SheetPage() {
     if (Notification.permission === "default") Notification.requestPermission();
   }
 
+  function showToast(message: string) {
+    setToast({ message, visible: true });
+    setTimeout(() => setToast({ message: "", visible: false }), 4000);
+  }
+
   function notifySheetFinished(name: string, result: number) {
     console.log("notifySheetFinished chamado", { name, result, permission: typeof Notification !== "undefined" ? Notification.permission : "undefined" });
     if (typeof Notification === "undefined") return;
     if (Notification.permission !== "granted") return;
+
+    const body = `${name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`;
+
+    // Tenta via Service Worker (funciona em Android/PWA)
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification("Nexus Sheets", {
+          body,
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+        });
+      });
+      return;
+    }
+
+    // Fallback para desktop (browser normal)
     new Notification("Nexus Sheets", {
-      body: `${name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`,
+      body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
     });
@@ -106,8 +128,10 @@ export default function SheetPage() {
       const totalR = data.lines.reduce((acc: number, l: any) => acc + l.withdrawal, 0);
       const totalD = data.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
       const totalC = data.lines.reduce((acc: number, l: any) => acc + l.chest, 0);
-      console.log("finishSheet sucesso, chamando notify", data.name, totalR - totalD + totalC + (data.salary || 0));
-      notifySheetFinished(data.name, totalR - totalD + totalC + (data.salary || 0));
+      const result = totalR - totalD + totalC + (data.salary || 0);
+      showToast(`✓ ${data.name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`);
+      console.log("finishSheet sucesso, chamando notify", data.name, result);
+      notifySheetFinished(data.name, result);
     } catch (err) { console.error(err); }
   }
 
@@ -358,6 +382,35 @@ export default function SheetPage() {
           </div>
         ))}
       </div>
+
+      {toast.visible && (
+        <div style={{
+          position: "fixed",
+          bottom: "80px",
+          right: "20px",
+          background: "#0f0f1a",
+          border: "1px solid rgba(34,211,165,0.4)",
+          borderRadius: "12px",
+          padding: "14px 18px",
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          animation: "fadeInUp 0.3s ease",
+          maxWidth: "300px",
+        }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3a5", flexShrink: 0 }} />
+          <p style={{ fontSize: "13px", color: "#fff", margin: 0, fontWeight: "500" }}>{toast.message}</p>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
