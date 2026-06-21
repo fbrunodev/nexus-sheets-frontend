@@ -157,7 +157,6 @@ html, body {
 .sheet-topbar { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 0; }
 .sheet-topbar-metrics { display: flex; align-items: center; gap: 22px; }
 @media (max-width: 767px) {
-  .sheet-topbar { flex-direction: column; align-items: stretch; gap: 12px; }
   .sheet-topbar-metrics { gap: 14px; flex-wrap: wrap; justify-content: space-between; }
 }
 

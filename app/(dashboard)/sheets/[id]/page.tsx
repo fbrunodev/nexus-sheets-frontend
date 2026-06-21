@@ -15,7 +15,7 @@ export default function SheetPage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [editingSalary, setEditingSalary] = useState(false);
   const [salaryValue, setSalaryValue] = useState(0);
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
+  const [finishModal, setFinishModal] = useState<{ visible: boolean; name: string; result: number }>({ visible: false, name: "", result: 0 });
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
@@ -25,11 +25,6 @@ export default function SheetPage() {
     console.log("requestNotificationPermission chamado", typeof Notification !== "undefined" ? Notification.permission : "undefined");
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "default") Notification.requestPermission();
-  }
-
-  function showToast(message: string) {
-    setToast({ message, visible: true });
-    setTimeout(() => setToast({ message: "", visible: false }), 4000);
   }
 
   function notifySheetFinished(name: string, result: number) {
@@ -129,7 +124,8 @@ export default function SheetPage() {
       const totalD = data.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
       const totalC = data.lines.reduce((acc: number, l: any) => acc + l.chest, 0);
       const result = totalR - totalD + totalC + (data.salary || 0);
-      showToast(`✓ ${data.name} finalizada! Resultado: ${result >= 0 ? "+" : ""}${fmt(result)}`);
+      setFinishModal({ visible: true, name: data.name, result });
+      setTimeout(() => setFinishModal({ visible: false, name: "", result: 0 }), 3000);
       console.log("finishSheet sucesso, chamando notify", data.name, result);
       notifySheetFinished(data.name, result);
     } catch (err) { console.error(err); }
@@ -184,22 +180,21 @@ export default function SheetPage() {
     <div>
       {/* ── Topbar sticky ── */}
       <div
-        className="sheet-topbar"
-        style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "12px 20px", marginBottom: "10px", position: "sticky", top: "0", zIndex: 20 }}
+        style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "12px 20px", marginBottom: "20px", position: "sticky", top: "0", zIndex: 20, display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: "12px" }}
       >
         {/* Esquerda: voltar + nome + data */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button onClick={() => router.push("/sheets")} style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
+          <button onClick={() => router.push("/sheets")} style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
             <ArrowLeft size={18} />
           </button>
-          <div>
-            <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase" }}>{sheet.name}</p>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
             <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
           </div>
         </div>
 
         {/* Direita: saved + finalizar */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
           {lastSaved && (
             <span style={{ fontSize: "11px", color: "#22d3a5", display: "flex", alignItems: "center", gap: "4px" }}>
               <Check size={12} /> {lastSaved}
@@ -266,7 +261,7 @@ export default function SheetPage() {
               style={{ background: item.highlight ? "rgba(59,130,246,0.06)" : "#0f0f1a", border, borderRadius: "14px", padding: "16px" }}
             >
               <p style={{ fontSize: "10px", color: "#6060a0", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</p>
-              <p style={{ fontSize: item.highlight ? "26px" : "20px", fontWeight: "700", color }}>
+              <p style={{ fontSize: item.highlight ? "clamp(18px, 5vw, 26px)" : "20px", fontWeight: "700", color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {showPlus ? "+" : ""}{fmt(item.value!)}
               </p>
             </div>
@@ -383,32 +378,37 @@ export default function SheetPage() {
         ))}
       </div>
 
-      {toast.visible && (
-        <div style={{
-          position: "fixed",
-          bottom: "80px",
-          right: "20px",
-          background: "#0f0f1a",
-          border: "1px solid rgba(34,211,165,0.4)",
-          borderRadius: "12px",
-          padding: "14px 18px",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-          animation: "fadeInUp 0.3s ease",
-          maxWidth: "300px",
-        }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3a5", flexShrink: 0 }} />
-          <p style={{ fontSize: "13px", color: "#fff", margin: 0, fontWeight: "500" }}>{toast.message}</p>
+      {finishModal.visible && (
+        <div
+          onClick={() => setFinishModal({ visible: false, name: "", result: 0 })}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "20px" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#0f0f1a", border: "1px solid rgba(34,211,165,0.3)", borderRadius: "20px", padding: "32px 28px", textAlign: "center", maxWidth: "320px", width: "100%", animation: "scaleIn 0.25s ease" }}
+          >
+            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(34,211,165,0.1)", border: "1px solid rgba(34,211,165,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <span style={{ fontSize: "24px" }}>🎯</span>
+            </div>
+            <p style={{ fontSize: "12px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Planilha finalizada</p>
+            <p style={{ fontSize: "18px", fontWeight: "700", color: "#fff", marginBottom: "12px" }}>{finishModal.name}</p>
+            <p style={{ fontSize: "32px", fontWeight: "700", color: finishModal.result >= 0 ? "#22d3a5" : "#f87171", marginBottom: "24px" }}>
+              {finishModal.result >= 0 ? "+" : ""}{fmt(finishModal.result)}
+            </p>
+            <button
+              onClick={() => setFinishModal({ visible: false, name: "", result: 0 })}
+              style={{ background: "rgba(34,211,165,0.1)", border: "1px solid rgba(34,211,165,0.3)", borderRadius: "10px", padding: "10px 32px", color: "#22d3a5", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+            >
+              OK
+            </button>
+          </div>
         </div>
       )}
 
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>
