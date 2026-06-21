@@ -50,16 +50,19 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<SheetStats | null>(null);
   const [sheets, setSheets] = useState<RecentSheet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("all");
 
   useEffect(() => {
-    Promise.all([fetchStats(), fetchRecentSheets()]).finally(() =>
-      setLoading(false)
-    );
+    fetchRecentSheets().finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [period]);
 
   async function fetchStats() {
     try {
-      const { data } = await api.get("/sheets/stats");
+      const { data } = await api.get(`/sheets/stats?period=${period}`);
       setStats(data);
     } catch (err) {
       console.error("Erro ao carregar stats:", err);
@@ -108,6 +111,35 @@ export default function DashboardPage() {
         <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
       ) : (
         <>
+          {/* ── Filtro de período ── */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+            {[
+              { label: "Todos", value: "all" },
+              { label: "Mês", value: "month" },
+              { label: "Semana", value: "week" },
+              { label: "Hoje", value: "today" },
+            ].map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: period === p.value ? "600" : "400",
+                  color: period === p.value ? "#fff" : "#6060a0",
+                  background: period === p.value ? "rgba(59,130,246,0.12)" : "transparent",
+                  border: `1px solid ${period === p.value ? "rgba(59,130,246,0.3)" : "#1a1a2e"}`,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  transition: "all 0.15s",
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
           {/* ── Cards de métricas ── */}
           <div className="grid-4" style={{ marginBottom: "16px" }}>
             {[
