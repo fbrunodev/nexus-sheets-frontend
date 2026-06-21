@@ -6,7 +6,7 @@ export interface User {
   role: "ADMIN" | "SUPERVISOR" | "OPERADOR" | "USER";
   is_active: boolean;
   plan_type: "LIFETIME" | "MONTHLY" | "TRIAL" | null;
-  plan_expiration: string | null;
+  plan_expires_at: string | null;
   created_at: string;
   last_login: string | null;
 }
@@ -43,10 +43,6 @@ export interface Sheet {
   owner_id: string;
   operator_id: string | null;
   status: SheetStatus;
-  cost_proxy: number;
-  cost_sms: number;
-  cost_bot: number;
-  cost_fintech: number;
   salary: number;
   goal: number;
   created_at: string;

@@ -119,8 +119,7 @@ export default function SheetPage() {
   const totalDeposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
   const totalReceived = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
   const totalChest = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
-  const totalCosts = sheet.cost_proxy + sheet.cost_sms + sheet.cost_bot + sheet.cost_fintech;
-  const finalResult = totalReceived - totalDeposited + totalChest + sheet.salary - totalCosts;
+  const finalResult = totalReceived - totalDeposited + totalChest + sheet.salary;
   const filled = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
   const isFinished = sheet.status === "FINISHED";
   const goalProgress = sheet.goal > 0 ? Math.min((filled / sheet.goal) * 100, 100) : 0;
@@ -186,25 +185,15 @@ export default function SheetPage() {
         </div>
       </div>
 
-      {/* Faixa Descontos & Salário */}
+      {/* Salário */}
       <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "18px 20px", marginBottom: "16px" }}>
-        <p style={{ fontSize: "11px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "14px" }}>Descontos & Salário</p>
-        <div className="grid-5">
-          {[
-            { label: "Proxy", field: "cost_proxy" },
-            { label: "SMS", field: "cost_sms" },
-            { label: "Bot", field: "cost_bot" },
-            { label: "Fintech", field: "cost_fintech" },
-            { label: "Salário", field: "salary" },
-          ].map((item) => (
-            <div key={item.field}>
-              <label style={{ display: "block", fontSize: "10px", color: item.field === "salary" ? "#3b82f6" : "#6060a0", marginBottom: "6px", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</label>
-              <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 12px" }}>
-                <span style={{ fontSize: "12px", color: "#3a3a5c", marginRight: "6px" }}>R$</span>
-                <input type="number" defaultValue={(sheet as any)[item.field] || 0} disabled={isFinished} onBlur={(e) => updateCost(item.field, Number(e.target.value))} style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "Inter, sans-serif" }} />
-              </div>
-            </div>
-          ))}
+        <p style={{ fontSize: "11px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "14px" }}>Salário</p>
+        <div style={{ maxWidth: "200px" }}>
+          <label style={{ display: "block", fontSize: "10px", color: "#3b82f6", marginBottom: "6px", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.06em" }}>Salário</label>
+          <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 12px" }}>
+            <span style={{ fontSize: "12px", color: "#3a3a5c", marginRight: "6px" }}>R$</span>
+            <input type="number" defaultValue={sheet.salary || 0} disabled={isFinished} onBlur={(e) => updateCost("salary", Number(e.target.value))} style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "Inter, sans-serif" }} />
+          </div>
         </div>
       </div>
 
