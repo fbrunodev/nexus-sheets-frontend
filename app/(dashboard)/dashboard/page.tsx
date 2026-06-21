@@ -30,7 +30,7 @@ interface RecentSheet {
   status: string;
   created_at: string;
   salary: number;
-  lines: { deposit: number; withdrawal: number; chest: number }[];
+  lines: { deposit: number; withdrawal: number; chest: number; bonus: number }[];
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -83,7 +83,7 @@ export default function DashboardPage() {
   // Fórmula: sum(withdrawal) - sum(deposit) + sum(chest) + salary
   function calcSheetResult(sheet: RecentSheet): number {
     const linesTotal = sheet.lines.reduce(
-      (acc, l) => acc + l.withdrawal - l.deposit + l.chest,
+      (acc, l) => acc + l.withdrawal - l.deposit + l.chest + (l.bonus || 0),
       0
     );
     return linesTotal + (sheet.salary ?? 0);

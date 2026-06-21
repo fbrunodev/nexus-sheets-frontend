@@ -194,11 +194,12 @@ export default function SheetsPage() {
   }
 
   function calcTotal(sheet: Sheet) {
-  return sheet.lines.reduce(
-    (acc, l) => acc + l.withdrawal - l.deposit + l.chest,
-    0
-  ) + (sheet.salary ?? 0);
-}
+    const bonus = sheet.lines.reduce((acc, l) => acc + (l.bonus || 0), 0);
+    const received = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
+    const deposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
+    const chest = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
+    return received - deposited + chest + bonus + (sheet.salary ?? 0);
+  }
   // Converte o texto colado em uma lista de números
   // Aceita formato "R$ 120,00" um por linha
   function parseDeposits(text: string): number[] {

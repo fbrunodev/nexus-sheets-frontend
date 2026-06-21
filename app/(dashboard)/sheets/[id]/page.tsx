@@ -106,7 +106,7 @@ export default function SheetPage() {
 
   function handleKeyDown(e: React.KeyboardEvent, rowIndex: number, field: string) {
     if (!sheet) return;
-    const fields = ["deposit", "withdrawal", "chest"];
+    const fields = ["deposit", "withdrawal", "chest", "bonus"];
     const colIndex = fields.indexOf(field);
     function focusCell(rowIdx: number, fieldName: string) {
       const targetLine = sheet!.lines[rowIdx];
@@ -132,7 +132,8 @@ export default function SheetPage() {
   const totalDeposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
   const totalReceived  = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
   const totalChest     = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
-  const finalResult    = totalReceived - totalDeposited + totalChest + sheet.salary;
+  const totalBonus     = sheet.lines.reduce((acc, l) => acc + (l.bonus || 0), 0);
+  const finalResult    = totalReceived - totalDeposited + totalChest + totalBonus + sheet.salary;
   const filled         = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
   const isFinished     = sheet.status === "FINISHED";
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
@@ -143,7 +144,7 @@ export default function SheetPage() {
     return value !== 0 ? activeColor : "#3a3a5c";
   }
 
-  const COLS = "44px 1fr 1fr 1fr 120px 36px";
+  const COLS = "44px 1fr 1fr 1fr 1fr 120px 36px";
 
   return (
     <div>
@@ -189,6 +190,7 @@ export default function SheetPage() {
           { label: "Total Depositado", value: totalDeposited,  activeColor: "#a78bfa" },
           { label: "Total Recebido",   value: totalReceived,   activeColor: "#22d3a5" },
           { label: "Total em Baús",    value: totalChest,      activeColor: "#fbbf24" },
+          { label: "Total em Bônus",   value: totalBonus,      activeColor: "#a78bfa" },
           { label: "Salário",          isSalary: true },
           { label: "Média",            value: averageDeposit,  activeColor: "#a78bfa" },
           { label: "Resultado Final",  value: finalResult,     activeColor: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
@@ -264,6 +266,7 @@ export default function SheetPage() {
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>DEPÓSITO</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>SAQUE</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>BAÚ</span>
+          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>BÔNUS</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
           <span />
         </div>
@@ -285,11 +288,12 @@ export default function SheetPage() {
                   )}
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                 {[
                   { field: "deposit",    label: "Depósito" },
                   { field: "withdrawal", label: "Saque" },
                   { field: "chest",      label: "Baú" },
+                  { field: "bonus",      label: "Bônus" },
                 ].map(({ field, label }) => (
                   <div key={field}>
                     <label style={{ display: "block", fontSize: "9px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</label>
@@ -317,7 +321,7 @@ export default function SheetPage() {
             {/* ===== Layout DESKTOP: linha em grid ===== */}
             <div className="row-desktop" style={{ gridTemplateColumns: COLS, gap: "16px", alignItems: "center", padding: "5px 16px", borderBottom: "1px solid #141422" }}>
               <span style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center" }}>{line.line_number}</span>
-              {["deposit", "withdrawal", "chest"].map((field) => (
+              {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
                 <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input

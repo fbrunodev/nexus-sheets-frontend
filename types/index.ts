@@ -33,6 +33,7 @@ export interface SheetLine {
   deposit: number;
   withdrawal: number;
   chest: number;
+  bonus: number;
   result: number;
   created_at: string;
 }
