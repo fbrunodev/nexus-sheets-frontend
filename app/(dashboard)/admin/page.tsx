@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
-import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus } from "lucide-react";
+import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 
@@ -20,6 +20,7 @@ interface ActivationKey {
 
 interface UserAdmin {
   id: string;
+  name: string | null;
   email: string;
   role: string;
   is_active: boolean;
@@ -41,7 +42,16 @@ export default function AdminPage() {
   const [generating, setGenerating] = useState(false);
   const [keyType, setKeyType] = useState("LIFETIME");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"keys" | "users"| "platforms">("keys");
+  const [activeTab, setActiveTab] = useState<"keys" | "users" | "platforms" | "costs">("keys");
+  const [costTypes, setCostTypes] = useState<any[]>([]);
+  const [newCostType, setNewCostType] = useState("");
+  const [creatingCostType, setCreatingCostType] = useState(false);
+  const [showOperatorModal, setShowOperatorModal] = useState(false);
+  const [operatorName, setOperatorName] = useState("");
+  const [operatorEmail, setOperatorEmail] = useState("");
+  const [operatorPassword, setOperatorPassword] = useState("");
+  const [creatingOperator, setCreatingOperator] = useState(false);
+  const [operatorError, setOperatorError] = useState<string>("");
   const isMobile = useIsMobile();
   // Redireciona se não for admin
   useEffect(() => {
@@ -54,8 +64,42 @@ export default function AdminPage() {
     fetchKeys();
     fetchUsers();
     fetchPlatforms();
+    fetchCostTypes();
   }, []);
 
+
+  async function fetchCostTypes() {
+    try {
+      const { data } = await api.get("/costs/types");
+      setCostTypes(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function createCostType() {
+    if (!newCostType.trim()) return;
+    setCreatingCostType(true);
+    try {
+      const { data } = await api.post("/costs/types", { name: newCostType });
+      setCostTypes((prev) => [...prev, data]);
+      setNewCostType("");
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Erro ao criar tipo de custo.");
+    } finally {
+      setCreatingCostType(false);
+    }
+  }
+
+  async function deleteCostType(id: string) {
+    if (!confirm("Remover este tipo de custo?")) return;
+    try {
+      await api.delete(`/costs/types/${id}`);
+      setCostTypes((prev) => prev.filter((c) => c.id !== id));
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Erro ao remover tipo de custo.");
+    }
+  }
 
   async function fetchPlatforms(){
     try {
@@ -128,6 +172,43 @@ export default function AdminPage() {
     }
   }
 
+  async function createNewOperator() {
+    if (!operatorName.trim() || !operatorEmail.trim() || !operatorPassword.trim()) return;
+    setCreatingOperator(true);
+    setOperatorError("");
+    try {
+      const { data } = await api.post("/operators/", {
+        name: operatorName,
+        email: operatorEmail,
+        password: operatorPassword,
+      });
+      setUsers((prev) => [data, ...prev]);
+      setShowOperatorModal(false);
+      setOperatorName("");
+      setOperatorEmail("");
+      setOperatorPassword("");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setOperatorError(detail.map((e: any) => String(e.msg || e)).join(", "));
+      } else {
+        setOperatorError(String(detail || "Erro ao criar operador. Tente novamente."));
+      }
+    } finally {
+      setCreatingOperator(false);
+    }
+  }
+
+  async function deleteOperator(operatorId: string) {
+    if (!confirm("Remover este operador?")) return;
+    try {
+      await api.delete(`/operators/${operatorId}`);
+      setUsers((prev) => prev.filter((u) => u.id !== operatorId));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   function copyKey(key: string, id: string) {
     navigator.clipboard.writeText(key);
     setCopiedId(id);
@@ -178,16 +259,17 @@ export default function AdminPage() {
       {/* Tabs */}
       <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
         {[
-          {id: "platforms", label:"Plataformas", icon: FileSpreadsheet},
+          { id: "platforms", label: "Plataformas", icon: FileSpreadsheet },
           { id: "keys", label: "Activation Keys", icon: Key },
-          { id: "users", label: "Usuários", icon: Users },
+          { id: "users", label: "Operadores", icon: Users },
+          { id: "costs", label: "Tipos de Custo", icon: DollarSign },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "keys" | "users" | "platforms")}
+              onClick={() => setActiveTab(tab.id as "keys" | "users" | "platforms" | "costs")}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -301,24 +383,32 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Tab: Usuários */}
+      {/* Tab: Operadores */}
       {activeTab === "users" && (
         <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
-          <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "20px" }}>
-            Usuários do sistema
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Operadores
+            </p>
+            <button
+              onClick={() => setShowOperatorModal(true)}
+              style={{ display: "flex", alignItems: "center", gap: "7px", background: "#3b82f6", border: "none", borderRadius: "8px", padding: "9px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+            >
+              <Plus size={14} /> Novo Operador
+            </button>
+          </div>
 
           {loadingUsers ? (
             <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
           ) : users.length === 0 ? (
             <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
-              Nenhum usuário encontrado.
+              Nenhum operador cadastrado.
             </p>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
-                  {["Usuário", "Role", "Status", "Plano", "Último login"].map((h) => (
+                  {["Operador", "Status", "Criado em", ""].map((h) => (
                     <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.06em" }}>
                       {h}
                     </th>
@@ -334,28 +424,31 @@ export default function AdminPage() {
                     <td style={{ padding: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "600", color: "#3b82f6", flexShrink: 0 }}>
-                          {u.email[0].toUpperCase()}
+                          {(u.name || u.email)[0].toUpperCase()}
                         </div>
-                        <span style={{ fontSize: "13px", fontWeight: "500" }}>{u.email}</span>
+                        <div>
+                          {u.name && <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "2px" }}>{u.name}</p>}
+                          <p style={{ fontSize: "12px", color: "#6060a0" }}>{u.email}</p>
+                        </div>
                       </div>
-                    </td>
-                    <td style={{ padding: "12px" }}>
-                      <span style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                        {u.role}
-                      </span>
                     </td>
                     <td style={{ padding: "12px" }}>
                       <span style={{ background: u.is_active ? "rgba(34,211,165,0.1)" : "rgba(248,113,113,0.1)", color: u.is_active ? "#22d3a5" : "#f87171", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
                         {u.is_active ? "Ativo" : "Inativo"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px" }}>
-                      <span style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                        {u.plan_type || "—"}
-                      </span>
-                    </td>
                     <td style={{ padding: "12px", fontSize: "12px", color: "#6060a0" }}>
-                      {u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "—"}
+                      {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "right" }}>
+                      <button
+                        onClick={() => deleteOperator(u.id)}
+                        style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3a5c")}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -411,6 +504,117 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+      {/* Tab: Tipos de Custo */}
+      {activeTab === "costs" && (
+        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Tipos de Custo
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                value={newCostType}
+                onChange={(e) => setNewCostType(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && createCostType()}
+                placeholder="Nome do tipo"
+                style={{ background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "8px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }}
+              />
+              <button
+                onClick={createCostType}
+                disabled={creatingCostType}
+                style={{ display: "flex", alignItems: "center", gap: "6px", background: creatingCostType ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "8px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingCostType ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                <Plus size={14} />
+                {creatingCostType ? "Criando..." : "Adicionar"}
+              </button>
+            </div>
+          </div>
+
+          {costTypes.length === 0 ? (
+            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+              Nenhum tipo de custo cadastrado.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
+              {costTypes.map((c) => (
+                <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#141422", borderRadius: "10px", padding: "12px 16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <DollarSign size={13} color="#22d3a5" />
+                    <span style={{ fontSize: "13px", fontWeight: "500" }}>{c.name}</span>
+                  </div>
+                  <button
+                    onClick={() => deleteCostType(c.id)}
+                    style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3a5c")}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal: Novo Operador */}
+      {showOperatorModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "20px" }}>
+          <div style={{ background: "#141422", border: "1px solid #2a2a4a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "400px" }}>
+
+            <p style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "24px" }}>Novo Operador</p>
+
+            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Nome</p>
+            <input
+              type="text"
+              value={operatorName}
+              onChange={(e) => setOperatorName(e.target.value)}
+              placeholder="Nome do operador"
+              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box" }}
+            />
+
+            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Email</p>
+            <input
+              type="email"
+              value={operatorEmail}
+              onChange={(e) => setOperatorEmail(e.target.value)}
+              placeholder="email@exemplo.com"
+              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box" }}
+            />
+
+            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Senha</p>
+            <input
+              type="password"
+              value={operatorPassword}
+              onChange={(e) => setOperatorPassword(e.target.value)}
+              placeholder="Senha de acesso"
+              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "20px", boxSizing: "border-box" }}
+            />
+
+            {operatorError && (
+              <p style={{ fontSize: "12px", color: "#f87171", marginBottom: "14px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "8px 12px" }}>
+                {operatorError}
+              </p>
+            )}
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => { setShowOperatorModal(false); setOperatorError(""); setOperatorName(""); setOperatorEmail(""); setOperatorPassword(""); }}
+                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #2a2a4a", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={createNewOperator}
+                disabled={creatingOperator}
+                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creatingOperator ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingOperator ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
+              >
+                {creatingOperator ? "Criando..." : "Criar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

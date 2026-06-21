@@ -11,11 +11,13 @@ import {
   LogOut,
   ShieldAlert,
   ChevronLeft,
+  DollarSign,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Planilhas", href: "/sheets", icon: FileSpreadsheet },
+  { label: "Custos", href: "/costs", icon: DollarSign },
   { label: "Operadores", href: "/operators", icon: Users },
   { label: "Admin", href: "/admin", icon: ShieldAlert, adminOnly: true },
   { label: "Configurações", href: "/settings", icon: Settings },

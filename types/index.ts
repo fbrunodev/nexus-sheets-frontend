@@ -83,6 +83,7 @@ export interface DashboardData {
 
 export interface Operator {
   id: string;
+  name: string | null;
   email: string;
   role: string;
   is_active: boolean;

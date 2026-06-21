@@ -10,6 +10,7 @@ export default function OperatorsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,20 +31,27 @@ export default function OperatorsPage() {
   }
 
   async function handleCreate() {
-    if (!newEmail.trim() || !newPassword.trim()) return;
+    if (!newName.trim() || !newEmail.trim() || !newPassword.trim()) return;
     setCreating(true);
     setError("");
     try {
       const { data } = await api.post("/operators/", {
+        name: newName,
         email: newEmail,
         password: newPassword,
       });
       setOperators((prev) => [data, ...prev]);
       setShowModal(false);
+      setNewName("");
       setNewEmail("");
       setNewPassword("");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erro ao criar operador.");
+      const detail = err.response?.data?.detail;
+      setError(
+        Array.isArray(detail)
+          ? detail.map((e: any) => String(e.msg || e)).join(", ")
+          : String(detail || "Erro ao criar operador.")
+      );
     } finally {
       setCreating(false);
     }
@@ -112,9 +120,12 @@ export default function OperatorsPage() {
                   <td style={{ padding: "14px 20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "600", color: "#3b82f6", flexShrink: 0 }}>
-                        {op.email[0].toUpperCase()}
+                        {(op.name || op.email)[0].toUpperCase()}
                       </div>
-                      <span style={{ fontSize: "13px", fontWeight: "500" }}>{op.email}</span>
+                      <div>
+                        {op.name && <div style={{ fontSize: "13px", fontWeight: "500" }}>{op.name}</div>}
+                        <div style={{ fontSize: "12px", color: "#6060a0" }}>{op.email}</div>
+                      </div>
                     </div>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
@@ -153,12 +164,22 @@ export default function OperatorsPage() {
             <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "24px" }}>Novo Operador</h2>
 
             <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: "500", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Nome</label>
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Nome do operador"
+                autoFocus
+                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", fontFamily: "Inter, sans-serif" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
               <label style={{ display: "block", fontSize: "11px", fontWeight: "500", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Email</label>
               <input
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="operador@email.com"
-                autoFocus
                 style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -189,7 +210,7 @@ export default function OperatorsPage() {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={creating || !newEmail.trim() || !newPassword.trim()}
+                disabled={creating || !newName.trim() || !newEmail.trim() || !newPassword.trim()}
                 style={{ flex: 1, padding: "11px", borderRadius: "10px", background: creating ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "14px", fontWeight: "600", cursor: creating ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
               >
                 {creating ? "Criando..." : "Criar"}
