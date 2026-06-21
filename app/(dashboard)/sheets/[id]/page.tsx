@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { registerPushSubscription } from "@/lib/push";
+// import { registerPushSubscription } from "@/lib/push";
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -20,9 +20,7 @@ export default function SheetPage() {
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
-  useEffect(() => {
-    registerPushSubscription().catch((err) => console.error("Push registration error:", err));
-  }, []);
+  // useEffect(() => { registerPushSubscription().catch((err) => console.error("Push registration error:", err)); }, []);
 
   async function fetchSheet() {
     try {
@@ -96,7 +94,10 @@ export default function SheetPage() {
       const result = totalR - totalD + totalC + (data.salary || 0);
       setFinishModal({ visible: true, name: data.name, result });
       setTimeout(() => setFinishModal({ visible: false, name: "", result: 0 }), 3000);
-    } catch (err) { console.error(err); }
+    } catch (err: any) {
+      console.error("finishSheet error:", err);
+      alert(err?.response?.data?.detail || err?.message || "Erro ao finalizar planilha");
+    }
   }
 
   function fmt(value: number) {
