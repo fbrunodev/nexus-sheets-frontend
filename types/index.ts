@@ -42,6 +42,7 @@ export interface Sheet {
   name: string;
   owner_id: string;
   operator_id: string | null;
+  platform_id: string | null;
   status: SheetStatus;
   salary: number;
   goal: number;

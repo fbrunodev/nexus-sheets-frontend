@@ -32,7 +32,6 @@ export default function SheetsPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [newName, setNewName] = useState("");
   const [newLines, setNewLines] = useState(10);
   const [newGoal, setNewGoal] = useState(0);
   const [activeStatus, setActiveStatus] = useState("all");
@@ -48,6 +47,7 @@ export default function SheetsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [createError, setCreateError] = useState("");
   const LIMIT = 20;
 
 
@@ -119,9 +119,9 @@ export default function SheetsPage() {
 
   async function handleCreate() {
     if (!selectedPlatform) return;
+    setCreateError("");
     setCreating(true);
     try {
-      // Encontra a plataforma escolhida para usar o nome dela
       const platform = platforms.find((p) => p.id === selectedPlatform);
 
       const payload: any = {
@@ -133,6 +133,7 @@ export default function SheetsPage() {
       if (pasteMode) {
         const deposits = parseDeposits(pasteText);
         if (deposits.length === 0) {
+          setCreateError("Nenhum depósito válido encontrado. Verifique o formato colado.");
           setCreating(false);
           return;
         }
@@ -140,7 +141,6 @@ export default function SheetsPage() {
       } else {
         payload.initial_lines = newLines;
       }
-
 
       const { data } = await api.post("/sheets/", payload);
       setSheets((prev) => [data, ...prev]);
@@ -151,9 +151,11 @@ export default function SheetsPage() {
       setNewGoal(0);
       setPasteText("");
       setPasteMode(false);
+      setCreateError("");
       router.push(`/sheets/${data.id}`);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail ?? "Erro ao criar planilha. Tente novamente.";
+      setCreateError(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setCreating(false);
     }
@@ -195,7 +197,7 @@ export default function SheetsPage() {
         line
           .replace(/R\$/g, "")   // remove R$
           .replace(/\./g, "")    // remove separador de milhar
-          .replace(",", ".")     // vírgula decimal vira ponto
+          .replace(/,/g, ".")    // vírgula decimal vira ponto
           .trim()
       )
       .filter((line) => line !== "")
@@ -421,7 +423,7 @@ export default function SheetsPage() {
       {showModal && (
         <div
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
-          onClick={() => setShowModal(false)}
+          onClick={() => { setShowModal(false); setCreateError(""); }}
         >
           <div
             style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "380px" }}
@@ -472,9 +474,14 @@ export default function SheetsPage() {
               </div>
             )}
 
+            {createError && (
+              <p style={{ fontSize: "12px", color: "#f87171", marginBottom: "12px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "8px 12px" }}>
+                {createError}
+              </p>
+            )}
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancelar</button>
-               <button onClick={handleCreate} disabled={creating || !selectedPlatform} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || !selectedPlatform ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || !selectedPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
+              <button onClick={() => { setShowModal(false); setCreateError(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancelar</button>
+              <button onClick={handleCreate} disabled={creating || !selectedPlatform} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || !selectedPlatform ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || !selectedPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
                 {creating ? "Criando..." : "Criar"}
               </button>
             </div>

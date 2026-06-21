@@ -187,7 +187,7 @@ export default function AdminPage() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "keys" | "users")}
+              onClick={() => setActiveTab(tab.id as "keys" | "users" | "platforms")}
               style={{
                 display: "flex",
                 alignItems: "center",

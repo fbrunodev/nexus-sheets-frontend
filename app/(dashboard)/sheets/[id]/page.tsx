@@ -123,7 +123,6 @@ export default function SheetPage() {
   const finalResult    = totalReceived - totalDeposited + totalChest + sheet.salary;
   const filled         = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
   const isFinished     = sheet.status === "FINISHED";
-  const goalProgress   = sheet.goal > 0 ? Math.min((filled / sheet.goal) * 100, 100) : 0;
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
@@ -311,7 +310,7 @@ export default function SheetPage() {
                 <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input
-                    ref={(el) => { inputRefs.current[`${line.id}-${field}-desktop`] = el; }}
+                    ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                     type="number"
                     defaultValue={(line as any)[field] || ""}
                     disabled={isFinished}
