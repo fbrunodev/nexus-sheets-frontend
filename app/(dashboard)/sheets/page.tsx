@@ -60,9 +60,8 @@ export default function SheetsPage() {
     setFiltered(result);
   }, [sheets, activeStatus, search]);
 
- useEffect(() => {
-    fetchSheets();
-    fetchStats();
+  useEffect(() => {
+    Promise.all([fetchSheets(), fetchStats()]);
   }, []);
 
   async function fetchSheets() {

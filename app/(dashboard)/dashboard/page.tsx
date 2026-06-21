@@ -47,7 +47,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState("all");
 
   useEffect(() => {
-    fetchRecentSheets().finally(() => setLoading(false));
+    Promise.all([fetchRecentSheets(), fetchStats()]).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
