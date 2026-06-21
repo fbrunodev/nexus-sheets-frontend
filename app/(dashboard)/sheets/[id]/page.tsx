@@ -305,7 +305,13 @@ export default function SheetPage() {
                         inputMode="decimal"
                         defaultValue={(line as any)[field] || ""}
                         disabled={isFinished}
-                        onBlur={(e) => updateLine(line.id, field, Number(e.target.value))}
+                        onBlur={(e) => {
+                          const newValue = Number(e.target.value);
+                          const currentValue = (line as any)[field] || 0;
+                          if (newValue !== currentValue) {
+                            updateLine(line.id, field, newValue);
+                          }
+                        }}
                         onKeyDown={(e) => handleKeyDown(e, index, field)}
                         placeholder="0"
                         style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "Inter, sans-serif" }}
@@ -330,7 +336,13 @@ export default function SheetPage() {
                     type="number"
                     defaultValue={(line as any)[field] || ""}
                     disabled={isFinished}
-                    onBlur={(e) => updateLine(line.id, field, Number(e.target.value))}
+                    onBlur={(e) => {
+                      const newValue = Number(e.target.value);
+                      const currentValue = (line as any)[field] || 0;
+                      if (newValue !== currentValue) {
+                        updateLine(line.id, field, newValue);
+                      }
+                    }}
                     onKeyDown={(e) => handleKeyDown(e, index, field)}
                     placeholder="0"
                     style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "Inter, sans-serif" }}
