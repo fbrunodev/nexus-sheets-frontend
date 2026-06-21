@@ -184,13 +184,12 @@ export default function SheetPage() {
         </div>
       </div>
 
-      {/* ── Cards de totais (grid-6) ── */}
-      <div className="grid-6" style={{ marginBottom: "20px" }}>
+      {/* ── Cards de totais (grid-5) ── */}
+      <div className="grid-5" style={{ marginBottom: "20px" }}>
         {[
           { label: "Total Depositado", value: totalDeposited,  activeColor: "#a78bfa" },
           { label: "Total Recebido",   value: totalReceived,   activeColor: "#22d3a5" },
           { label: "Total em Baús",    value: totalChest,      activeColor: "#fbbf24" },
-          { label: "Total em Bônus",   value: totalBonus,      activeColor: "#a78bfa" },
           { label: "Salário",          isSalary: true },
           { label: "Média",            value: averageDeposit,  activeColor: "#a78bfa" },
           { label: "Resultado Final",  value: finalResult,     activeColor: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
