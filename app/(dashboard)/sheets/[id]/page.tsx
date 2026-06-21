@@ -4,9 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
-import { ArrowLeft, Check, Plus, Trash2, X } from "lucide-react";
-
-
+import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -15,6 +13,8 @@ export default function SheetPage() {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [editingSalary, setEditingSalary] = useState(false);
+  const [salaryValue, setSalaryValue] = useState(0);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
@@ -23,6 +23,7 @@ export default function SheetPage() {
     try {
       const { data } = await api.get(`/sheets/${id}`);
       setSheet(data);
+      setSalaryValue(data.salary || 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -103,8 +104,8 @@ export default function SheetPage() {
     }
     switch (e.key) {
       case "ArrowDown": e.preventDefault(); focusCell(rowIndex + 1, field); break;
-      case "ArrowUp": e.preventDefault(); focusCell(rowIndex - 1, field); break;
-      case "Enter": e.preventDefault(); focusCell(rowIndex + 1, field); break;
+      case "ArrowUp":   e.preventDefault(); focusCell(rowIndex - 1, field); break;
+      case "Enter":     e.preventDefault(); focusCell(rowIndex + 1, field); break;
       case "Tab":
         e.preventDefault();
         if (colIndex < fields.length - 1) focusCell(rowIndex, fields[colIndex + 1]);
@@ -117,62 +118,49 @@ export default function SheetPage() {
   if (!sheet) return <p style={{ color: "#f87171" }}>Planilha não encontrada.</p>;
 
   const totalDeposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
-  const totalReceived = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
-  const totalChest = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
-  const finalResult = totalReceived - totalDeposited + totalChest + sheet.salary;
-  const filled = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
-  const isFinished = sheet.status === "FINISHED";
-  const goalProgress = sheet.goal > 0 ? Math.min((filled / sheet.goal) * 100, 100) : 0;
-  const depositLines = sheet.lines.filter((l) => l.deposit > 0).length;
+  const totalReceived  = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
+  const totalChest     = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
+  const finalResult    = totalReceived - totalDeposited + totalChest + sheet.salary;
+  const filled         = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
+  const isFinished     = sheet.status === "FINISHED";
+  const goalProgress   = sheet.goal > 0 ? Math.min((filled / sheet.goal) * 100, 100) : 0;
+  const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
-  const inputStyle = {
-    background: "#080810",
-    border: "1px solid #1a1a2e",
-    borderRadius: "8px",
-    padding: "9px 12px",
-    fontSize: "13px",
-    color: "#fff",
-    width: "100%",
-    outline: "none",
-    fontFamily: "Inter, sans-serif",
-  };
+  // Cor condicional: só aparece quando o valor for diferente de zero
+  function metricColor(value: number, activeColor: string) {
+    return value !== 0 ? activeColor : "#3a3a5c";
+  }
+
+  const COLS = "44px 1fr 1fr 1fr 120px 36px";
 
   return (
     <div>
-      {/* Barra sticky */}
-       <div className="sheet-topbar" style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "14px 20px", marginBottom: "20px", position: "sticky", top: "0", zIndex: 20 }}>
+      {/* ── Topbar sticky ── */}
+      <div
+        className="sheet-topbar"
+        style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "12px 20px", marginBottom: "10px", position: "sticky", top: "0", zIndex: 20 }}
+      >
+        {/* Esquerda: voltar + nome + data */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button onClick={() => router.push("/sheets")} style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center" }}>
             <ArrowLeft size={18} />
           </button>
           <div>
-            <p style={{ fontSize: "16px", fontWeight: "700", textTransform: "uppercase" }}>{sheet.name}</p>
+            <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase" }}>{sheet.name}</p>
             <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
           </div>
         </div>
-         <div className="sheet-topbar-metrics">
-          <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em" }}>Saldo</p>
-            <p style={{ fontSize: "15px", fontWeight: "700", color: finalResult >= 0 ? "#3b82f6" : "#f87171" }}>{fmt(finalResult)}</p>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em" }}>Operações</p>
-            <p style={{ fontSize: "15px", fontWeight: "700" }}>{filled}</p>
-          </div>
-          {sheet.goal > 0 && (
-            <div>
-              <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta · {filled}/{sheet.goal}</p>
-              <div style={{ width: "90px", height: "3px", background: "#1a1a2e", borderRadius: "2px", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${goalProgress}%`, background: "#3b82f6" }} />
-              </div>
-            </div>
-          )}
+
+        {/* Direita: saved + finalizar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           {lastSaved && (
             <span style={{ fontSize: "11px", color: "#22d3a5", display: "flex", alignItems: "center", gap: "4px" }}>
               <Check size={12} /> {lastSaved}
             </span>
           )}
+
+          {/* Finalizar / Concluída */}
           {!isFinished ? (
             <button onClick={finishSheet} style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "#3b82f6", color: "#fff", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
               Finalizar
@@ -185,36 +173,62 @@ export default function SheetPage() {
         </div>
       </div>
 
-      {/* Salário */}
-      <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "18px 20px", marginBottom: "16px" }}>
-        <p style={{ fontSize: "11px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "14px" }}>Salário</p>
-        <div style={{ maxWidth: "200px" }}>
-          <label style={{ display: "block", fontSize: "10px", color: "#3b82f6", marginBottom: "6px", fontWeight: "500", textTransform: "uppercase", letterSpacing: "0.06em" }}>Salário</label>
-          <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 12px" }}>
-            <span style={{ fontSize: "12px", color: "#3a3a5c", marginRight: "6px" }}>R$</span>
-            <input type="number" defaultValue={sheet.salary || 0} disabled={isFinished} onBlur={(e) => updateCost("salary", Number(e.target.value))} style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "Inter, sans-serif" }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Cards de totais */}
+      {/* ── Cards de totais (grid-6) ── */}
       <div className="grid-6" style={{ marginBottom: "20px" }}>
         {[
-          { label: "Total Depositado", value: totalDeposited, color: "#f87171" },
-          { label: "Total Recebido", value: totalReceived, color: "#22d3a5" },
-          { label: "Total em Baús", value: totalChest, color: "#fbbf24" },
-          { label: "Salário", value: sheet.salary, color: "#3b82f6" },
-          { label: "Média", value: averageDeposit, color: "#a78bfa" },
-          { label: "Resultado Final", value: finalResult, color: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
-        ].map((item) => (
-          <div key={item.label} style={{ background: item.highlight ? "rgba(59,130,246,0.06)" : "#0f0f1a", border: `1px solid ${item.highlight ? "rgba(59,130,246,0.25)" : "#1a1a2e"}`, borderRadius: "14px", padding: "16px" }}>
-            <p style={{ fontSize: "10px", color: "#6060a0", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</p>
-            <p style={{ fontSize: "20px", fontWeight: "700", color: item.color }}>{item.value >= 0 ? "+" : ""}{fmt(item.value)}</p>
-          </div>
-        ))}
+          { label: "Total Depositado", value: totalDeposited,  activeColor: "#a78bfa" },
+          { label: "Total Recebido",   value: totalReceived,   activeColor: "#22d3a5" },
+          { label: "Total em Baús",    value: totalChest,      activeColor: "#fbbf24" },
+          { label: "Salário",          isSalary: true },
+          { label: "Média",            value: averageDeposit,  activeColor: "#a78bfa" },
+          { label: "Resultado Final",  value: finalResult,     activeColor: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
+        ].map((item) => {
+          if (item.isSalary) {
+            return (
+              <div key="salary" style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "12px", padding: "16px", position: "relative" }}>
+                <p style={{ fontSize: "9px", color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Salário</p>
+                {editingSalary ? (
+                  <input
+                    type="number"
+                    autoFocus
+                    value={salaryValue}
+                    onChange={(e) => setSalaryValue(Number(e.target.value))}
+                    onBlur={() => { updateCost("salary", salaryValue); setEditingSalary(false); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    style={{ background: "transparent", border: "none", borderBottom: "1px solid #3b82f6", color: "#fff", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "2px 0", fontFamily: "Inter, sans-serif" }}
+                  />
+                ) : (
+                  <p
+                    onClick={() => { if (!isFinished) setEditingSalary(true); }}
+                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "#3b82f6" : "#3a3a5c", cursor: isFinished ? "default" : "pointer" }}
+                  >
+                    {salaryValue > 0 ? "+" : ""}{fmt(salaryValue)}
+                  </p>
+                )}
+                {!isFinished && <Pencil size={11} color="#3b82f6" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />}
+              </div>
+            );
+          }
+          const color = metricColor(item.value!, item.activeColor!);
+          const showPlus = item.value! > 0;
+          const border = item.highlight
+            ? `2px solid ${finalResult >= 0 ? "rgba(34,211,165,0.4)" : "rgba(248,113,113,0.4)"}`
+            : "1px solid #1a1a2e";
+          return (
+            <div
+              key={item.label}
+              style={{ background: item.highlight ? "rgba(59,130,246,0.06)" : "#0f0f1a", border, borderRadius: "14px", padding: "16px" }}
+            >
+              <p style={{ fontSize: "10px", color: "#6060a0", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</p>
+              <p style={{ fontSize: item.highlight ? "26px" : "20px", fontWeight: "700", color }}>
+                {showPlus ? "+" : ""}{fmt(item.value!)}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Toolbar */}
+      {/* ── Toolbar ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "14px", fontWeight: "600" }}>Operações</span>
@@ -232,17 +246,17 @@ export default function SheetPage() {
         )}
       </div>
 
-      {/* Tabela */}
+      {/* ── Tabela ── */}
       <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", overflow: "hidden" }}>
-        <div className="table-header-desktop" style={{ gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #1a1a2e" }}>
+        {/* Cabeçalho desktop */}
+        <div className="table-header-desktop" style={{ gridTemplateColumns: COLS, gap: "16px", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid #1a1a2e" }}>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "center" }}>#</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>DEPÓSITO</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>SAQUE</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>BAÚ</span>
           <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
-          <span></span>
+          <span />
         </div>
-        
 
         {sheet.lines.map((line, index) => (
           <div key={line.id}>
@@ -263,9 +277,9 @@ export default function SheetPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {[
-                  { field: "deposit", label: "Depósito" },
+                  { field: "deposit",    label: "Depósito" },
                   { field: "withdrawal", label: "Saque" },
-                  { field: "chest", label: "Baú" },
+                  { field: "chest",      label: "Baú" },
                 ].map(({ field, label }) => (
                   <div key={field}>
                     <label style={{ display: "block", fontSize: "9px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</label>
@@ -291,10 +305,10 @@ export default function SheetPage() {
             </div>
 
             {/* ===== Layout DESKTOP: linha em grid ===== */}
-            <div className="row-desktop" style={{ gridTemplateColumns: "50px 1fr 1fr 1fr 140px 40px", gap: "16px", alignItems: "center", padding: "8px 20px", borderBottom: "1px solid #141422" }}>
+            <div className="row-desktop" style={{ gridTemplateColumns: COLS, gap: "16px", alignItems: "center", padding: "5px 16px", borderBottom: "1px solid #141422" }}>
               <span style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center" }}>{line.line_number}</span>
               {["deposit", "withdrawal", "chest"].map((field) => (
-                <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 12px", maxWidth: "180px" }}>
+                <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input
                     ref={(el) => { inputRefs.current[`${line.id}-${field}-desktop`] = el; }}
@@ -304,7 +318,7 @@ export default function SheetPage() {
                     onBlur={(e) => updateLine(line.id, field, Number(e.target.value))}
                     onKeyDown={(e) => handleKeyDown(e, index, field)}
                     placeholder="0"
-                    style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "8px 0", fontFamily: "Inter, sans-serif" }}
+                    style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "Inter, sans-serif" }}
                     onFocus={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#3b82f6"; e.target.select(); }}
                     onBlurCapture={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#1a1a2e"; }}
                   />
