@@ -20,7 +20,9 @@ export default function SheetPage() {
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
-  useEffect(() => { registerPushSubscription(); }, []);
+  useEffect(() => {
+    registerPushSubscription().catch((err) => console.error("Push registration error:", err));
+  }, []);
 
   async function fetchSheet() {
     try {
