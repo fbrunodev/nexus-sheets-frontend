@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import Sidebar from "@/components/layout/Sidebar";
 import { Bell, ChevronDown, Menu } from "lucide-react";
 import MobileNav from "@/components/layout/MobileNav";
+import { registerPushSubscription } from "@/lib/push";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -37,6 +38,10 @@ export default function DashboardLayout({
     const now = new Date();
     setCurrentDate(now.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }));
     setCurrentDateShort(now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }));
+  }, []);
+
+  useEffect(() => {
+    registerPushSubscription().catch(console.error);
   }, []);
 
   if (!hasHydrated) {
