@@ -299,6 +299,7 @@ export default function SheetPage() {
                     <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 8px" }}>
                       <span style={{ fontSize: "10px", color: "#3a3a5c", marginRight: "3px" }}>R$</span>
                       <input
+                        key={`${line.id}-${field}-${(line as any)[field]}`}
                         ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                         type="number"
                         inputMode="decimal"
@@ -324,6 +325,7 @@ export default function SheetPage() {
                 <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input
+                    key={`${line.id}-${field}-${(line as any)[field]}`}
                     ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                     type="number"
                     defaultValue={(line as any)[field] || ""}
