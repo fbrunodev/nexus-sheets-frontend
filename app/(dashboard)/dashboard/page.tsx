@@ -1,9 +1,3 @@
-// O que muda:
-// 1. Consome /sheets/stats em vez de /dashboard/ (que não existe)
-// 2. Remove pieChart de custos e todos os campos cost_*
-// 3. Remove "Depositado" e "Recebido" dos cards — só mostra Resultado e Planilhas
-// 4. Tabela de planilhas recentes: calcula total sem cost_*
-// 5. Gráfico mensal simplificado: só "Resultado" por planilha (sem deposited/received)
 
 "use client";
 
@@ -144,7 +138,7 @@ export default function DashboardPage() {
           <div className="grid-4" style={{ marginBottom: "16px" }}>
             {[
               {
-                label: "Resultado Total",
+                label: "Lucro Total",
                 value: fmt(grandTotal),
                 color: isPositive ? "#22d3a5" : "#f87171",
                 icon: isPositive
@@ -204,7 +198,7 @@ export default function DashboardPage() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Planilha</p>
+              <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
               <span style={{ fontSize: "11px", color: "#6060a0" }}>Últimas {sheets.length}</span>
             </div>
             {chartData.length === 0 ? (
