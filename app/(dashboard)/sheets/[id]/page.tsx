@@ -44,9 +44,14 @@ export default function SheetPage() {
         deposit: field === "deposit" ? value : line.deposit,
         withdrawal: field === "withdrawal" ? value : line.withdrawal,
         chest: field === "chest" ? value : line.chest,
+        bonus: field === "bonus" ? value : line.bonus,
       };
       const { data } = await api.patch(`/sheets/${id}/lines/${lineId}`, updated);
       setSheet((prev) => prev ? { ...prev, lines: prev.lines.map((l) => l.id === lineId ? data : l) } : prev);
+      const refKey = `${lineId}-${field}`;
+      if (inputRefs.current[refKey]) {
+        inputRefs.current[refKey]!.value = String(data[field as keyof typeof data] ?? 0);
+      }
       setLastSaved(new Date().toLocaleTimeString("pt-BR"));
     } catch (err) {
       console.error(err);
@@ -299,7 +304,6 @@ export default function SheetPage() {
                     <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 8px" }}>
                       <span style={{ fontSize: "10px", color: "#3a3a5c", marginRight: "3px" }}>R$</span>
                       <input
-                        key={`${line.id}-${field}-${(line as any)[field]}`}
                         ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                         type="number"
                         inputMode="decimal"
@@ -331,7 +335,6 @@ export default function SheetPage() {
                 <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
                   <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
                   <input
-                    key={`${line.id}-${field}-${(line as any)[field]}`}
                     ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                     type="number"
                     defaultValue={(line as any)[field] || ""}
