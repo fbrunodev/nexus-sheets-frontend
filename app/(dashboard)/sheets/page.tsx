@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
@@ -28,7 +28,6 @@ export default function SheetsPage() {
   const router = useRouter();
 
   const [sheets, setSheets] = useState<Sheet[]>([]);
-  const [filtered, setFiltered] = useState<Sheet[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -53,21 +52,31 @@ export default function SheetsPage() {
 
 
 
-  useEffect(() => {
-    let result = sheets;
-    if (activeStatus !== "all") result = result.filter((s) => s.status === activeStatus);
-    if (search.trim()) result = result.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
-    setFiltered(result);
-  }, [sheets, activeStatus, search]);
+  const searchMounted = useRef(false);
 
   useEffect(() => {
-    Promise.all([fetchSheets(), fetchStats()]);
-  }, []);
+    fetchSheets();
+    fetchStats();
+  }, [activeStatus]);
+
+  useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
+    const timeout = setTimeout(() => {
+      fetchSheets();
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   async function fetchSheets() {
     setLoading(true);
     try {
-      const { data } = await api.get(`/sheets/?limit=${LIMIT}&offset=0`);
+      const statusParam = activeStatus !== "all" ? activeStatus : "";
+      const { data } = await api.get(
+        `/sheets/?limit=${LIMIT}&offset=0&status=${statusParam}&search=${encodeURIComponent(search)}`
+      );
       setSheets(data.items);
       setOffset(data.items.length);
       setHasMore(data.has_more);
@@ -81,7 +90,10 @@ export default function SheetsPage() {
   async function loadMore() {
     setLoadingMore(true);
     try {
-      const { data } = await api.get(`/sheets/?limit=${LIMIT}&offset=${offset}`);
+      const statusParam = activeStatus !== "all" ? activeStatus : "";
+      const { data } = await api.get(
+        `/sheets/?limit=${LIMIT}&offset=${offset}&status=${statusParam}&search=${encodeURIComponent(search)}`
+      );
       setSheets((prev) => [...prev, ...data.items]);
       setOffset((prev) => prev + data.items.length);
       setHasMore(data.has_more);
@@ -285,14 +297,14 @@ export default function SheetsPage() {
       {/* Cards */}
       {loading ? (
         <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
-      ) : filtered.length === 0 ? (
+      ) : sheets.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
           <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
           <p style={{ fontSize: "13px" }}>Nenhuma planilha encontrada</p>
         </div>
       ) : (
         <div className="grid-cards">
-          {filtered.map((sheet) => {
+          {sheets.map((sheet) => {
             const total = calcTotal(sheet);
             const status = statusConfig[sheet.status];
             const isPositive = total > 0;
@@ -394,8 +406,7 @@ export default function SheetsPage() {
         </div>
       )}
 
-      {/* Botão Carregar mais — só quando não há busca/filtro ativo */}
-      {!loading && hasMore && activeStatus === "all" && !search.trim() && (
+      {!loading && hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
           <button
             onClick={loadMore}
