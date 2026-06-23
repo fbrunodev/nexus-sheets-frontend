@@ -96,7 +96,8 @@ export default function SheetPage() {
       const totalR = data.lines.reduce((acc: number, l: any) => acc + l.withdrawal, 0);
       const totalD = data.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
       const totalC = data.lines.reduce((acc: number, l: any) => acc + l.chest, 0);
-      const result = totalR - totalD + totalC + (data.salary || 0);
+      const totalB = data.lines.reduce((acc: number, l: any) => acc + (l.bonus || 0), 0);
+      const result = totalR - totalD + totalC + totalB + (data.salary || 0);
       setFinishModal({ visible: true, name: data.name, result });
       setTimeout(() => setFinishModal({ visible: false, name: "", result: 0 }), 3000);
     } catch (err: any) {
