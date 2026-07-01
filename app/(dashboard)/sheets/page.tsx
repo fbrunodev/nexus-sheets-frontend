@@ -43,6 +43,8 @@ export default function SheetsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [operatorSheets, setOperatorSheets] = useState<any[]>([]);
+  const [operators, setOperators] = useState<any[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -55,7 +57,9 @@ export default function SheetsPage() {
   const searchMounted = useRef(false);
 
   useEffect(() => {
-    fetchSheets();
+    if (activeStatus !== "operators") {
+      fetchSheets();
+    }
     fetchStats();
   }, [activeStatus]);
 
@@ -116,7 +120,18 @@ export default function SheetsPage() {
 
   useEffect(() => {
     fetchPlatforms();
+    fetchOperatorSheets();
   }, []);
+
+  async function fetchOperatorSheets() {
+    try {
+      const { data } = await api.get("/sheets/operator-sheets");
+      setOperatorSheets(data.items);
+      setOperators(data.operators);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   async function fetchPlatforms() {
     try {
@@ -228,6 +243,7 @@ export default function SheetsPage() {
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
     { label: "Iniciada", value: "IN_PROGRESS", count: inProgress },
     { label: "Finalizada", value: "FINISHED", count: finished },
+    ...(operators.length > 0 ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }] : []),
   ];
 
   return (
@@ -296,7 +312,77 @@ export default function SheetsPage() {
       </div>
 
       {/* Cards */}
-      {loading ? (
+      {activeStatus === "operators" ? (
+        operatorSheets.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
+            <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
+            <p style={{ fontSize: "13px" }}>Nenhuma planilha de operador encontrada</p>
+          </div>
+        ) : (
+          <div className="grid-cards">
+            {operatorSheets.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
+              const total = calcTotal(sheet);
+              const st = statusConfig[sheet.status];
+              const isPositive = total > 0;
+              const isNeutral = total === 0;
+              const deposited = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
+              const roi = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
+              const roiNum = parseFloat(roi);
+
+              return (
+                <div
+                  key={sheet.id}
+                  onClick={() => router.push(`/sheets/${sheet.id}`)}
+                  style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a2e"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: isPositive ? "#22d3a5" : isNeutral ? "#3b82f6" : "#f87171", borderRadius: "12px 12px 0 0" }} />
+
+                  {/* Badge do operador */}
+                  <div style={{ display: "inline-flex", alignItems: "center", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600", color: "#a78bfa", marginBottom: "10px" }}>
+                    {operator_name}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
+                    <div style={{ flex: 1, marginRight: "8px" }}>
+                      <p style={{ fontSize: "14px", fontWeight: "600", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
+                      <p style={{ fontSize: "11px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+                    </div>
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px", background: st.bg, color: st.color, borderRadius: "20px", padding: "3px 9px", fontSize: "10px", fontWeight: "600", flexShrink: 0 }}>
+                      <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: st.dot }} />
+                      {st.label}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.goal}</p>
+                    </div>
+                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "#22d3a5" : roiNum < 0 ? "#f87171" : "#6060a0" }}>
+                        {roiNum > 0 ? "+" : ""}{roi}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #1a1a2e" }}>
+                    <span style={{ fontSize: "10px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      {isPositive ? <TrendingUp size={13} color="#22d3a5" /> : isNeutral ? <Minus size={13} color="#6060a0" /> : <TrendingDown size={13} color="#f87171" />}
+                      <span style={{ fontSize: "16px", fontWeight: "700", color: isPositive ? "#22d3a5" : isNeutral ? "#6060a0" : "#f87171" }}>
+                        {isPositive ? "+" : ""}{fmt(total)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : loading ? (
         <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
       ) : sheets.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
@@ -376,7 +462,7 @@ export default function SheetsPage() {
                     </div>
                   </>
                 )}
-      
+
                 {/* Métricas */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                   <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
