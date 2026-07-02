@@ -5,11 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 // import { registerPushSubscription } from "@/lib/push";
 
 export default function SheetPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,9 +141,10 @@ export default function SheetPage() {
   const totalReceived  = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
   const totalChest     = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
   const totalBonus     = sheet.lines.reduce((acc, l) => acc + (l.bonus || 0), 0);
-  const finalResult    = totalReceived - totalDeposited + totalChest + totalBonus + sheet.salary;
+  const finalResult    = totalReceived - totalDeposited + totalChest + totalBonus + (sheet.cooperation_type !== "BAU" ? sheet.salary : 0);
   const filled         = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
   const isFinished     = sheet.status === "FINISHED";
+  const isReadOnly     = sheet.owner_id !== user?.id;
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
@@ -164,8 +167,23 @@ export default function SheetPage() {
             <ArrowLeft size={18} />
           </button>
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
-            <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+              <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
+              <span style={{ flexShrink: 0, fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", background: sheet.cooperation_type === "META" ? "rgba(59,130,246,0.12)" : sheet.cooperation_type === "BAU" ? "rgba(251,191,36,0.12)" : "rgba(34,211,165,0.12)", color: sheet.cooperation_type === "META" ? "#3b82f6" : sheet.cooperation_type === "BAU" ? "#fbbf24" : "#22d3a5", border: `1px solid ${sheet.cooperation_type === "META" ? "rgba(59,130,246,0.25)" : sheet.cooperation_type === "BAU" ? "rgba(251,191,36,0.25)" : "rgba(34,211,165,0.25)"}` }}>
+                {sheet.cooperation_type}
+              </span>
+              {isReadOnly && (
+                <span style={{ flexShrink: 0, background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "6px", padding: "2px 8px", fontSize: "10px", fontWeight: "600" }}>
+                  Somente leitura
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+              {sheet.cooperation_type === "META" && sheet.goal > 0 && (
+                <p style={{ fontSize: "10px", color: "#6060a0" }}>Meta: <span style={{ color: "#fff", fontWeight: "600" }}>{sheet.goal}</span></p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -178,26 +196,27 @@ export default function SheetPage() {
           )}
 
           {/* Finalizar / Concluída */}
-          {!isFinished ? (
+          {!isFinished && !isReadOnly ? (
             <button onClick={finishSheet} style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "#3b82f6", color: "#fff", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
               Finalizar
             </button>
-          ) : (
+          ) : isFinished ? (
             <span style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "rgba(34,211,165,0.1)", color: "#22d3a5", border: "1px solid rgba(34,211,165,0.25)" }}>
               ✓ Concluída
             </span>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* ── Cards de totais (grid-6) ── */}
-      <div className="grid-6" style={{ marginBottom: "20px" }}>
+      <div className={sheet.cooperation_type === "BAU" ? "grid-5" : "grid-6"} style={{ marginBottom: "20px" }}>
         {[
           { label: "Total Depositado", value: totalDeposited,  activeColor: "#a78bfa" },
           { label: "Total Recebido",   value: totalReceived,   activeColor: "#22d3a5" },
           { label: "Total em Baús",    value: totalChest,      activeColor: "#fbbf24" },
-          { label: "Salário",          isSalary: true },
-          { label: "Média",            value: averageDeposit,  activeColor: "#a78bfa" },
+          ...(sheet.cooperation_type === "BAU" ? [{ label: "Total em Bônus", value: totalBonus, activeColor: "#f97316" }] : []),
+          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Salário", isSalary: true }] : []),
+          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Média", value: averageDeposit, activeColor: "#a78bfa" }] : []),
           { label: "Resultado Final",  value: finalResult,     activeColor: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
         ].map((item) => {
           if (item.isSalary) {
@@ -216,13 +235,13 @@ export default function SheetPage() {
                   />
                 ) : (
                   <p
-                    onClick={() => { if (!isFinished) setEditingSalary(true); }}
-                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "#3b82f6" : "#3a3a5c", cursor: isFinished ? "default" : "pointer" }}
+                    onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
+                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "#3b82f6" : "#3a3a5c", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
                   >
                     {salaryValue > 0 ? "+" : ""}{fmt(salaryValue)}
                   </p>
                 )}
-                {!isFinished && <Pencil size={11} color="#3b82f6" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />}
+                {!isFinished && !isReadOnly && <Pencil size={11} color="#3b82f6" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />}
               </div>
             );
           }
@@ -245,13 +264,28 @@ export default function SheetPage() {
         })}
       </div>
 
+      {sheet.cooperation_type === "META" && sheet.goal > 0 && (
+        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "16px 20px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+            <span style={{ fontSize: "12px", fontWeight: "600", color: "#fff" }}>Progresso da Meta</span>
+            <span style={{ fontSize: "12px", color: "#6060a0" }}>{filled}/{sheet.goal} operações</span>
+          </div>
+          <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "8px", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${Math.min((filled / sheet.goal) * 100, 100)}%`, background: filled >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px", transition: "width 0.3s ease" }} />
+          </div>
+          {filled >= sheet.goal && (
+            <p style={{ fontSize: "11px", color: "#22d3a5", marginTop: "8px", fontWeight: "600" }}>✓ Meta atingida!</p>
+          )}
+        </div>
+      )}
+
       {/* ── Toolbar ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "14px", fontWeight: "600" }}>Operações</span>
           <span style={{ fontSize: "9px", background: "#1a1a2e", color: "#6060a0", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace" }}>Enter / Setas</span>
         </div>
-        {!isFinished && (
+        {!isFinished && !isReadOnly && (
           <div style={{ display: "flex", gap: "8px" }}>
             <button onClick={addLines} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "rgba(59,130,246,0.12)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
               <Plus size={14} /> 5 linhas
@@ -286,7 +320,7 @@ export default function SheetPage() {
                   <span style={{ fontSize: "15px", fontWeight: "700", color: line.result > 0 ? "#22d3a5" : line.result < 0 ? "#f87171" : "#3a3a5c" }}>
                     {line.result > 0 ? "+" : ""}{fmt(line.result)}
                   </span>
-                  {!isFinished && (
+                  {!isFinished && !isReadOnly && (
                     <button onClick={() => removeLine(line.id)} style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}>
                       <X size={16} />
                     </button>
@@ -309,7 +343,7 @@ export default function SheetPage() {
                         type="number"
                         inputMode="decimal"
                         defaultValue={(line as any)[field] || ""}
-                        disabled={isFinished}
+                        disabled={isFinished || isReadOnly}
                         onBlur={(e) => {
                           const newValue = Number(e.target.value);
                           const currentValue = (line as any)[field] || 0;
@@ -339,7 +373,7 @@ export default function SheetPage() {
                     ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                     type="number"
                     defaultValue={(line as any)[field] || ""}
-                    disabled={isFinished}
+                    disabled={isFinished || isReadOnly}
                     onBlur={(e) => {
                       const newValue = Number(e.target.value);
                       const currentValue = (line as any)[field] || 0;
@@ -358,7 +392,7 @@ export default function SheetPage() {
               <span style={{ fontSize: "14px", fontWeight: "600", textAlign: "right", color: line.result > 0 ? "#22d3a5" : line.result < 0 ? "#f87171" : "#3a3a5c" }}>
                 {line.result > 0 ? "+" : ""}{fmt(line.result)}
               </span>
-              {!isFinished ? (
+              {!isFinished && !isReadOnly ? (
                 <button onClick={() => removeLine(line.id)} style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <X size={15} />
                 </button>

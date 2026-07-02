@@ -49,6 +49,7 @@ export default function SheetsPage() {
   const [deleting, setDeleting] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [createError, setCreateError] = useState("");
+  const [cooperationType, setCooperationType] = useState<"META" | "BAU" | "RECARGA">("META");
   const LIMIT = 20;
 
 
@@ -144,16 +145,17 @@ export default function SheetsPage() {
 
 
   async function handleCreate() {
-    if (!selectedPlatform) return;
+    if (cooperationType !== "BAU" && !selectedPlatform) return;
     setCreateError("");
     setCreating(true);
     try {
       const platform = platforms.find((p) => p.id === selectedPlatform);
 
       const payload: any = {
-        name: platform ? platform.name : "Sem nome",
-        goal: newGoal,
-        platform_id: selectedPlatform,
+        name: cooperationType === "BAU" ? "Baú" : (platform ? platform.name : "Sem nome"),
+        goal: cooperationType === "META" ? newGoal : 0,
+        platform_id: cooperationType === "BAU" ? null : selectedPlatform,
+        cooperation_type: cooperationType,
       };
 
       if (pasteMode) {
@@ -178,6 +180,7 @@ export default function SheetsPage() {
       setPasteText("");
       setPasteMode(false);
       setCreateError("");
+      setCooperationType("META");
       router.push(`/sheets/${data.id}`);
     } catch (err: any) {
       const msg = err?.response?.data?.detail ?? "Erro ao criar planilha. Tente novamente.";
@@ -356,10 +359,31 @@ export default function SheetsPage() {
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.goal}</p>
-                    </div>
+                    {sheet.cooperation_type === "META" ? (
+                      <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                        <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
+                        {sheet.goal > 0 ? (() => {
+                          const filledLines = sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length;
+                          return (
+                            <>
+                              <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                              <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px" }} />
+                              </div>
+                            </>
+                          );
+                        })() : (
+                          <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>—</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                        <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                          {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
+                        </p>
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length}</p>
+                      </div>
+                    )}
                     <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
                       <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
                       <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "#22d3a5" : roiNum < 0 ? "#f87171" : "#6060a0" }}>
@@ -465,10 +489,31 @@ export default function SheetsPage() {
 
                 {/* Métricas */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-                  <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                    <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.goal}</p>
-                  </div>
+                  {sheet.cooperation_type === "META" ? (
+                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
+                      {sheet.goal > 0 ? (() => {
+                        const filledLines = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
+                        return (
+                          <>
+                            <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                            <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px" }} />
+                            </div>
+                          </>
+                        );
+                      })() : (
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>—</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                        {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
+                      </p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length}</p>
+                    </div>
+                  )}
                   <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
                     <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
                     <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "#22d3a5" : roiNum < 0 ? "#f87171" : "#6060a0" }}>
@@ -520,7 +565,7 @@ export default function SheetsPage() {
       {showModal && (
         <div
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
-          onClick={() => { setShowModal(false); setCreateError(""); }}
+          onClick={() => { setShowModal(false); setCreateError(""); setCooperationType("META"); }}
         >
           <div
             style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "380px" }}
@@ -528,46 +573,85 @@ export default function SheetsPage() {
           >
             <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px" }}>Nova Planilha</h2>
 
+            {cooperationType !== "BAU" && (
+              <div style={{ marginBottom: "14px" }}>
+                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Plataforma</label>
+                <select
+                  value={selectedPlatform}
+                  onChange={(e) => setSelectedPlatform(e.target.value)}
+                  autoFocus
+                  style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: selectedPlatform ? "#fff" : "#6060a0", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", cursor: "pointer" }}
+                >
+                  <option value="" disabled>Selecione a plataforma</option>
+                  {platforms.map((p) => (
+                    <option key={p.id} value={p.id} style={{ color: "#fff" }}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div style={{ marginBottom: "14px" }}>
-              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Plataforma</label>
-              <select
-                value={selectedPlatform}
-                onChange={(e) => setSelectedPlatform(e.target.value)}
-                autoFocus
-                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: selectedPlatform ? "#fff" : "#6060a0", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", cursor: "pointer" }}
-              >
-                <option value="" disabled>Selecione a plataforma</option>
-                {platforms.map((p) => (
-                  <option key={p.id} value={p.id} style={{ color: "#fff" }}>{p.name}</option>
+              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Tipo de Cooperação</label>
+              <div style={{ display: "flex", gap: "4px", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "4px" }}>
+                {(["META", "BAU", "RECARGA"] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setCooperationType(type)}
+                    style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: cooperationType === type ? "rgba(59,130,246,0.15)" : "transparent", color: cooperationType === type ? "#3b82f6" : "#6060a0" }}
+                  >
+                    {type === "META" ? "Meta" : type === "BAU" ? "Baú" : "Recarga"}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Meta</label>
-              <input type="number" value={newGoal} onChange={(e) => setNewGoal(Number(e.target.value))} min={0} placeholder="0" style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
-            </div>
+            {cooperationType === "META" && (
+              <div style={{ marginBottom: "14px" }}>
+                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Meta</label>
+                <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                  {[20, 30, 40, 50].map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setNewGoal(g)}
+                      style={{ padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", border: `1px solid ${newGoal === g ? "rgba(59,130,246,0.5)" : "#1a1a2e"}`, background: newGoal === g ? "rgba(59,130,246,0.12)" : "#080810", color: newGoal === g ? "#3b82f6" : "#6060a0", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                <input type="number" value={newGoal} onChange={(e) => setNewGoal(Number(e.target.value))} min={0} placeholder="0" style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+              </div>
+            )}
 
-            <div style={{ display: "flex", gap: "4px", marginBottom: "14px", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "4px" }}>
-              <button onClick={() => setPasteMode(false)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: !pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: !pasteMode ? "#3b82f6" : "#6060a0" }}>
-                Linhas vazias
-              </button>
-              <button onClick={() => setPasteMode(true)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: pasteMode ? "#3b82f6" : "#6060a0" }}>
-                Colar depósitos
-              </button>
-            </div>
+            {cooperationType === "META" && (
+              <div style={{ display: "flex", gap: "4px", marginBottom: "14px", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "4px" }}>
+                <button onClick={() => setPasteMode(false)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: !pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: !pasteMode ? "#3b82f6" : "#6060a0" }}>
+                  Linhas vazias
+                </button>
+                <button onClick={() => setPasteMode(true)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: pasteMode ? "#3b82f6" : "#6060a0" }}>
+                  Colar depósitos
+                </button>
+              </div>
+            )}
 
-            {!pasteMode ? (
+            {cooperationType === "META" ? (
+              !pasteMode ? (
+                <div style={{ marginBottom: "22px" }}>
+                  <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Linhas iniciais</label>
+                  <input type="number" value={newLines} onChange={(e) => setNewLines(Number(e.target.value))} min={1} max={200} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+                </div>
+              ) : (
+                <div style={{ marginBottom: "22px" }}>
+                  <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                    Cole os depósitos {pasteText.trim() && `(${parseDeposits(pasteText).length} linhas)`}
+                  </label>
+                  <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={"R$ 120,00\nR$ 21,00\nR$ 90,00\n..."} rows={6} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", resize: "vertical" }} />
+                </div>
+              )
+            ) : (
               <div style={{ marginBottom: "22px" }}>
                 <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Linhas iniciais</label>
                 <input type="number" value={newLines} onChange={(e) => setNewLines(Number(e.target.value))} min={1} max={200} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
-              </div>
-            ) : (
-              <div style={{ marginBottom: "22px" }}>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  Cole os depósitos {pasteText.trim() && `(${parseDeposits(pasteText).length} linhas)`}
-                </label>
-                <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={"R$ 120,00\nR$ 21,00\nR$ 90,00\n..."} rows={6} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", resize: "vertical" }} />
               </div>
             )}
 
@@ -578,7 +662,7 @@ export default function SheetsPage() {
             )}
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={() => { setShowModal(false); setCreateError(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancelar</button>
-              <button onClick={handleCreate} disabled={creating || !selectedPlatform} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || !selectedPlatform ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || !selectedPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
+              <button onClick={handleCreate} disabled={creating || (cooperationType !== "BAU" && !selectedPlatform)} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || (cooperationType !== "BAU" && !selectedPlatform) ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || (cooperationType !== "BAU" && !selectedPlatform) ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
                 {creating ? "Criando..." : "Criar"}
               </button>
             </div>

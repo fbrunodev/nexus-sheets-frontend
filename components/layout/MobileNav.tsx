@@ -27,6 +27,8 @@ export default function MobileNav() {
 
   const items = navItems.filter(
     (item) => !item.adminOnly || user?.role === "ADMIN"
+  ).filter(
+    (item) => !(item.href === "/operators" && user?.role === "OPERADOR")
   );
 
   return (

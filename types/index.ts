@@ -47,6 +47,7 @@ export interface Sheet {
   status: SheetStatus;
   salary: number;
   goal: number;
+  cooperation_type: "META" | "BAU" | "RECARGA";
   created_at: string;
   updated_at: string;
   lines: SheetLine[];
