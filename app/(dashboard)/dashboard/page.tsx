@@ -269,6 +269,14 @@ export default function DashboardPage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px", justifyContent: "center" }}>
+                  {costStats.map((item, index) => (
+                    <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: ["#3b82f6","#22d3a5","#fbbf24","#f87171","#a78bfa","#f97316"][index % 6], flexShrink: 0 }} />
+                      <span style={{ fontSize: "10px", color: "#6060a0" }}>{item.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
