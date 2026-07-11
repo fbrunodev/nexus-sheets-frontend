@@ -61,7 +61,6 @@ export default function MobileNav() {
           <Link
             key={item.href}
             href={item.href}
-            {...(item.newTab && { target: "_blank", rel: "noopener noreferrer" })}
             style={{
               display: "flex",
               alignItems: "center",
