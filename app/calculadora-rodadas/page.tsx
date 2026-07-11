@@ -102,7 +102,12 @@ export default function CalculadoraRodadas() {
 
       {/* Fechar */}
       <button
-        onClick={() => window.close()}
+        onClick={() => {
+          window.close();
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 100);
+        }}
         style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#f87171", fontSize: "12px", fontWeight: "600", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: "Inter, sans-serif", marginBottom: "16px" }}
       >
         <span>✕</span>
