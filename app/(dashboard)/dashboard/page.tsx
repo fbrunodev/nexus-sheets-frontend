@@ -11,6 +11,9 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { TrendingUp, TrendingDown, FileSpreadsheet, ArrowUpRight } from "lucide-react";
 
@@ -43,16 +46,18 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<SheetStats | null>(null);
   const [sheets, setSheets] = useState<RecentSheet[]>([]);
+  const [costStats, setCostStats] = useState<{ name: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("all");
 
   useEffect(() => {
-    Promise.all([fetchRecentSheets(), fetchStats()]).finally(() => setLoading(false));
+    Promise.all([fetchRecentSheets(), fetchStats(), fetchCostStats()]).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     fetchStats();
     fetchRecentSheets();
+    fetchCostStats();
   }, [period]);
 
   async function fetchStats() {
@@ -61,6 +66,15 @@ export default function DashboardPage() {
       setStats(data);
     } catch (err) {
       console.error("Erro ao carregar stats:", err);
+    }
+  }
+
+  async function fetchCostStats() {
+    try {
+      const { data } = await api.get(`/costs/stats?period=${period}`);
+      setCostStats(data);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -190,48 +204,74 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* ── Gráfico de performance ── */}
-          <div
-            style={{
-              background: "#0f0f1a",
-              border: "1px solid #1a1a2e",
-              borderRadius: "12px",
-              padding: "18px",
-              marginBottom: "16px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
-              <span style={{ fontSize: "11px", color: "#6060a0" }}>{periodLabel} · {sheets.length} planilhas</span>
+          {/* ── Gráficos: linha + pie lado a lado ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "16px", marginBottom: "16px" }}>
+
+            {/* Gráfico de linha */}
+            <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
+                <span style={{ fontSize: "11px", color: "#6060a0" }}>{periodLabel} · {sheets.length} planilhas</span>
+              </div>
+              {chartData.length === 0 ? (
+                <p style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center", padding: "40px 0" }}>
+                  Nenhuma planilha para exibir
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={chartData}>
+                    <XAxis dataKey="name" stroke="#3a3a5c" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#3a3a5c" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      formatter={(v) => [fmt(Number(v ?? 0)), "Resultado"]}
+                      contentStyle={{ background: "#141422", border: "1px solid #1a1a2e", borderRadius: "8px", fontSize: "11px" }}
+                    />
+                    <Line type="monotone" dataKey="resultado" stroke="#3b82f6" dot={{ fill: "#3b82f6", r: 3 }} strokeWidth={2.5} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
-            {chartData.length === 0 ? (
-              <p style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center", padding: "40px 0" }}>
-                Nenhuma planilha para exibir
-              </p>
-            ) : (
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={chartData}>
-                  <XAxis dataKey="name" stroke="#3a3a5c" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#3a3a5c" tick={{ fontSize: 10 }} />
-                  <Tooltip
-                    formatter={(v) => [fmt(Number(v ?? 0)), "Resultado"]}
-                    contentStyle={{
-                      background: "#141422",
-                      border: "1px solid #1a1a2e",
-                      borderRadius: "8px",
-                      fontSize: "11px",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="resultado"
-                    stroke="#3b82f6"
-                    dot={{ fill: "#3b82f6", r: 3 }}
-                    strokeWidth={2.5}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+
+            {/* Pie de custos */}
+            {costStats.length > 0 && (
+              <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
+                <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "16px" }}>Distribuição de Custos</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={costStats}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return percent > 0.05 ? (
+                          <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+                            {`${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        ) : null;
+                      }}
+                      labelLine={false}
+                    >
+                      {costStats.map((_, index) => (
+                        <Cell key={index} fill={["#3b82f6","#22d3a5","#fbbf24","#f87171","#a78bfa","#f97316"][index % 6]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: "#141422", border: "1px solid #1a1a2e", borderRadius: "8px", fontSize: "11px" }}
+                      formatter={(v: any) => [`R$ ${Number(v).toFixed(2)}`, ""]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             )}
+
           </div>
 
           {/* ── Tabela de planilhas recentes ── */}
