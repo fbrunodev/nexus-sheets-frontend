@@ -52,6 +52,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchStats();
+    fetchRecentSheets();
   }, [period]);
 
   async function fetchStats() {
@@ -65,7 +66,8 @@ export default function DashboardPage() {
 
   async function fetchRecentSheets() {
     try {
-      const { data } = await api.get("/sheets/?limit=5&offset=0");
+      const statusParam = period !== "all" ? `&period=${period}` : "";
+      const { data } = await api.get(`/sheets/?limit=10&offset=0${statusParam}`);
       setSheets(data.items);
     } catch (err) {
       console.error("Erro ao carregar planilhas:", err);
@@ -96,6 +98,7 @@ export default function DashboardPage() {
     resultado: parseFloat(calcSheetResult(s).toFixed(2)),
   }));
 
+  const periodLabel = period === "all" ? "Todas" : period === "month" ? "Este mês" : period === "week" ? "Esta semana" : "Hoje";
   const grandTotal = stats?.grand_total ?? 0;
   const isPositive = grandTotal >= 0;
 
@@ -199,7 +202,7 @@ export default function DashboardPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
-              <span style={{ fontSize: "11px", color: "#6060a0" }}>Últimas {sheets.length}</span>
+              <span style={{ fontSize: "11px", color: "#6060a0" }}>{periodLabel} · {sheets.length} planilhas</span>
             </div>
             {chartData.length === 0 ? (
               <p style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center", padding: "40px 0" }}>
