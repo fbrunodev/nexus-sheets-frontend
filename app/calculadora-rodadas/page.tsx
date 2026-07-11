@@ -264,7 +264,7 @@ export default function CalculadoraRodadas() {
               { id: 5, deposito: "" },
             ]);
           }}
-          style={{ background: "transparent", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "10px 16px", color: "#6060a0", fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "8px", padding: "10px 16px", color: "#f87171", fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
         >
           Limpar
         </button>
