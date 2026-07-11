@@ -191,7 +191,7 @@ export default function CalculadoraRodadas() {
                 ? <span style={{ color: "#3a3a5c", fontSize: "12px" }}>—</span>
                 : res.excede
                 ? <span style={{ color: "#f87171", fontSize: "12px", fontWeight: "600" }}>Excede {limite}</span>
-                : <span style={{ color: "#22d3a5", fontSize: "14px", fontWeight: "700" }}>Parar {res.parar}</span>
+                : <span style={{ color: "#22d3a5", fontSize: "14px", fontWeight: "700" }}>Parar em {res.parar}</span>
               }
             </div>
 
