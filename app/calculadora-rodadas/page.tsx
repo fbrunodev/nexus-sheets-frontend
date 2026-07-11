@@ -179,8 +179,8 @@ export default function CalculadoraRodadas() {
               {!res
                 ? <span style={{ color: "#3a3a5c", fontSize: "12px" }}>—</span>
                 : res.excede
-                ? <span style={{ color: "#f87171", fontSize: "12px", fontWeight: "700" }}>{res.rodadas} rod.</span>
-                : <span style={{ color: "#fbbf24", fontSize: "12px", fontWeight: "700" }}>{res.rodadas} rod.</span>
+                ? <span style={{ color: "#f87171", fontSize: "14px", fontWeight: "700" }}>{res.rodadas} rod.</span>
+                : <span style={{ color: "#fbbf24", fontSize: "14px", fontWeight: "700" }}>{res.rodadas} rod.</span>
               }
             </div>
 
