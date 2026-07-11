@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Conta { id: number; deposito: string; }
 
@@ -28,6 +28,8 @@ export default function CalculadoraRodadas() {
   const [nextContaId, setNextContaId] = useState(6);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   if (typeof window !== "undefined") {
     window.addEventListener("beforeinstallprompt", (e) => {
@@ -90,6 +92,8 @@ export default function CalculadoraRodadas() {
     borderRadius: "10px",
     padding: "14px 16px",
   };
+
+  if (!mounted) return null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#080810", color: "#fff", fontFamily: "Inter, sans-serif", padding: "20px 16px", maxWidth: "480px", margin: "0 auto", overflowX: "hidden" }}>
