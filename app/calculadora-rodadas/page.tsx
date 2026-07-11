@@ -94,6 +94,12 @@ export default function CalculadoraRodadas() {
   return (
     <div style={{ minHeight: "100vh", background: "#080810", color: "#fff", fontFamily: "Inter, sans-serif", padding: "20px 16px", maxWidth: "480px", margin: "0 auto", overflowX: "hidden" }}>
 
+      {/* Voltar */}
+      <a href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#3b82f6", fontSize: "12px", fontWeight: "600", textDecoration: "none", marginBottom: "16px", background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "8px", padding: "6px 12px" }}>
+        <span>←</span>
+        <span>Nexus Sheets</span>
+      </a>
+
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
         <div>
