@@ -33,6 +33,25 @@ export default function CalculadoraRodadas() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    const saved = localStorage.getItem("calculadora-state");
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        if (state.xStr) setXStr(state.xStr);
+        if (state.limiteStr) setLimiteStr(state.limiteStr);
+        if (state.divisorStr) setDivisorStr(state.divisorStr);
+        if (state.contas) setContas(state.contas);
+      } catch (e) {}
+    }
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    localStorage.setItem("calculadora-state", JSON.stringify({ xStr, limiteStr, divisorStr, contas }));
+  }, [xStr, limiteStr, divisorStr, contas, mounted]);
+
   if (typeof window !== "undefined") {
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
@@ -221,15 +240,35 @@ export default function CalculadoraRodadas() {
         );
       })}
 
-      {/* Botão adicionar conta */}
-      <button
-        onClick={addConta}
-        style={{ width: "100%", marginTop: "4px", background: "rgba(59,130,246,0.08)", border: "1px dashed rgba(59,130,246,0.2)", borderRadius: "10px", padding: "12px", color: "#3b82f6", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "background 0.15s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.14)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.08)"; }}
-      >
-        + Adicionar Conta
-      </button>
+      {/* Botões de ação */}
+      <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+        <button
+          onClick={addConta}
+          style={{ flex: 1, background: "rgba(59,130,246,0.08)", border: "1px dashed rgba(59,130,246,0.2)", borderRadius: "10px", padding: "12px", color: "#3b82f6", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "background 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.14)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.08)"; }}
+        >
+          + Adicionar Conta
+        </button>
+        <button
+          onClick={() => {
+            localStorage.removeItem("calculadora-state");
+            setXStr("1");
+            setLimiteStr("999");
+            setDivisorStr("");
+            setContas([
+              { id: 1, deposito: "" },
+              { id: 2, deposito: "" },
+              { id: 3, deposito: "" },
+              { id: 4, deposito: "" },
+              { id: 5, deposito: "" },
+            ]);
+          }}
+          style={{ background: "transparent", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "10px 16px", color: "#6060a0", fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+        >
+          Limpar
+        </button>
+      </div>
     </div>
   );
 }
