@@ -12,12 +12,14 @@ import {
   ShieldAlert,
   ChevronLeft,
   DollarSign,
+  Calculator,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Planilhas", href: "/sheets", icon: FileSpreadsheet },
   { label: "Custos", href: "/costs", icon: DollarSign },
+  { label: "Calculadora", href: "/calculadora-rodadas", icon: Calculator, newTab: true },
   { label: "Operadores", href: "/operators", icon: Users },
   { label: "Admin", href: "/admin", icon: ShieldAlert, adminOnly: true },
   { label: "Configurações", href: "/settings", icon: Settings },
@@ -104,6 +106,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
               <Link
                 key={item.href}
                 href={item.href}
+                {...(item.newTab && { target: "_blank", rel: "noopener noreferrer" })}
                 style={{
                   display: "flex",
                   alignItems: "center",
