@@ -18,7 +18,7 @@ export default function CalculadoraRodadas() {
   const [xStr, setXStr] = useState<string>("1");
   const [limiteStr, setLimiteStr] = useState<string>("999");
   const [divisorStr, setDivisorStr] = useState<string>("");
-  const x = parseFloat(xStr) || 0;
+  const x = parseFloat(xStr.replace(",", ".")) || 0;
   const limite = parseInt(limiteStr) || 0;
   const [contas, setContas] = useState<Conta[]>([
     { id: 1, deposito: "" },
@@ -190,7 +190,7 @@ export default function CalculadoraRodadas() {
 
       {/* Linhas de contas */}
       {contas.map((conta, i) => {
-        const res = calcular(parseFloat(conta.deposito) || 0, x, parseFloat(divisorStr) || 0, limite);
+        const res = calcular(parseFloat(conta.deposito.replace(",", ".")) || 0, x, parseFloat(divisorStr.replace(",", ".")) || 0, limite);
         return (
           <div key={conta.id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
 
