@@ -34,6 +34,7 @@ export default function SheetsPage() {
   const [newLines, setNewLines] = useState(10);
   const [newGoal, setNewGoal] = useState(0);
   const [activeStatus, setActiveStatus] = useState("all");
+  const [period, setPeriod] = useState<"all" | "month" | "week">("all");
   const [search, setSearch] = useState("");
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteText, setPasteText] = useState("");
@@ -62,7 +63,7 @@ export default function SheetsPage() {
       fetchSheets();
     }
     fetchStats();
-  }, [activeStatus]);
+  }, [activeStatus, period]);
 
   useEffect(() => {
     if (!searchMounted.current) {
@@ -79,8 +80,9 @@ export default function SheetsPage() {
     setLoading(true);
     try {
       const statusParam = activeStatus !== "all" ? activeStatus : "";
+      const periodParam = period !== "all" ? `&period=${period}` : "";
       const { data } = await api.get(
-        `/sheets/?limit=${LIMIT}&offset=0&status=${statusParam}&search=${encodeURIComponent(search)}`
+        `/sheets/?limit=${LIMIT}&offset=0&status=${statusParam}&search=${encodeURIComponent(search)}${periodParam}`
       );
       setSheets(data.items);
       setOffset(data.items.length);
@@ -96,8 +98,9 @@ export default function SheetsPage() {
     setLoadingMore(true);
     try {
       const statusParam = activeStatus !== "all" ? activeStatus : "";
+      const periodParam = period !== "all" ? `&period=${period}` : "";
       const { data } = await api.get(
-        `/sheets/?limit=${LIMIT}&offset=${offset}&status=${statusParam}&search=${encodeURIComponent(search)}`
+        `/sheets/?limit=${LIMIT}&offset=${offset}&status=${statusParam}&search=${encodeURIComponent(search)}${periodParam}`
       );
       setSheets((prev) => [...prev, ...data.items]);
       setOffset((prev) => prev + data.items.length);
@@ -277,6 +280,35 @@ export default function SheetsPage() {
             <Plus size={14} />
             Nova Planilha
           </button>
+        </div>
+      </div>
+
+      {/* Filtro de período */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+        <div style={{ display: "flex", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", overflow: "hidden" }}>
+          {[
+            { label: "Todos", value: "all" },
+            { label: "Mês", value: "month" },
+            { label: "Semana", value: "week" },
+          ].map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPeriod(p.value as "all" | "month" | "week")}
+              style={{
+                padding: "6px 14px",
+                fontSize: "12px",
+                fontWeight: period === p.value ? "600" : "400",
+                color: period === p.value ? "#3b82f6" : "#6060a0",
+                background: period === p.value ? "rgba(59,130,246,0.1)" : "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Inter, sans-serif",
+                transition: "all 0.15s",
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
       </div>
 

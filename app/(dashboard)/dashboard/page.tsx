@@ -205,10 +205,10 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Gráficos: linha + pie lado a lado ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px" }}>
 
             {/* Gráfico de linha */}
-            <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
+            <div style={{ flex: "2 1 280px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
                 <span style={{ fontSize: "11px", color: "#6060a0" }}>{periodLabel} · {sheets.length} planilhas</span>
@@ -234,9 +234,9 @@ export default function DashboardPage() {
 
             {/* Pie de custos */}
             {costStats.length > 0 && (
-              <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
-                <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "16px" }}>Distribuição de Custos</p>
-                <ResponsiveContainer width="100%" height={200}>
+              <div style={{ flex: "1 1 200px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "16px", alignSelf: "flex-start" }}>Distribuição de Custos</p>
+                <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
                       data={costStats}
