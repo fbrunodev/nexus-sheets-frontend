@@ -150,7 +150,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                     >
                       {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                     </td>
-                    <td style={{ padding: "12px 20px" }}>
+                    <td style={{ padding: "12px 20px", verticalAlign: "middle" }}>
                       <StatusDot status={sheet.status} />
                     </td>
                     <td

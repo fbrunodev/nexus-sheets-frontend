@@ -69,13 +69,13 @@ export default function DashboardLayout({
 
       <div className="app-content" style={{ marginLeft: sidebarOpen ? undefined : "0", flex: 1, display: "flex", flexDirection: "column" }}>
 
-        {/* Topbar */}
+        {/* Topbar — visível só no mobile (desktop usa o header da página) */}
         <div
+          className="app-topbar"
           style={{
             height: "52px",
             background: "var(--bg)",
             borderBottom: "1px solid var(--border)",
-            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 24px",

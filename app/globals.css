@@ -121,6 +121,8 @@ html, body {
 /* --- Layout: sidebar e menu inferior --- */
 .app-sidebar { display: block; }
 .app-mobile-nav { display: none; }
+/* Topbar: oculto no desktop, visível no mobile */
+.app-topbar { display: none; }
 
 .app-content {
   margin-left: 200px;
@@ -129,6 +131,9 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* Sino no header do dashboard: visível no desktop, oculto no mobile (topbar tem o seu) */
+.dash-bell-btn { display: flex; }
 
 .app-main {
   padding: 24px;
@@ -147,6 +152,8 @@ html, body {
   .topbar-menu-btn { display: none !important; }
   .date-long { display: none; }
   .date-short { display: inline; }
+  .app-topbar { display: flex !important; }
+  .dash-bell-btn { display: none !important; }
 }
 
 /* Mostrar data curta só no mobile */
