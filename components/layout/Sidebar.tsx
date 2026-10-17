@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Visão geral", href: "/dashboard", icon: LayoutDashboard },
   { label: "Planilhas", href: "/sheets", icon: FileSpreadsheet },
   { label: "Custos", href: "/costs", icon: DollarSign },
   { label: "Calculadora", href: "/calculadora-rodadas", icon: Calculator, newTab: true },
@@ -40,8 +40,8 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
       style={{
         width: "200px",
         minHeight: "100vh",
-        background: "#080810",
-        borderRight: "1px solid #1a1a2e",
+        background: "var(--bg-sidebar)",
+        borderRight: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         position: "fixed",
@@ -58,7 +58,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 16px",
-          borderBottom: "1px solid #1a1a2e",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -115,27 +115,27 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
                   borderRadius: "8px",
                   fontSize: "13px",
                   fontWeight: isActive ? "500" : "400",
-                  color: isActive ? "#fff" : "#6060a0",
-                  background: isActive ? "rgba(59,130,246,0.12)" : "transparent",
+                  color: isActive ? "var(--text)" : "var(--text-muted)",
+                  background: isActive ? "var(--surface-hover)" : "transparent",
                   textDecoration: "none",
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.color = "#a0a0c0";
+                    e.currentTarget.style.background = "var(--surface-hover)";
+                    e.currentTarget.style.color = "var(--text-secondary)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#6060a0";
+                    e.currentTarget.style.color = "var(--text-muted)";
                   }
                 }}
               >
                 <Icon
                   size={16}
-                  color={isActive ? "#3b82f6" : "#6060a0"}
+                  color={isActive ? "var(--accent)" : "var(--text-muted)"}
                   strokeWidth={isActive ? 2.5 : 1.8}
                 />
                 {item.label}
@@ -145,7 +145,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
       </nav>
 
       {/* User */}
-      <div style={{ borderTop: "1px solid #1a1a2e", padding: "12px 8px" }}>
+      <div style={{ borderTop: "1px solid var(--border)", padding: "12px 8px" }}>
         <div
           style={{
             display: "flex",
@@ -161,13 +161,13 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
               width: "28px",
               height: "28px",
               borderRadius: "7px",
-              background: "rgba(59,130,246,0.2)",
+              background: "rgba(174,184,255,0.12)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "12px",
               fontWeight: "700",
-              color: "#3b82f6",
+              color: "var(--accent)",
               flexShrink: 0,
             }}
           >

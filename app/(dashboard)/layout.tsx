@@ -9,7 +9,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import { registerPushSubscription } from "@/lib/push";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
+  "/dashboard": "Visão geral",
   "/sheets": "Planilhas",
   "/operators": "Operadores",
   "/settings": "Configurações",
@@ -46,8 +46,8 @@ export default function DashboardLayout({
 
   if (!hasHydrated) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#080810" }}>
-        <p style={{ color: "#6060a0", fontSize: "14px" }}>Carregando...</p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Carregando...</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function DashboardLayout({
   )?.[1] || "Nexus Sheets";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#080810" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
       {/* Sidebar — escondida no mobile via CSS */}
       {sidebarOpen && (
         <div className="app-sidebar">
@@ -73,8 +73,8 @@ export default function DashboardLayout({
         <div
           style={{
             height: "52px",
-            background: "#080810",
-            borderBottom: "1px solid #1a1a2e",
+            background: "var(--bg)",
+            borderBottom: "1px solid var(--border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -89,7 +89,7 @@ export default function DashboardLayout({
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="topbar-menu-btn"
-                style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", alignItems: "center", padding: "4px" }}
+                style={{ background: "transparent", border: "none", color: "var(--text-secondary)", cursor: "pointer", alignItems: "center", padding: "4px" }}
                 title="Mostrar menu"
               >
                 <Menu size={18} />
@@ -101,39 +101,43 @@ export default function DashboardLayout({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "#0f0f1a",
-                border: "1px solid #1a1a2e",
-                borderRadius: "8px",
-                padding: "6px 12px",
-                fontSize: "12px",
-                color: "#6060a0",
-              }}
-            >
-              <span className="date-long">{currentDate}</span>
-              <span className="date-short">{currentDateShort}</span>
-              <ChevronDown size={12} color="#6060a0" />
-            </div>
+            {/* Date picker: oculto no /dashboard — período controlado pela própria página */}
+            {!pathname.startsWith("/dashboard") && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                <span className="date-long">{currentDate}</span>
+                <span className="date-short">{currentDateShort}</span>
+                <ChevronDown size={12} color="var(--text-secondary)" />
+              </div>
+            )}
 
-            <div
+            <button
+              aria-label="Notificações"
               style={{
                 width: "32px",
                 height: "32px",
                 borderRadius: "8px",
-                background: "#0f0f1a",
-                border: "1px solid #1a1a2e",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
               }}
             >
-              <Bell size={15} color="#6060a0" />
-            </div>
+              <Bell size={15} color="var(--text-secondary)" />
+            </button>
           </div>
         </div>
 
