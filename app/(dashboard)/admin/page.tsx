@@ -6,7 +6,29 @@ import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
+const CARET =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
+
+const MODAL_LABEL: React.CSSProperties = {
+  display: "block",
+  fontSize: "10px",
+  fontWeight: "600",
+  color: "var(--text-muted)",
+  marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.07em",
+};
+
+type BadgeVariant = "neutral" | "positive" | "negative" | "warning";
+const KEY_TYPE_BADGE: Record<string, BadgeVariant> = {
+  LIFETIME: "positive",
+  MONTHLY:  "neutral",
+  TRIAL:    "warning",
+};
 
 interface ActivationKey {
   id: string;
@@ -32,9 +54,11 @@ interface UserAdmin {
 export default function AdminPage() {
   const { user } = useAuthStore();
   const router = useRouter();
+  const isMobile = useIsMobile();
+
   const [platforms, setPlatforms] = useState<any[]>([]);
-  const [newPlatform, setNewPlatform] = useState("")
-  const [creatingPlatform, setCreatingPlatform] = useState(false)
+  const [newPlatform, setNewPlatform] = useState("");
+  const [creatingPlatform, setCreatingPlatform] = useState(false);
   const [keys, setKeys] = useState<ActivationKey[]>([]);
   const [users, setUsers] = useState<UserAdmin[]>([]);
   const [loadingKeys, setLoadingKeys] = useState(true);
@@ -51,13 +75,10 @@ export default function AdminPage() {
   const [operatorEmail, setOperatorEmail] = useState("");
   const [operatorPassword, setOperatorPassword] = useState("");
   const [creatingOperator, setCreatingOperator] = useState(false);
-  const [operatorError, setOperatorError] = useState<string>("");
-  const isMobile = useIsMobile();
-  // Redireciona se não for admin
+  const [operatorError, setOperatorError] = useState("");
+
   useEffect(() => {
-    if (user && user.role !== "ADMIN") {
-      router.push("/dashboard");
-    }
+    if (user && user.role !== "ADMIN") router.push("/dashboard");
   }, [user, router]);
 
   useEffect(() => {
@@ -67,14 +88,9 @@ export default function AdminPage() {
     fetchCostTypes();
   }, []);
 
-
   async function fetchCostTypes() {
-    try {
-      const { data } = await api.get("/costs/types");
-      setCostTypes(data);
-    } catch (err) {
-      console.error(err);
-    }
+    try { const { data } = await api.get("/costs/types"); setCostTypes(data); }
+    catch (err) { console.error(err); }
   }
 
   async function createCostType() {
@@ -101,43 +117,26 @@ export default function AdminPage() {
     }
   }
 
-  async function fetchPlatforms(){
-    try {
-      const {data} = await api.get("/platforms/")
-      setPlatforms(data)
-    }catch(err) {
-      console.error(err)
-    }
+  async function fetchPlatforms() {
+    try { const { data } = await api.get("/platforms/"); setPlatforms(data); }
+    catch (err) { console.error(err); }
   }
 
-
   async function fetchKeys() {
-    try {
-      const { data } = await api.get("/admin/keys");
-      setKeys(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingKeys(false);
-    }
+    try { const { data } = await api.get("/admin/keys"); setKeys(data); }
+    catch (err) { console.error(err); }
+    finally { setLoadingKeys(false); }
   }
 
   async function fetchUsers() {
-    try {
-      // Busca operadores como proxy de usuários por enquanto
-      const { data } = await api.get("/operators/");
-      setUsers(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingUsers(false);
-    }
+    try { const { data } = await api.get("/operators/"); setUsers(data); }
+    catch (err) { console.error(err); }
+    finally { setLoadingUsers(false); }
   }
 
   async function createPlatform() {
     if (!newPlatform.trim()) return;
-    setCreatingPlatform(true) 
-    
+    setCreatingPlatform(true);
     try {
       const { data } = await api.post("/platforms/", { name: newPlatform });
       setPlatforms((prev) => [...prev, data]);
@@ -147,7 +146,6 @@ export default function AdminPage() {
     } finally {
       setCreatingPlatform(false);
     }
-    
   }
 
   async function deletePlatform(platformId: string) {
@@ -155,21 +153,16 @@ export default function AdminPage() {
     try {
       await api.delete(`/platforms/${platformId}`);
       setPlatforms((prev) => prev.filter((p) => p.id !== platformId));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
-  
+
   async function generateKey() {
     setGenerating(true);
     try {
       const { data } = await api.post("/admin/keys", { type: keyType });
       setKeys((prev) => [data, ...prev]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setGenerating(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setGenerating(false); }
   }
 
   async function createNewOperator() {
@@ -189,11 +182,11 @@ export default function AdminPage() {
       setOperatorPassword("");
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
-      if (Array.isArray(detail)) {
-        setOperatorError(detail.map((e: any) => String(e.msg || e)).join(", "));
-      } else {
-        setOperatorError(String(detail || "Erro ao criar operador. Tente novamente."));
-      }
+      setOperatorError(
+        Array.isArray(detail)
+          ? detail.map((e: any) => String(e.msg || e)).join(", ")
+          : String(detail || "Erro ao criar operador. Tente novamente.")
+      );
     } finally {
       setCreatingOperator(false);
     }
@@ -204,9 +197,7 @@ export default function AdminPage() {
     try {
       await api.delete(`/operators/${operatorId}`);
       setUsers((prev) => prev.filter((u) => u.id !== operatorId));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
 
   function copyKey(key: string, id: string) {
@@ -215,40 +206,49 @@ export default function AdminPage() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
-  const typeColors: Record<string, { color: string; bg: string }> = {
-    LIFETIME: { color: "#22d3a5", bg: "rgba(34,211,165,0.1)" },
-    MONTHLY: { color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-    TRIAL: { color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
-  };
-
   const availableKeys = keys.filter((k) => !k.is_used).length;
   const usedKeys = keys.filter((k) => k.is_used).length;
 
   if (user?.role !== "ADMIN") return null;
+
+  const TABS = [
+    { id: "platforms", label: "Plataformas", icon: FileSpreadsheet },
+    { id: "keys",      label: "Activation Keys", icon: Key },
+    { id: "users",     label: "Operadores", icon: Users },
+    { id: "costs",     label: "Tipos de Custo", icon: DollarSign },
+  ] as const;
 
   return (
     <div>
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-          <ShieldAlert size={20} color="#3b82f6" />
-          <h1 style={{ fontSize: "24px", fontWeight: "700" }}>Painel Admin</h1>
+          <ShieldAlert size={20} color="var(--accent)" />
+          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)" }}>Painel Admin</h1>
         </div>
-        <p style={{ color: "#6060a0", fontSize: "13px" }}>
-          Gerencie usuários, chaves e configurações globais
-        </p>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie usuários, chaves e configurações globais</p>
       </div>
 
       {/* Métricas */}
-      <div style={{ display: "grid",gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+          gap: "12px",
+          marginBottom: "24px",
+        }}
+      >
         {[
-          { label: "Total de keys", value: keys.length, color: "#fff" },
-          { label: "Keys disponíveis", value: availableKeys, color: "#22d3a5" },
-          { label: "Keys utilizadas", value: usedKeys, color: "#f87171" },
-          { label: "Operadores", value: users.length, color: "#3b82f6" },
+          { label: "Total de keys",    value: keys.length,   color: "var(--text)" },
+          { label: "Keys disponíveis", value: availableKeys, color: "var(--positive)" },
+          { label: "Keys utilizadas",  value: usedKeys,      color: "var(--negative-text)" },
+          { label: "Operadores",       value: users.length,  color: "var(--accent)" },
         ].map((item) => (
-          <div key={item.label} style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "16px 20px" }}>
-            <p style={{ fontSize: "11px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div
+            key={item.label}
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px" }}
+          >
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
@@ -257,19 +257,26 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
-        {[
-          { id: "platforms", label: "Plataformas", icon: FileSpreadsheet },
-          { id: "keys", label: "Activation Keys", icon: Key },
-          { id: "users", label: "Operadores", icon: Users },
-          { id: "costs", label: "Tipos de Custo", icon: DollarSign },
-        ].map((tab) => {
+      <div
+        style={{
+          display: "flex",
+          gap: "4px",
+          marginBottom: "20px",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "10px",
+          padding: "4px",
+          width: "fit-content",
+          flexWrap: "wrap",
+        }}
+      >
+        {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "keys" | "users" | "platforms" | "costs")}
+              onClick={() => setActiveTab(tab.id)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -278,138 +285,143 @@ export default function AdminPage() {
                 borderRadius: "8px",
                 fontSize: "13px",
                 fontWeight: isActive ? "600" : "400",
-                color: isActive ? "#fff" : "#6060a0",
-                background: isActive ? "rgba(59,130,246,0.15)" : "transparent",
+                color: isActive ? "var(--text)" : "var(--text-muted)",
+                background: isActive ? "var(--surface-hover)" : "transparent",
                 border: "none",
                 cursor: "pointer",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "inherit",
                 transition: "all 0.15s",
               }}
             >
-              <Icon size={14} color={isActive ? "#3b82f6" : "#6060a0"} />
+              <Icon size={14} color={isActive ? "var(--accent)" : "var(--text-muted)"} />
               {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Tab: Activation Keys */}
+      {/* ── Tab: Activation Keys ── */}
       {activeTab === "keys" && (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Gerenciar Keys
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <select
                 value={keyType}
                 onChange={(e) => setKeyType(e.target.value)}
-                style={{ background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "8px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", cursor: "pointer" }}
+                className="ui-select"
+                style={{ backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: "32px", padding: "8px 32px 8px 12px" }}
               >
                 <option value="LIFETIME">Vitalícia</option>
                 <option value="MONTHLY">Mensal</option>
                 <option value="TRIAL">Trial</option>
               </select>
-              <button
-                onClick={generateKey}
-                disabled={generating}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: generating ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "8px", padding: "9px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: generating ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
+              <Button variant="primary" onClick={generateKey} disabled={generating} style={{ gap: "8px" }}>
                 <Key size={14} />
                 {generating ? "Gerando..." : "Gerar Key"}
-              </button>
+              </Button>
             </div>
           </div>
 
           {loadingKeys ? (
-            <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
           ) : keys.length === 0 ? (
-            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "24px" }}>
               Nenhuma chave gerada ainda.
             </p>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
                   {["Chave", "Tipo", "Status", "Criada em"].map((h) => (
-                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.06em" }}>
+                    <th
+                      key={h}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                    >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {keys.map((k) => {
-                  const typeStyle = typeColors[k.type] || typeColors.LIFETIME;
-                  return (
-                    <tr key={k.id} style={{ borderBottom: "1px solid #1a1a2e" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.01)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                    >
-                      <td style={{ padding: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <code style={{ fontSize: "13px", color: k.is_used ? "#3a3a5c" : "#fff", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                            {k.key}
-                          </code>
-                          {!k.is_used && (
-                            <button
-                              onClick={() => copyKey(k.key, k.id)}
-                              style={{ background: "transparent", border: "none", cursor: "pointer", color: copiedId === k.id ? "#22d3a5" : "#6060a0", display: "flex", alignItems: "center" }}
-                            >
-                              {copiedId === k.id ? <Check size={13} /> : <Copy size={13} />}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px" }}>
-                        <span style={{ background: typeStyle.bg, color: typeStyle.color, borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                          {k.type}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px" }}>
-                        <span style={{ background: k.is_used ? "rgba(248,113,113,0.1)" : "rgba(34,211,165,0.1)", color: k.is_used ? "#f87171" : "#22d3a5", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                          {k.is_used ? "Utilizada" : "Disponível"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px", fontSize: "12px", color: "#6060a0" }}>
-                        {new Date(k.created_at).toLocaleDateString("pt-BR")}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {keys.map((k) => (
+                  <tr
+                    key={k.id}
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <td style={{ padding: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <code
+                          style={{
+                            fontSize: "13px",
+                            color: k.is_used ? "var(--text-muted)" : "var(--text)",
+                            fontFamily: "monospace",
+                            letterSpacing: "0.05em",
+                            opacity: k.is_used ? 0.5 : 1,
+                          }}
+                        >
+                          {k.key}
+                        </code>
+                        {!k.is_used && (
+                          <button
+                            onClick={() => copyKey(k.key, k.id)}
+                            style={{ background: "transparent", border: "none", cursor: "pointer", color: copiedId === k.id ? "var(--positive)" : "var(--text-muted)", display: "flex", alignItems: "center", transition: "color 0.15s" }}
+                          >
+                            {copiedId === k.id ? <Check size={13} /> : <Copy size={13} />}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: "12px" }}>
+                      <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{k.type}</Badge>
+                    </td>
+                    <td style={{ padding: "12px" }}>
+                      <Badge variant={k.is_used ? "negative" : "positive"}>
+                        {k.is_used ? "Utilizada" : "Disponível"}
+                      </Badge>
+                    </td>
+                    <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
+                      {new Date(k.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
         </div>
       )}
 
-      {/* Tab: Operadores */}
+      {/* ── Tab: Operadores ── */}
       {activeTab === "users" && (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Operadores
             </p>
-            <button
-              onClick={() => setShowOperatorModal(true)}
-              style={{ display: "flex", alignItems: "center", gap: "7px", background: "#3b82f6", border: "none", borderRadius: "8px", padding: "9px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-            >
+            <Button variant="primary" onClick={() => setShowOperatorModal(true)} style={{ gap: "7px" }}>
               <Plus size={14} /> Novo Operador
-            </button>
+            </Button>
           </div>
 
           {loadingUsers ? (
-            <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
           ) : users.length === 0 ? (
-            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "24px" }}>
               Nenhum operador cadastrado.
             </p>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
                   {["Operador", "Status", "Criado em", ""].map((h) => (
-                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.06em" }}>
+                    <th
+                      key={h}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                    >
                       {h}
                     </th>
                   ))}
@@ -417,35 +429,51 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: "1px solid #1a1a2e" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.01)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  <tr
+                    key={u.id}
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <td style={{ padding: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "600", color: "#3b82f6", flexShrink: 0 }}>
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "8px",
+                            background: "var(--surface-hover)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            color: "var(--accent)",
+                            flexShrink: 0,
+                          }}
+                        >
                           {(u.name || u.email)[0].toUpperCase()}
                         </div>
                         <div>
-                          {u.name && <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "2px" }}>{u.name}</p>}
-                          <p style={{ fontSize: "12px", color: "#6060a0" }}>{u.email}</p>
+                          {u.name && <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "2px", color: "var(--text)" }}>{u.name}</p>}
+                          <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>{u.email}</p>
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <span style={{ background: u.is_active ? "rgba(34,211,165,0.1)" : "rgba(248,113,113,0.1)", color: u.is_active ? "#22d3a5" : "#f87171", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
+                      <Badge variant={u.is_active ? "positive" : "negative"}>
                         {u.is_active ? "Ativo" : "Inativo"}
-                      </span>
+                      </Badge>
                     </td>
-                    <td style={{ padding: "12px", fontSize: "12px", color: "#6060a0" }}>
+                    <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                       {new Date(u.created_at).toLocaleDateString("pt-BR")}
                     </td>
                     <td style={{ padding: "12px", textAlign: "right" }}>
                       <button
                         onClick={() => deleteOperator(u.id)}
-                        style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3a5c")}
+                        style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto", transition: "color 0.15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -458,12 +486,11 @@ export default function AdminPage() {
         </div>
       )}
 
-
-      {/* Tab: Plataformas */}
+      {/* ── Tab: Plataformas ── */}
       {activeTab === "platforms" && (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Plataformas
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -472,31 +499,40 @@ export default function AdminPage() {
                 onChange={(e) => setNewPlatform(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createPlatform()}
                 placeholder="Nome da plataforma"
-                style={{ background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "8px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }}
+                className="ui-input"
+                style={{ width: "180px" }}
               />
-              <button
-                onClick={createPlatform}
-                disabled={creatingPlatform}
-                style={{ display: "flex", alignItems: "center", gap: "6px", background: creatingPlatform ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "8px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingPlatform ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
+              <Button variant="primary" onClick={createPlatform} disabled={creatingPlatform} style={{ gap: "6px" }}>
                 <Plus size={14} />
                 {creatingPlatform ? "Criando..." : "Adicionar"}
-              </button>
+              </Button>
             </div>
           </div>
 
           {platforms.length === 0 ? (
-            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "24px" }}>
               Nenhuma plataforma cadastrada.
             </p>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
               {platforms.map((p) => (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#141422", borderRadius: "10px", padding: "12px 16px" }}>
-                  <span style={{ fontSize: "13px", fontWeight: "500" }}>{p.name}</span>
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    background: "var(--surface-hover)",
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                  }}
+                >
+                  <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>{p.name}</span>
                   <button
                     onClick={() => deletePlatform(p.id)}
-                    style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}
+                    style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", transition: "color 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -506,11 +542,12 @@ export default function AdminPage() {
           )}
         </div>
       )}
-      {/* Tab: Tipos de Custo */}
+
+      {/* ── Tab: Tipos de Custo ── */}
       {activeTab === "costs" && (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Tipos de Custo
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -519,36 +556,43 @@ export default function AdminPage() {
                 onChange={(e) => setNewCostType(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createCostType()}
                 placeholder="Nome do tipo"
-                style={{ background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "8px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }}
+                className="ui-input"
+                style={{ width: "180px" }}
               />
-              <button
-                onClick={createCostType}
-                disabled={creatingCostType}
-                style={{ display: "flex", alignItems: "center", gap: "6px", background: creatingCostType ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "8px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingCostType ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
+              <Button variant="primary" onClick={createCostType} disabled={creatingCostType} style={{ gap: "6px" }}>
                 <Plus size={14} />
                 {creatingCostType ? "Criando..." : "Adicionar"}
-              </button>
+              </Button>
             </div>
           </div>
 
           {costTypes.length === 0 ? (
-            <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "24px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "24px" }}>
               Nenhum tipo de custo cadastrado.
             </p>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
               {costTypes.map((c) => (
-                <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#141422", borderRadius: "10px", padding: "12px 16px" }}>
+                <div
+                  key={c.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    background: "var(--surface-hover)",
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                  }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <DollarSign size={13} color="#22d3a5" />
-                    <span style={{ fontSize: "13px", fontWeight: "500" }}>{c.name}</span>
+                    <DollarSign size={13} color="var(--positive)" />
+                    <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>{c.name}</span>
                   </div>
                   <button
                     onClick={() => deleteCostType(c.id)}
-                    style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3a5c")}
+                    style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", transition: "color 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -559,64 +603,84 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal: Novo Operador */}
-      {showOperatorModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "20px" }}>
-          <div style={{ background: "#141422", border: "1px solid #2a2a4a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "400px" }}>
+      {/* Modal — Novo Operador */}
+      <Modal
+        open={showOperatorModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowOperatorModal(false);
+            setOperatorError("");
+            setOperatorName("");
+            setOperatorEmail("");
+            setOperatorPassword("");
+          }
+        }}
+      >
+        <ModalContent title="Novo Operador" maxWidth={400}>
+          <ModalBody>
+            <div>
+              <label style={MODAL_LABEL}>Nome</label>
+              <input
+                type="text"
+                value={operatorName}
+                onChange={(e) => setOperatorName(e.target.value)}
+                placeholder="Nome do operador"
+                autoFocus
+                className="ui-input"
+              />
+            </div>
 
-            <p style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "24px" }}>Novo Operador</p>
+            <div>
+              <label style={MODAL_LABEL}>Email</label>
+              <input
+                type="email"
+                value={operatorEmail}
+                onChange={(e) => setOperatorEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                className="ui-input"
+              />
+            </div>
 
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Nome</p>
-            <input
-              type="text"
-              value={operatorName}
-              onChange={(e) => setOperatorName(e.target.value)}
-              placeholder="Nome do operador"
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box" }}
-            />
-
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Email</p>
-            <input
-              type="email"
-              value={operatorEmail}
-              onChange={(e) => setOperatorEmail(e.target.value)}
-              placeholder="email@exemplo.com"
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box" }}
-            />
-
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Senha</p>
-            <input
-              type="password"
-              value={operatorPassword}
-              onChange={(e) => setOperatorPassword(e.target.value)}
-              placeholder="Senha de acesso"
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "20px", boxSizing: "border-box" }}
-            />
+            <div>
+              <label style={MODAL_LABEL}>Senha</label>
+              <input
+                type="password"
+                value={operatorPassword}
+                onChange={(e) => setOperatorPassword(e.target.value)}
+                placeholder="Senha de acesso"
+                className="ui-input"
+              />
+            </div>
 
             {operatorError && (
-              <p style={{ fontSize: "12px", color: "#f87171", marginBottom: "14px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "8px 12px" }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--negative-text)",
+                  background: "var(--negative-subtle)",
+                  border: "1px solid var(--negative-bar)",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                }}
+              >
                 {operatorError}
               </p>
             )}
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => { setShowOperatorModal(false); setOperatorError(""); setOperatorName(""); setOperatorEmail(""); setOperatorPassword(""); }}
-                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #2a2a4a", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={createNewOperator}
-                disabled={creatingOperator}
-                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creatingOperator ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creatingOperator ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                {creatingOperator ? "Criando..." : "Criar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </ModalClose>
+            <Button
+              variant="primary"
+              onClick={createNewOperator}
+              disabled={creatingOperator || !operatorName.trim() || !operatorEmail.trim() || !operatorPassword.trim()}
+            >
+              {creatingOperator ? "Criando..." : "Criar"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
