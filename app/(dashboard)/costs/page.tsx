@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/services/api";
-import { DollarSign, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -55,6 +55,7 @@ export default function CostsPage() {
   const [newValue, setNewValue] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useEffect(() => { fetchCostTypes(); }, []);
   useEffect(() => { fetchCosts(); }, [month, year]);
@@ -104,12 +105,13 @@ export default function CostsPage() {
   }
 
   async function deleteCost(id: string) {
-    if (!confirm("Remover este custo?")) return;
     try {
       await api.delete(`/costs/${id}`);
       setCosts((prev) => prev.filter((c) => c.id !== id));
     } catch (err) {
       console.error(err);
+    } finally {
+      setDeleteTarget(null);
     }
   }
 
@@ -182,7 +184,7 @@ export default function CostsPage() {
             <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "2px" }}>
               Total do mês
             </p>
-            <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--negative-text)" }}>
+            <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--text)" }}>
               R$ {total.toFixed(2).replace(".", ",")}
             </p>
           </Card>
@@ -228,28 +230,12 @@ export default function CostsPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <td style={{ padding: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div
-                        style={{
-                          width: "28px",
-                          height: "28px",
-                          borderRadius: "7px",
-                          background: "var(--positive-subtle)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <DollarSign size={13} color="var(--positive)" />
-                      </div>
-                      <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>
-                        {c.cost_type.name}
-                      </span>
-                    </div>
+                    <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>
+                      {c.cost_type.name}
+                    </span>
                   </td>
                   <td style={{ padding: "12px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--negative-text)", fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
                       R$ {Number(c.value).toFixed(2).replace(".", ",")}
                     </span>
                   </td>
@@ -261,7 +247,8 @@ export default function CostsPage() {
                   </td>
                   <td style={{ padding: "12px", textAlign: "right" }}>
                     <button
-                      onClick={() => deleteCost(c.id)}
+                      aria-label="Excluir custo"
+                      onClick={() => setDeleteTarget(c.id)}
                       style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto", transition: "color 0.15s" }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -334,6 +321,25 @@ export default function CostsPage() {
               disabled={creating || !newCostTypeId || !newValue}
             >
               {creating ? "Salvando..." : "Salvar"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal: Confirmar exclusão */}
+      <Modal open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <ModalContent title="Excluir custo" maxWidth={360}>
+          <ModalBody>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
+              Tem certeza que deseja remover este custo? Essa ação não pode ser desfeita.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </ModalClose>
+            <Button variant="primary" onClick={() => deleteTarget && deleteCost(deleteTarget)}>
+              Excluir
             </Button>
           </ModalFooter>
         </ModalContent>
