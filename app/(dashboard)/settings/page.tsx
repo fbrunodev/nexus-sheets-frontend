@@ -5,7 +5,6 @@ import { User, Lock } from "lucide-react";
 
 const ROLE_LABEL: Record<string, string> = { ADMIN: "Administrador", OPERADOR: "Operador" };
 const PLAN_LABEL: Record<string, string> = { LIFETIME: "Vitalícia", MONTHLY: "Mensal" };
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -79,16 +78,11 @@ export default function SettingsPage() {
             className="ui-input"
           />
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button variant="primary" disabled>Salvar perfil</Button>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
-        </div>
       </Card>
 
       {/* Card senha */}
       <Card style={{ padding: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
           <div
             style={{
               width: "32px",
@@ -104,26 +98,9 @@ export default function SettingsPage() {
           </div>
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Alterar senha</p>
         </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Senha atual</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Nova senha</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ marginBottom: "24px" }}>
-          <label style={LABEL}>Confirmar nova senha</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button variant="primary" disabled>Alterar senha</Button>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
-        </div>
+        <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+          Alteração de senha disponível em breve.
+        </p>
       </Card>
     </div>
   );
