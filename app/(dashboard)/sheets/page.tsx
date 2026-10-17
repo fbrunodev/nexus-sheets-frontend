@@ -15,13 +15,22 @@ import {
   Trash2,
   MoreVertical,
 } from "lucide-react";
+import { StatusDot } from "@/components/ui/status-dot";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
+const CARET =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
 
-
-const statusConfig: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  NOT_STARTED: { label: "Não iniciada", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", dot: "#fbbf24" },
-  IN_PROGRESS: { label: "Em andamento", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", dot: "#3b82f6" },
-  FINISHED: { label: "Concluída", color: "#22d3a5", bg: "rgba(34,211,165,0.08)", dot: "#22d3a5" },
+const MODAL_LABEL: React.CSSProperties = {
+  display: "block",
+  fontSize: "10px",
+  fontWeight: "600",
+  color: "var(--text-muted)",
+  marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.07em",
 };
 
 export default function SheetsPage() {
@@ -52,9 +61,6 @@ export default function SheetsPage() {
   const [createError, setCreateError] = useState("");
   const [cooperationType, setCooperationType] = useState<"META" | "BAU" | "RECARGA">("META");
   const LIMIT = 20;
-
-
-
 
   const searchMounted = useRef(false);
 
@@ -121,7 +127,6 @@ export default function SheetsPage() {
     }
   }
 
-
   useEffect(() => {
     fetchPlatforms();
     fetchOperatorSheets();
@@ -146,21 +151,18 @@ export default function SheetsPage() {
     }
   }
 
-
   async function handleCreate() {
     if (cooperationType !== "BAU" && !selectedPlatform) return;
     setCreateError("");
     setCreating(true);
     try {
       const platform = platforms.find((p) => p.id === selectedPlatform);
-
       const payload: any = {
         name: cooperationType === "BAU" ? "Baú" : (platform ? platform.name : "Sem nome"),
         goal: cooperationType === "META" ? newGoal : 0,
         platform_id: cooperationType === "BAU" ? null : selectedPlatform,
         cooperation_type: cooperationType,
       };
-
       if (pasteMode) {
         const deposits = parseDeposits(pasteText);
         if (deposits.length === 0) {
@@ -172,7 +174,6 @@ export default function SheetsPage() {
       } else {
         payload.initial_lines = newLines;
       }
-
       const { data } = await api.post("/sheets/", payload);
       setSheets((prev) => [data, ...prev]);
       fetchStats();
@@ -194,22 +195,20 @@ export default function SheetsPage() {
   }
 
   async function handleDelete() {
-        if (!deleteTarget) return;
-        setDeleting(true);
-        try {
-          await api.delete(`/sheets/${deleteTarget.id}`);
-          // Remove da lista local
-          setSheets((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-          // Atualiza os contadores
-          fetchStats();
-          setDeleteTarget(null);
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setDeleting(false);
-        }
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/sheets/${deleteTarget.id}`);
+      setSheets((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      fetchStats();
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
   }
-  
+
   function fmt(value: number) {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   }
@@ -221,214 +220,322 @@ export default function SheetsPage() {
     const chest = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
     return received - deposited + chest + bonus + (sheet.salary ?? 0);
   }
-  // Converte o texto colado em uma lista de números
-  // Aceita formato "R$ 120,00" um por linha
+
   function parseDeposits(text: string): number[] {
     return text
       .split("\n")
       .map((line) =>
-        line
-          .replace(/R\$/g, "")   // remove R$
-          .replace(/\./g, "")    // remove separador de milhar
-          .replace(/,/g, ".")    // vírgula decimal vira ponto
-          .trim()
+        line.replace(/R\$/g, "").replace(/\./g, "").replace(/,/g, ".").trim()
       )
       .filter((line) => line !== "")
       .map((line) => parseFloat(line))
       .filter((num) => !isNaN(num));
   }
 
-  const grandTotal = stats?.grand_total ?? 0;
-  const notStarted = stats?.not_started ?? 0;
-  const inProgress = stats?.in_progress ?? 0;
-  const finished = stats?.finished ?? 0;
-  const totalSheets = stats?.total ?? 0;
+  const grandTotal   = stats?.grand_total ?? 0;
+  const notStarted   = stats?.not_started ?? 0;
+  const inProgress   = stats?.in_progress ?? 0;
+  const finished     = stats?.finished ?? 0;
+  const totalSheets  = stats?.total ?? 0;
 
   const tabs = [
-    { label: "Todas", value: "all", count: totalSheets },
+    { label: "Todas",       value: "all",         count: totalSheets },
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
-    { label: "Iniciada", value: "IN_PROGRESS", count: inProgress },
-    { label: "Finalizada", value: "FINISHED", count: finished },
-    ...(operators.length > 0 ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }] : []),
+    { label: "Iniciada",    value: "IN_PROGRESS",  count: inProgress },
+    { label: "Finalizada",  value: "FINISHED",     count: finished },
+    ...(operators.length > 0
+      ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }]
+      : []),
   ];
+
+  const canCreate = !creating && (cooperationType === "BAU" || !!selectedPlatform);
 
   return (
     <div>
-      {/* Header */}
-      <div className="page-header" style={{ marginBottom: "20px" }}>        
-                <div className="page-header-search" style={{ position: "relative" }}>
+      {/* ── Header ── */}
+      <div className="page-header" style={{ marginBottom: "20px" }}>
+        <div className="page-header-search" style={{ position: "relative" }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar planilha..."
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 12px 7px 32px", color: "#fff", fontSize: "12px", outline: "none", width: "100%", fontFamily: "Inter, sans-serif" }}          />
-          <svg style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)" }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6060a0" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            className="ui-input"
+            style={{ paddingLeft: "32px" }}
+          />
+          <svg
+            style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+            width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="var(--text-muted)" strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
         </div>
 
         <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "8px", padding: "7px 14px", display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "center" }}>
-            <FileSpreadsheet size={13} color="#3b82f6" />
-            <span style={{ fontSize: "12px", color: "#6060a0" }}>Total Geral</span>
-            <span style={{ fontSize: "13px", fontWeight: "700", color: grandTotal >= 0 ? "#22d3a5" : "#f87171" }}>{fmt(grandTotal)}</span>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", background: "#3b82f6", border: "none", borderRadius: "8px", padding: "8px 16px", color: "#fff", fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+          <div
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "7px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flex: 1,
+              justifyContent: "center",
+            }}
           >
-            <Plus size={14} />
-            Nova Planilha
-          </button>
-        </div>
-      </div>
-
-      {/* Filtro de período */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        <div style={{ display: "flex", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", overflow: "hidden" }}>
-          {[
-            { label: "Todos", value: "all" },
-            { label: "Mês", value: "month" },
-            { label: "Semana", value: "week" },
-          ].map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value as "all" | "month" | "week")}
+            <FileSpreadsheet size={13} color="var(--accent)" />
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Total Geral</span>
+            <span
               style={{
-                padding: "6px 14px",
-                fontSize: "12px",
-                fontWeight: period === p.value ? "600" : "400",
-                color: period === p.value ? "#3b82f6" : "#6060a0",
-                background: period === p.value ? "rgba(59,130,246,0.1)" : "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Inter, sans-serif",
-                transition: "all 0.15s",
+                fontSize: "13px",
+                fontWeight: "700",
+                fontVariantNumeric: "tabular-nums",
+                color: grandTotal >= 0 ? "var(--positive)" : "var(--negative-text)",
               }}
             >
-              {p.label}
-            </button>
-          ))}
+              {fmt(grandTotal)}
+            </span>
+          </div>
+          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px", fontSize: "12px" }}>
+            <Plus size={14} />
+            Nova Planilha
+          </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs-row" style={{ marginBottom: "16px" }}>        
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveStatus(tab.value)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: activeStatus === tab.value ? "600" : "400", color: activeStatus === tab.value ? "#fff" : "#6060a0", background: activeStatus === tab.value ? "rgba(59,130,246,0.12)" : "transparent", border: `1px solid ${activeStatus === tab.value ? "rgba(59,130,246,0.3)" : "#1a1a2e"}`, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", flexShrink: 0, whiteSpace: "nowrap" }}
-          >
-            {tab.label}
-            <span style={{ background: activeStatus === tab.value ? "rgba(59,130,246,0.2)" : "#1a1a2e", color: activeStatus === tab.value ? "#3b82f6" : "#6060a0", borderRadius: "20px", padding: "1px 7px", fontSize: "10px", fontWeight: "600" }}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
+      {/* ── Filtro de período ── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+        <div
+          style={{
+            display: "flex",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          {(["all", "month", "week"] as const).map((v) => {
+            const label = v === "all" ? "Todos" : v === "month" ? "Mês" : "Semana";
+            const active = period === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setPeriod(v)}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "12px",
+                  fontWeight: active ? "600" : "400",
+                  color: active ? "var(--text)" : "var(--text-muted)",
+                  background: active ? "var(--surface-hover)" : "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 0.15s",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-       {/* Contadores */}
-       <div className="grid-4" style={{ marginBottom: "20px" }}>
-      {[
-          { label: "Total", value: totalSheets, color: "#fff", icon: <FileSpreadsheet size={16} color="#6060a0" /> },
-          { label: "Não Iniciadas", value: notStarted, color: "#fbbf24", icon: <Clock size={16} color="#fbbf24" /> },
-          { label: "Iniciadas", value: inProgress, color: "#3b82f6", icon: <TrendingUp size={16} color="#3b82f6" /> },
-          { label: "Finalizadas", value: finished, color: "#22d3a5", icon: <Trophy size={16} color="#22d3a5" /> },
+      {/* ── Tabs ── */}
+      <div className="tabs-row" style={{ marginBottom: "16px" }}>
+        {tabs.map((tab) => {
+          const active = activeStatus === tab.value;
+          return (
+            <button
+              key={tab.value}
+              onClick={() => setActiveStatus(tab.value)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: active ? "600" : "400",
+                color: active ? "var(--text)" : "var(--text-muted)",
+                background: active ? "var(--surface-hover)" : "transparent",
+                border: `1px solid ${active ? "var(--border-strong)" : "var(--border)"}`,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.15s",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {tab.label}
+              <span
+                style={{
+                  background: active ? "var(--border-strong)" : "var(--border)",
+                  color: active ? "var(--text)" : "var(--text-muted)",
+                  borderRadius: "20px",
+                  padding: "1px 7px",
+                  fontSize: "10px",
+                  fontWeight: "600",
+                }}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Contadores ── */}
+      <div className="grid-4" style={{ marginBottom: "20px" }}>
+        {[
+          { label: "Total",         value: totalSheets, color: "var(--text)",      icon: <FileSpreadsheet size={16} color="var(--text-muted)" /> },
+          { label: "Não Iniciadas", value: notStarted,  color: "var(--warning)",   icon: <Clock size={16} color="var(--warning)" /> },
+          { label: "Iniciadas",     value: inProgress,  color: "var(--accent)",    icon: <TrendingUp size={16} color="var(--accent)" /> },
+          { label: "Finalizadas",   value: finished,    color: "var(--positive)",  icon: <Trophy size={16} color="var(--positive)" /> },
         ].map((item) => (
-          <div key={item.label} style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            key={item.label}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "10px",
+              padding: "14px 16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
-              <p style={{ fontSize: "10px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.07em" }}>{item.label}</p>
-              <p style={{ fontSize: "22px", fontWeight: "700", color: item.color }}>{item.value}</p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  color: "var(--text-muted)",
+                  marginBottom: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                }}
+              >
+                {item.label}
+              </p>
+              <p style={{ fontSize: "22px", fontWeight: "700", color: item.color }}>
+                {item.value}
+              </p>
             </div>
             {item.icon}
           </div>
         ))}
       </div>
 
-      {/* Cards */}
+      {/* ── Cards ── */}
       {activeStatus === "operators" ? (
         operatorSheets.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
+          <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
             <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
             <p style={{ fontSize: "13px" }}>Nenhuma planilha de operador encontrada</p>
           </div>
         ) : (
           <div className="grid-cards">
             {operatorSheets.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
-              const total = calcTotal(sheet);
-              const st = statusConfig[sheet.status];
+              const total     = calcTotal(sheet);
               const isPositive = total > 0;
-              const isNeutral = total === 0;
-              const deposited = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
-              const roi = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-              const roiNum = parseFloat(roi);
+              const isNeutral  = total === 0;
+              const deposited  = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
+              const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
+              const roiNum     = parseFloat(roi);
 
               return (
                 <div
                   key={sheet.id}
                   onClick={() => router.push(`/sheets/${sheet.id}`)}
-                  style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a2e"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    padding: "18px",
+                    cursor: "pointer",
+                    transition: "border-color 0.2s, transform 0.2s",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-strong)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
                 >
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: isPositive ? "#22d3a5" : isNeutral ? "#3b82f6" : "#f87171", borderRadius: "12px 12px 0 0" }} />
+                  <div
+                    style={{
+                      position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+                      background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
+                      borderRadius: "12px 12px 0 0",
+                    }}
+                  />
 
-                  {/* Badge do operador */}
-                  <div style={{ display: "inline-flex", alignItems: "center", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600", color: "#a78bfa", marginBottom: "10px" }}>
-                    {operator_name}
+                  <div style={{ marginBottom: "10px" }}>
+                    <Badge variant="neutral">{operator_name}</Badge>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
                     <div style={{ flex: 1, marginRight: "8px" }}>
-                      <p style={{ fontSize: "14px", fontWeight: "600", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
-                      <p style={{ fontSize: "11px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+                      <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {sheet.name}
+                      </p>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                        {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
+                      </p>
                     </div>
-                    <span style={{ display: "flex", alignItems: "center", gap: "4px", background: st.bg, color: st.color, borderRadius: "20px", padding: "3px 9px", fontSize: "10px", fontWeight: "600", flexShrink: 0 }}>
-                      <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: st.dot }} />
-                      {st.label}
-                    </span>
+                    <StatusDot status={sheet.status} showLabel={false} size={8} style={{ flexShrink: 0 }} />
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                     {sheet.cooperation_type === "META" ? (
-                      <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
+                      <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
                         {sheet.goal > 0 ? (() => {
                           const filledLines = sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length;
                           return (
                             <>
-                              <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
-                              <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px" }} />
+                              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                              <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                               </div>
                             </>
                           );
                         })() : (
-                          <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>—</p>
+                          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
                         )}
                       </div>
                     ) : (
-                      <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                      <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
                           {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                         </p>
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length}</p>
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                          {sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length}
+                        </p>
                       </div>
                     )}
-                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "#22d3a5" : roiNum < 0 ? "#f87171" : "#6060a0" }}>
+                    <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
                         {roiNum > 0 ? "+" : ""}{roi}%
                       </p>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #1a1a2e" }}>
-                    <span style={{ fontSize: "10px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+                    <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      {isPositive ? <TrendingUp size={13} color="#22d3a5" /> : isNeutral ? <Minus size={13} color="#6060a0" /> : <TrendingDown size={13} color="#f87171" />}
-                      <span style={{ fontSize: "16px", fontWeight: "700", color: isPositive ? "#22d3a5" : isNeutral ? "#6060a0" : "#f87171" }}>
+                      {isPositive
+                        ? <TrendingUp size={13} color="var(--positive)" />
+                        : isNeutral
+                        ? <Minus size={13} color="var(--text-muted)" />
+                        : <TrendingDown size={13} color="var(--negative-text)" />}
+                      <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
                         {isPositive ? "+" : ""}{fmt(total)}
                       </span>
                     </div>
@@ -439,68 +546,111 @@ export default function SheetsPage() {
           </div>
         )
       ) : loading ? (
-        <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
       ) : sheets.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
           <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
           <p style={{ fontSize: "13px" }}>Nenhuma planilha encontrada</p>
         </div>
       ) : (
         <div className="grid-cards">
           {sheets.map((sheet) => {
-            const total = calcTotal(sheet);
-            const status = statusConfig[sheet.status];
+            const total      = calcTotal(sheet);
             const isPositive = total > 0;
-            const isNeutral = total === 0;
-            const deposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
-            const roi = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-            const roiNum = parseFloat(roi);
+            const isNeutral  = total === 0;
+            const deposited  = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
+            const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
+            const roiNum     = parseFloat(roi);
 
             return (
               <div
                 key={sheet.id}
                 onClick={() => router.push(`/sheets/${sheet.id}`)}
-                style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a2e"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  padding: "18px",
+                  cursor: "pointer",
+                  transition: "border-color 0.2s, transform 0.2s",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
                 {/* Linha topo */}
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: isPositive ? "#22d3a5" : isNeutral ? "#3b82f6" : "#f87171", borderRadius: "12px 12px 0 0" }} />
+                <div
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+                    background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
+                    borderRadius: "12px 12px 0 0",
+                  }}
+                />
 
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
                   <div style={{ flex: 1, marginRight: "8px" }}>
-                    <p style={{ fontSize: "14px", fontWeight: "600", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
-                    <p style={{ fontSize: "11px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+                    <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {sheet.name}
+                    </p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                      {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
+                    </p>
                   </div>
-                  <span style={{ display: "flex", alignItems: "center", gap: "4px", background: status.bg, color: status.color, borderRadius: "20px", padding: "3px 9px", fontSize: "10px", fontWeight: "600", flexShrink: 0 }}>
-                    <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: status.dot }} />
-                    {status.label}
-                  </span>
+                  <StatusDot status={sheet.status} showLabel={false} size={8} style={{ marginTop: "3px", flexShrink: 0 }} />
                   <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(menuOpen === sheet.id ? null : sheet.id);
-                      }}
-                      title="Opções"
-                      style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px", borderRadius: "4px", transition: "color 0.15s" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#9090b0"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "#3a3a5c"; }}
-                    >
-                      <MoreVertical size={16} />
-                    </button>
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(menuOpen === sheet.id ? null : sheet.id);
+                    }}
+                    title="Opções"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--text-muted)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "2px",
+                      borderRadius: "4px",
+                      transition: "color 0.15s",
+                      marginLeft: "4px",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
                 </div>
-                 {/* Dropdown de opções */}
+
+                {/* Dropdown de opções */}
                 {menuOpen === sheet.id && (
                   <>
-                    {/* Overlay invisível para fechar ao clicar fora */}
                     <div
                       onClick={(e) => { e.stopPropagation(); setMenuOpen(null); }}
                       style={{ position: "fixed", inset: 0, zIndex: 40 }}
                     />
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      style={{ position: "absolute", top: "48px", right: "16px", background: "#141422", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "4px", minWidth: "140px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", zIndex: 41 }}
+                      style={{
+                        position: "absolute",
+                        top: "48px",
+                        right: "16px",
+                        background: "var(--surface-hover)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "10px",
+                        padding: "4px",
+                        minWidth: "140px",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                        zIndex: 41,
+                      }}
                     >
                       <button
                         onClick={(e) => {
@@ -508,8 +658,23 @@ export default function SheetsPage() {
                           setMenuOpen(null);
                           setDeleteTarget(sheet);
                         }}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 10px", borderRadius: "7px", background: "transparent", border: "none", color: "#f87171", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "background 0.15s" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(248,113,113,0.08)"; }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          width: "100%",
+                          padding: "8px 10px",
+                          borderRadius: "7px",
+                          background: "transparent",
+                          border: "none",
+                          color: "var(--negative-text)",
+                          fontSize: "13px",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--negative-subtle)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                       >
                         <Trash2 size={14} />
@@ -522,44 +687,50 @@ export default function SheetsPage() {
                 {/* Métricas */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                   {sheet.cooperation_type === "META" ? (
-                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
+                    <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
                       {sheet.goal > 0 ? (() => {
                         const filledLines = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
                         return (
                           <>
-                            <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
-                            <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px" }} />
+                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                            <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                             </div>
                           </>
                         );
                       })() : (
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>—</p>
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
                       )}
                     </div>
                   ) : (
-                    <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                    <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
                         {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                       </p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: "#fff" }}>{sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length}</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                        {sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length}
+                      </p>
                     </div>
                   )}
-                  <div style={{ background: "#141422", borderRadius: "8px", padding: "10px 12px" }}>
-                    <p style={{ fontSize: "9px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "#22d3a5" : roiNum < 0 ? "#f87171" : "#6060a0" }}>
+                  <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
+                    <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
+                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
                       {roiNum > 0 ? "+" : ""}{roi}%
                     </p>
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #1a1a2e" }}>
-                  <span style={{ fontSize: "10px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                    {isPositive ? <TrendingUp size={13} color="#22d3a5" /> : isNeutral ? <Minus size={13} color="#6060a0" /> : <TrendingDown size={13} color="#f87171" />}
-                    <span style={{ fontSize: "16px", fontWeight: "700", color: isPositive ? "#22d3a5" : isNeutral ? "#6060a0" : "#f87171" }}>
+                    {isPositive
+                      ? <TrendingUp size={13} color="var(--positive)" />
+                      : isNeutral
+                      ? <Minus size={13} color="var(--text-muted)" />
+                      : <TrendingDown size={13} color="var(--negative-text)" />}
+                    <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
                       {isPositive ? "+" : ""}{fmt(total)}
                     </span>
                   </div>
@@ -570,176 +741,276 @@ export default function SheetsPage() {
         </div>
       )}
 
+      {/* ── Carregar mais ── */}
       {!loading && hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-          <button
-            onClick={loadMore}
-            disabled={loadingMore}
-            style={{
-              background: "#0f0f1a",
-              border: "1px solid #1a1a2e",
-              borderRadius: "8px",
-              padding: "10px 24px",
-              color: loadingMore ? "#3a3a5c" : "#3b82f6",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: loadingMore ? "not-allowed" : "pointer",
-              fontFamily: "Inter, sans-serif",
-              transition: "all 0.15s",
-            }}
-          >
+          <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? "Carregando..." : "Carregar mais"}
-          </button>
+          </Button>
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
-          onClick={() => { setShowModal(false); setCreateError(""); setCooperationType("META"); }}
-        >
-          <div
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "380px" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px" }}>Nova Planilha</h2>
-
+      {/* ── Modal — Nova Planilha ── */}
+      <Modal
+        open={showModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowModal(false);
+            setCreateError("");
+            setCooperationType("META");
+          }
+        }}
+      >
+        <ModalContent title="Nova Planilha" maxWidth={380}>
+          <ModalBody>
+            {/* Plataforma */}
             {cooperationType !== "BAU" && (
-              <div style={{ marginBottom: "14px" }}>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Plataforma</label>
+              <div>
+                <label style={MODAL_LABEL}>Plataforma</label>
                 <select
                   value={selectedPlatform}
                   onChange={(e) => setSelectedPlatform(e.target.value)}
                   autoFocus
-                  style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: selectedPlatform ? "#fff" : "#6060a0", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", cursor: "pointer" }}
+                  className="ui-select"
+                  style={{ backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: "36px" }}
                 >
                   <option value="" disabled>Selecione a plataforma</option>
                   {platforms.map((p) => (
-                    <option key={p.id} value={p.id} style={{ color: "#fff" }}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>
             )}
 
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Tipo de Cooperação</label>
-              <div style={{ display: "flex", gap: "4px", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "4px" }}>
-                {(["META", "BAU", "RECARGA"] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setCooperationType(type)}
-                    style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: cooperationType === type ? "rgba(59,130,246,0.15)" : "transparent", color: cooperationType === type ? "#3b82f6" : "#6060a0" }}
-                  >
-                    {type === "META" ? "Meta" : type === "BAU" ? "Baú" : "Recarga"}
-                  </button>
-                ))}
+            {/* Tipo de Cooperação */}
+            <div>
+              <label style={MODAL_LABEL}>Tipo de Cooperação</label>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "4px",
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "4px",
+                }}
+              >
+                {(["META", "BAU", "RECARGA"] as const).map((type) => {
+                  const active = cooperationType === type;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setCooperationType(type)}
+                      style={{
+                        flex: 1,
+                        padding: "7px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        border: "none",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        background: active ? "var(--surface-hover)" : "transparent",
+                        color: active ? "var(--text)" : "var(--text-muted)",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {type === "META" ? "Meta" : type === "BAU" ? "Baú" : "Recarga"}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
+            {/* Meta */}
             {cooperationType === "META" && (
-              <div style={{ marginBottom: "14px" }}>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Meta</label>
+              <div>
+                <label style={MODAL_LABEL}>Meta</label>
                 <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
-                  {[20, 30, 40, 50].map((g) => (
-                    <button
-                      key={g}
-                      onClick={() => setNewGoal(g)}
-                      style={{ padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", border: `1px solid ${newGoal === g ? "rgba(59,130,246,0.5)" : "#1a1a2e"}`, background: newGoal === g ? "rgba(59,130,246,0.12)" : "#080810", color: newGoal === g ? "#3b82f6" : "#6060a0", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-                    >
-                      {g}
-                    </button>
-                  ))}
+                  {[20, 30, 40, 50].map((g) => {
+                    const active = newGoal === g;
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => setNewGoal(g)}
+                        style={{
+                          padding: "5px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          border: `1px solid ${active ? "var(--border-strong)" : "var(--border)"}`,
+                          background: active ? "var(--surface-hover)" : "var(--bg)",
+                          color: active ? "var(--text)" : "var(--text-muted)",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
                 </div>
-                <input type="number" value={newGoal} onChange={(e) => setNewGoal(Number(e.target.value))} min={0} placeholder="0" style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+                <input
+                  type="number"
+                  value={newGoal}
+                  onChange={(e) => setNewGoal(Number(e.target.value))}
+                  min={0}
+                  placeholder="0"
+                  className="ui-input"
+                />
               </div>
             )}
 
+            {/* Modo: linhas vs colar */}
             {cooperationType === "META" && (
-              <div style={{ display: "flex", gap: "4px", marginBottom: "14px", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "4px" }}>
-                <button onClick={() => setPasteMode(false)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: !pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: !pasteMode ? "#3b82f6" : "#6060a0" }}>
-                  Linhas vazias
-                </button>
-                <button onClick={() => setPasteMode(true)} style={{ flex: 1, padding: "7px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", background: pasteMode ? "rgba(59,130,246,0.15)" : "transparent", color: pasteMode ? "#3b82f6" : "#6060a0" }}>
-                  Colar depósitos
-                </button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "4px",
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "4px",
+                }}
+              >
+                {[
+                  { label: "Linhas vazias", value: false },
+                  { label: "Colar depósitos", value: true },
+                ].map(({ label, value }) => {
+                  const active = pasteMode === value;
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setPasteMode(value)}
+                      style={{
+                        flex: 1,
+                        padding: "7px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        border: "none",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        background: active ? "var(--surface-hover)" : "transparent",
+                        color: active ? "var(--text)" : "var(--text-muted)",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
+            {/* Linhas / textarea */}
             {cooperationType === "META" ? (
               !pasteMode ? (
-                <div style={{ marginBottom: "22px" }}>
-                  <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Linhas iniciais</label>
-                  <input type="number" value={newLines} onChange={(e) => setNewLines(Number(e.target.value))} min={1} max={200} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+                <div>
+                  <label style={MODAL_LABEL}>Linhas iniciais</label>
+                  <input
+                    type="number"
+                    value={newLines}
+                    onChange={(e) => setNewLines(Number(e.target.value))}
+                    min={1}
+                    max={200}
+                    className="ui-input"
+                  />
                 </div>
               ) : (
-                <div style={{ marginBottom: "22px" }}>
-                  <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                    Cole os depósitos {pasteText.trim() && `(${parseDeposits(pasteText).length} linhas)`}
+                <div>
+                  <label style={MODAL_LABEL}>
+                    Cole os depósitos{pasteText.trim() ? ` (${parseDeposits(pasteText).length} linhas)` : ""}
                   </label>
-                  <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={"R$ 120,00\nR$ 21,00\nR$ 90,00\n..."} rows={6} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", resize: "vertical" }} />
+                  <textarea
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    placeholder={"R$ 120,00\nR$ 21,00\nR$ 90,00\n..."}
+                    rows={6}
+                    className="ui-textarea"
+                  />
                 </div>
               )
             ) : (
-              <div style={{ marginBottom: "22px" }}>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "600", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.07em" }}>Linhas iniciais</label>
-                <input type="number" value={newLines} onChange={(e) => setNewLines(Number(e.target.value))} min={1} max={200} style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "9px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif" }} />
+              <div>
+                <label style={MODAL_LABEL}>Linhas iniciais</label>
+                <input
+                  type="number"
+                  value={newLines}
+                  onChange={(e) => setNewLines(Number(e.target.value))}
+                  min={1}
+                  max={200}
+                  className="ui-input"
+                />
               </div>
             )}
 
+            {/* Erro */}
             {createError && (
-              <p style={{ fontSize: "12px", color: "#f87171", marginBottom: "12px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "8px 12px" }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--negative-text)",
+                  background: "var(--negative-subtle)",
+                  border: "1px solid var(--negative-bar)",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                }}
+              >
                 {createError}
               </p>
             )}
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => { setShowModal(false); setCreateError(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancelar</button>
-              <button onClick={handleCreate} disabled={creating || (cooperationType !== "BAU" && !selectedPlatform)} style={{ flex: 1, padding: "10px", borderRadius: "8px", background: creating || (cooperationType !== "BAU" && !selectedPlatform) ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: creating || (cooperationType !== "BAU" && !selectedPlatform) ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}>
-                {creating ? "Criando..." : "Criar"}
-              </button>
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </ModalClose>
+            <Button variant="primary" onClick={handleCreate} disabled={!canCreate}>
+              {creating ? "Criando..." : "Criar"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* ── Modal — Confirmar exclusão ── */}
+      <Modal
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null); }}
+      >
+        <ModalContent maxWidth={360}>
+          <ModalBody style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "var(--negative-subtle)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+              }}
+            >
+              <Trash2 size={22} color="var(--negative-text)" />
             </div>
-          </div>
-        </div>
-      )}
-      {/* Pop-up de confirmação de exclusão */}
-      {deleteTarget && (
-        <div
-          onClick={() => !deleting && setDeleteTarget(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: "20px" }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "#0f0f1a", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "360px", textAlign: "center" }}
-          >
-            <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <Trash2 size={22} color="#f87171" />
-            </div>
-            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "8px" }}>
+            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", marginBottom: "8px" }}>
               Excluir planilha?
             </h3>
-            <p style={{ fontSize: "14px", color: "#9090b0", marginBottom: "22px", lineHeight: "1.5" }}>
-              A planilha <strong style={{ color: "#fff" }}>{deleteTarget.name}</strong> será removida da sua lista. Esta ação pode ser revertida pelo suporte.
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              A planilha <strong style={{ color: "var(--text)" }}>{deleteTarget?.name}</strong> será removida da sua lista. Esta ação pode ser revertida pelo suporte.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
-                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "14px", fontWeight: "600", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: deleting ? "#1a1a2e" : "#f87171", border: "none", color: "#fff", fontSize: "14px", fontWeight: "600", cursor: deleting ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                {deleting ? "Excluindo..." : "Excluir"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost" disabled={deleting}>Cancelar</Button>
+            </ModalClose>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Excluindo..." : "Excluir"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
