@@ -7,13 +7,8 @@ import { Sheet } from "@/types";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
-
-const TYPE_STYLE: Record<string, { bg: string; color: string; border: string }> = {
-  META:    { bg: "var(--surface-hover)", color: "var(--accent)",    border: "var(--border-strong)" },
-  BAU:     { bg: "rgba(245,185,74,0.10)", color: "var(--warning)",   border: "rgba(245,185,74,0.3)" },
-  RECARGA: { bg: "rgba(34,211,165,0.08)", color: "var(--positive)",  border: "rgba(34,211,165,0.25)" },
-};
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -154,7 +149,6 @@ export default function SheetPage() {
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
-  const typeStyle = TYPE_STYLE[sheet.cooperation_type] ?? TYPE_STYLE.META;
   const COLS = "44px 1fr 1fr 1fr 1fr 120px 36px";
 
   return (
@@ -192,27 +186,16 @@ export default function SheetPage() {
               <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
                 {sheet.name}
               </p>
-              <span
-                style={{
-                  flexShrink: 0,
-                  fontSize: "9px",
-                  fontWeight: "700",
-                  padding: "2px 7px",
-                  borderRadius: "20px",
-                  background: typeStyle.bg,
-                  color: typeStyle.color,
-                  border: `1px solid ${typeStyle.border}`,
-                }}
-              >
+              <Badge variant="neutral" style={{ flexShrink: 0, fontSize: "9px" }}>
                 {sheet.cooperation_type}
-              </span>
+              </Badge>
               {isReadOnly && (
                 <span
                   style={{
                     flexShrink: 0,
-                    background: "rgba(245,185,74,0.10)",
+                    background: "var(--warning-subtle)",
                     color: "var(--warning)",
-                    border: "1px solid rgba(245,185,74,0.3)",
+                    border: "1px solid var(--warning-border)",
                     borderRadius: "6px",
                     padding: "2px 8px",
                     fontSize: "10px",
@@ -252,9 +235,9 @@ export default function SheetPage() {
                 borderRadius: "8px",
                 fontSize: "12px",
                 fontWeight: "600",
-                background: "rgba(34,211,165,0.08)",
+                background: "var(--positive-subtle)",
                 color: "var(--positive)",
-                border: "1px solid rgba(34,211,165,0.25)",
+                border: "1px solid var(--positive-border)",
               }}
             >
               ✓ Concluída
@@ -314,7 +297,7 @@ export default function SheetPage() {
           const color = (item.value ?? 0) !== 0 ? item.activeColor! : "var(--text-muted)";
           const showPlus = (item.value ?? 0) > 0;
           const borderStr = item.highlight
-            ? `2px solid ${finalResult >= 0 ? "rgba(34,211,165,0.35)" : "rgba(229,72,77,0.35)"}`
+            ? `2px solid ${finalResult >= 0 ? "var(--positive-border)" : "var(--negative-border)"}`
             : "1px solid var(--border)";
           return (
             <div
@@ -585,8 +568,8 @@ export default function SheetPage() {
                 width: "56px",
                 height: "56px",
                 borderRadius: "50%",
-                background: "rgba(34,211,165,0.08)",
-                border: "1px solid rgba(34,211,165,0.25)",
+                background: "var(--positive-subtle)",
+                border: "1px solid var(--positive-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

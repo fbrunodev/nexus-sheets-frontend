@@ -648,7 +648,7 @@ export default function SheetsPage() {
                         borderRadius: "10px",
                         padding: "4px",
                         minWidth: "140px",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                        boxShadow: "var(--shadow-popover)",
                         zIndex: 41,
                       }}
                     >

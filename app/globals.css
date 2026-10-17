@@ -23,6 +23,20 @@
   --primary-bg: #EDEDEF;
   --primary-text: #0B0B0C;
   --negative-subtle: rgba(229,72,77,0.10);
+  --negative-border: rgba(229,72,77,0.25);
+  /* Variantes sutis */
+  --positive-subtle: rgba(74,222,149,0.08);
+  --positive-border: rgba(74,222,149,0.25);
+  --warning-subtle: rgba(245,185,74,0.12);
+  --warning-border: rgba(245,185,74,0.30);
+  /* Sombras */
+  --shadow-popover: 0 8px 24px rgba(0,0,0,0.45);
+  /* Cores de gráfico */
+  --chart-1: #AEB8FF;
+  --chart-2: #6E7BD9;
+  --chart-3: #3E4796;
+  --chart-4: #2A3170;
+  --chart-5: #3A3A50;
 }
 
 @media (min-width: 768px) {

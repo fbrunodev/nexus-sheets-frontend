@@ -168,8 +168,8 @@ export default function SettingsPage() {
           {profileSuccess && (
             <div
               style={{
-                background: "rgba(34,211,165,0.08)",
-                border: "1px solid rgba(34,211,165,0.25)",
+                background: "var(--positive-subtle)",
+                border: "1px solid var(--positive-border)",
                 borderRadius: "8px",
                 padding: "10px 14px",
                 color: "var(--positive)",
@@ -206,7 +206,7 @@ export default function SettingsPage() {
               width: "32px",
               height: "32px",
               borderRadius: "8px",
-              background: "rgba(245,185,74,0.12)",
+              background: "var(--warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -270,8 +270,8 @@ export default function SettingsPage() {
           {passwordSuccess && (
             <div
               style={{
-                background: "rgba(34,211,165,0.08)",
-                border: "1px solid rgba(34,211,165,0.25)",
+                background: "var(--positive-subtle)",
+                border: "1px solid var(--positive-border)",
                 borderRadius: "8px",
                 padding: "10px 14px",
                 color: "var(--positive)",

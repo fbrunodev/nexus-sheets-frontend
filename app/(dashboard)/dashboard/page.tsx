@@ -217,7 +217,7 @@ export default function DashboardPage() {
                   overflow: "hidden",
                   zIndex: 20,
                   minWidth: "210px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                  boxShadow: "var(--shadow-popover)",
                 }}
               >
                 {PERIOD_OPTIONS.map((opt) => (

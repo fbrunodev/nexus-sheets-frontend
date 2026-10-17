@@ -254,7 +254,7 @@ export default function CostsPage() {
                           width: "28px",
                           height: "28px",
                           borderRadius: "7px",
-                          background: "rgba(34,211,165,0.08)",
+                          background: "var(--positive-subtle)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",

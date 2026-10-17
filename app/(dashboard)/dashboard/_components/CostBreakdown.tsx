@@ -8,7 +8,13 @@ interface Props {
   sheetCount?: number;
 }
 
-const COLORS = ["#AEB8FF", "#6E7BD9", "#3E4796", "#2A3170", "#3A3A50"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
