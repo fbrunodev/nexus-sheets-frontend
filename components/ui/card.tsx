@@ -1,15 +1,33 @@
 import * as React from "react"
 
+export type CardVariant = "default" | "section" | "tile" | "compact"
+
+const RADIUS: Record<CardVariant, string> = {
+  default: "12px",
+  section: "14px",
+  tile:    "10px",
+  compact: "8px",
+}
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: CardVariant
+  highlight?: boolean
+  border?: string
+}
+
 export function Card({
+  variant = "default",
+  highlight,
+  border,
   style,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: CardProps) {
   return (
     <div
       style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
+        background: highlight ? "var(--surface-hover)" : "var(--surface)",
+        border: border ?? "1px solid var(--border)",
+        borderRadius: RADIUS[variant],
         ...style,
       }}
       {...props}

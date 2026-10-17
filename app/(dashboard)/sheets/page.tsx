@@ -274,8 +274,8 @@ export default function SheetsPage() {
 
         <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Card
+            variant="compact"
             style={{
-              borderRadius: "8px",
               padding: "7px 14px",
               display: "flex",
               alignItems: "center",
@@ -395,8 +395,8 @@ export default function SheetsPage() {
         ].map((item) => (
           <Card
             key={item.label}
+            variant="tile"
             style={{
-              borderRadius: "10px",
               padding: "14px 16px",
               display: "flex",
               justifyContent: "space-between",

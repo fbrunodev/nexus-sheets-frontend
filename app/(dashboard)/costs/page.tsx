@@ -185,11 +185,8 @@ export default function CostsPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Card
-            style={{
-              borderRadius: "10px",
-              padding: "10px 20px",
-              textAlign: "center",
-            }}
+            variant="tile"
+            style={{ padding: "10px 20px", textAlign: "center" }}
           >
             <p style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
               Total do mês
@@ -210,7 +207,7 @@ export default function CostsPage() {
       </div>
 
       {/* Lista de custos */}
-      <Card style={{ borderRadius: "14px", padding: "24px" }}>
+      <Card variant="section" style={{ padding: "24px" }}>
         {loading ? (
           <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
         ) : costs.length === 0 ? (

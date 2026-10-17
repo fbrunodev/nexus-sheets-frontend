@@ -297,12 +297,10 @@ export default function SheetPage() {
           return (
             <Card
               key={item.label}
-              style={{
-                background: item.highlight ? "var(--surface-hover)" : undefined,
-                border: borderStr,
-                borderRadius: "14px",
-                padding: "16px",
-              }}
+              variant="section"
+              highlight={item.highlight}
+              border={borderStr}
+              style={{ padding: "16px" }}
             >
               <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>
                 {item.label}
@@ -381,7 +379,7 @@ export default function SheetPage() {
       </div>
 
       {/* ── Tabela ── */}
-      <Card style={{ borderRadius: "14px", overflow: "hidden" }}>
+      <Card variant="section" style={{ overflow: "hidden" }}>
         {/* Cabeçalho desktop */}
         <div
           className="table-header-desktop"

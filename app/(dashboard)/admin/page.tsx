@@ -303,7 +303,7 @@ export default function AdminPage() {
 
       {/* ── Tab: Activation Keys ── */}
       {activeTab === "keys" && (
-        <Card style={{ borderRadius: "14px", padding: "24px" }}>
+        <Card variant="section" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Gerenciar Keys
@@ -398,7 +398,7 @@ export default function AdminPage() {
 
       {/* ── Tab: Operadores ── */}
       {activeTab === "users" && (
-        <Card style={{ borderRadius: "14px", padding: "24px" }}>
+        <Card variant="section" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Operadores
@@ -489,7 +489,7 @@ export default function AdminPage() {
 
       {/* ── Tab: Plataformas ── */}
       {activeTab === "platforms" && (
-        <Card style={{ borderRadius: "14px", padding: "24px" }}>
+        <Card variant="section" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Plataformas
@@ -546,7 +546,7 @@ export default function AdminPage() {
 
       {/* ── Tab: Tipos de Custo ── */}
       {activeTab === "costs" && (
-        <Card style={{ borderRadius: "14px", padding: "24px" }}>
+        <Card variant="section" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Tipos de Custo
