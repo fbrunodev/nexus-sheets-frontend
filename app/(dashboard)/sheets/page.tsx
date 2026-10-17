@@ -27,13 +27,12 @@ const CARET =
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
+
+const fmtRoi = new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1 });
 
 export default function SheetsPage() {
   const router = useRouter();
@@ -418,8 +417,7 @@ export default function SheetsPage() {
               const isPositive = total > 0;
               const isNeutral  = total === 0;
               const deposited  = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
-              const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-              const roiNum     = parseFloat(roi);
+              const roiRatio   = deposited > 0 ? (total / deposited) : 0;
 
               return (
                 <Card
@@ -494,9 +492,9 @@ export default function SheetsPage() {
                       </div>
                     )}
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                        {roiNum > 0 ? "+" : ""}{roi}%
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
+                        {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
                       </p>
                     </div>
                   </div>
