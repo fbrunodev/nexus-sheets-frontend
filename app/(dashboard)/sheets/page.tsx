@@ -242,8 +242,8 @@ export default function SheetsPage() {
   const tabs = [
     { label: "Todas",       value: "all",         count: totalSheets },
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
-    { label: "Iniciada",    value: "IN_PROGRESS",  count: inProgress },
-    { label: "Finalizada",  value: "FINISHED",     count: finished },
+    { label: "Em andamento", value: "IN_PROGRESS",  count: inProgress },
+    { label: "Concluída",   value: "FINISHED",     count: finished },
     ...(operators.length > 0
       ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }]
       : []),
