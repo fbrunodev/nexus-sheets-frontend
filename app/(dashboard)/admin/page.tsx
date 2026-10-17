@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -221,14 +222,7 @@ export default function AdminPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-          <ShieldAlert size={20} color="var(--accent)" />
-          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)" }}>Painel Admin</h1>
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie usuários, chaves e configurações globais</p>
-      </div>
+      <PageHeader title="Painel admin" subtitle="Gerencie usuários, chaves e configurações globais" />
 
       {/* Métricas */}
       <div

@@ -19,6 +19,7 @@ import { StatusDot } from "@/components/ui/status-dot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -253,8 +254,18 @@ export default function SheetsPage() {
 
   return (
     <div>
-      {/* ── Header ── */}
-      <div className="page-header" style={{ marginBottom: "20px" }}>
+      <PageHeader
+        title="Planilhas"
+        actions={
+          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px" }}>
+            <Plus size={14} />
+            Nova Planilha
+          </Button>
+        }
+      />
+
+      {/* ── Busca ── */}
+      <div className="page-header" style={{ marginBottom: "16px" }}>
         <div className="page-header-search" style={{ position: "relative" }}>
           <input
             value={search}
@@ -270,37 +281,6 @@ export default function SheetsPage() {
           >
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
-        </div>
-
-        <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Card
-            variant="compact"
-            style={{
-              padding: "7px 14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              flex: 1,
-              justifyContent: "center",
-            }}
-          >
-            <FileSpreadsheet size={13} color="var(--accent)" />
-            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Total Geral</span>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: "700",
-                fontVariantNumeric: "tabular-nums",
-                color: grandTotal >= 0 ? "var(--positive)" : "var(--negative-text)",
-              }}
-            >
-              {fmt(grandTotal)}
-            </span>
-          </Card>
-          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px", fontSize: "12px" }}>
-            <Plus size={14} />
-            Nova Planilha
-          </Button>
         </div>
       </div>
 

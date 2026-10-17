@@ -5,6 +5,7 @@ import api from "@/services/api";
 import { DollarSign, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -129,14 +130,7 @@ export default function CostsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-          <DollarSign size={20} color="var(--positive)" />
-          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)" }}>Custos</h1>
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie seus custos mensais</p>
-      </div>
+      <PageHeader title="Custos" subtitle="Gerencie seus custos mensais" />
 
       {/* Filtro mês/ano + total */}
       <div

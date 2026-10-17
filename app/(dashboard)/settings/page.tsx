@@ -5,6 +5,7 @@ import { User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 
 const LABEL: React.CSSProperties = {
   display: "block",
@@ -21,13 +22,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: "600px" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "var(--text)" }}>
-          Configurações
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie suas preferências e segurança</p>
-      </div>
+      <PageHeader title="Configurações" subtitle="Gerencie suas preferências e segurança" />
 
       {/* Card perfil */}
       <Card style={{ padding: "24px", marginBottom: "16px" }}>

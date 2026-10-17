@@ -7,6 +7,7 @@ import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const MODAL_LABEL: React.CSSProperties = {
@@ -71,17 +72,16 @@ export default function OperatorsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
-        <div>
-          <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "var(--text)" }}>Operadores</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie os operadores do sistema</p>
-        </div>
-        <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "8px" }}>
-          <Plus size={16} />
-          Novo Operador
-        </Button>
-      </div>
+      <PageHeader
+        title="Operadores"
+        subtitle="Gerencie os operadores do sistema"
+        actions={
+          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "8px" }}>
+            <Plus size={16} />
+            Novo Operador
+          </Button>
+        }
+      />
 
       {/* Contador */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
