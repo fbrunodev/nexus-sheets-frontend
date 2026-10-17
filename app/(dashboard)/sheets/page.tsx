@@ -55,6 +55,7 @@ export default function SheetsPage() {
   const [stats, setStats] = useState<any>(null);
   const [operatorSheets, setOperatorSheets] = useState<any[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperator, setSelectedOperator] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -65,9 +66,7 @@ export default function SheetsPage() {
   const searchMounted = useRef(false);
 
   useEffect(() => {
-    if (activeStatus !== "operators") {
-      fetchSheets();
-    }
+    fetchSheets();
     fetchStats();
   }, [activeStatus, period]);
 
@@ -239,13 +238,10 @@ export default function SheetsPage() {
   const totalSheets  = stats?.total ?? 0;
 
   const tabs = [
-    { label: "Todas",       value: "all",         count: totalSheets },
+    { label: "Todas",        value: "all",         count: totalSheets },
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
     { label: "Em andamento", value: "IN_PROGRESS",  count: inProgress },
     { label: "Concluída",   value: "FINISHED",     count: finished },
-    ...(operators.length > 0
-      ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }]
-      : []),
   ];
 
   const canCreate = !creating && (cooperationType === "BAU" || !!selectedPlatform);
@@ -280,6 +276,19 @@ export default function SheetsPage() {
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
         </div>
+        {operators.length > 0 && (
+          <select
+            value={selectedOperator}
+            onChange={(e) => setSelectedOperator(e.target.value)}
+            className="ui-select"
+            style={{ backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: "32px" }}
+          >
+            <option value="">Todos os operadores</option>
+            {operators.map((op: any) => (
+              <option key={op.id} value={op.id}>{op.name || op.email}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* ── Filtro de período ── */}
@@ -340,15 +349,17 @@ export default function SheetsPage() {
       </div>
 
       {/* ── Cards ── */}
-      {activeStatus === "operators" ? (
-        operatorSheets.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
-            <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
-            <p style={{ fontSize: "13px" }}>Nenhuma planilha de operador encontrada</p>
-          </div>
-        ) : (
-          <div className="grid-cards">
-            {operatorSheets.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
+      {selectedOperator !== "" ? (
+        (() => {
+          const filtered = operatorSheets.filter((item: any) => item.sheet.owner_id === selectedOperator || item.operator_id === selectedOperator);
+          return filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
+              <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
+              <p style={{ fontSize: "13px" }}>Nenhuma planilha encontrada para este operador</p>
+            </div>
+          ) : (
+            <div className="grid-cards">
+              {filtered.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
               const total     = calcTotal(sheet);
               const isPositive = total > 0;
               const isNeutral  = total === 0;
@@ -452,7 +463,8 @@ export default function SheetsPage() {
               );
             })}
           </div>
-        )
+        );
+      })()
       ) : loading ? (
         <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
       ) : sheets.length === 0 ? (
@@ -467,8 +479,7 @@ export default function SheetsPage() {
             const isPositive = total > 0;
             const isNeutral  = total === 0;
             const deposited  = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
-            const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-            const roiNum     = parseFloat(roi);
+            const roiRatio   = deposited > 0 ? (total / deposited) : 0;
 
             return (
               <Card
@@ -619,9 +630,9 @@ export default function SheetsPage() {
                     </div>
                   )}
                   <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                    <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                      {roiNum > 0 ? "+" : ""}{roi}%
+                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
+                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
+                      {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
                     </p>
                   </div>
                 </div>
