@@ -4,8 +4,8 @@ export type CardVariant = "default" | "compact"
 export type CardTone = "positive" | "negative"
 
 const TONE_BORDER: Record<CardTone, string> = {
-  positive: "2px solid var(--positive-border)",
-  negative: "2px solid var(--negative-border)",
+  positive: "1px solid var(--positive-border)",
+  negative: "1px solid var(--negative-border)",
 }
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
