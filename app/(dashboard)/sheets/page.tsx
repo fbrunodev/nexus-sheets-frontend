@@ -7,9 +7,6 @@ import { Sheet } from "@/types";
 import {
   Plus,
   FileSpreadsheet,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Trash2,
   MoreVertical,
 } from "lucide-react";
@@ -375,7 +372,8 @@ export default function SheetsPage() {
                     cursor: "pointer",
                     transition: "border-color 0.2s, transform 0.2s",
                     position: "relative",
-                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "var(--border-strong)";
@@ -386,14 +384,6 @@ export default function SheetsPage() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-                      background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
-                      borderRadius: "12px 12px 0 0",
-                    }}
-                  />
-
                   <div style={{ marginBottom: "10px" }}>
                     <Badge variant="neutral">{operator_name}</Badge>
                   </div>
@@ -403,39 +393,41 @@ export default function SheetsPage() {
                       <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {sheet.name}
                       </p>
-                      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>
                         {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                       </p>
+                      <StatusDot status={sheet.status} size={6} />
                     </div>
-                    <StatusDot status={sheet.status} showLabel={false} size={8} style={{ flexShrink: 0 }} />
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px", flex: 1 }}>
                     {sheet.cooperation_type === "META" ? (
                       <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                        {sheet.goal > 0 ? (() => {
+                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>Meta</p>
+                        {(() => {
                           const filledLines = sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length;
+                          const pct = sheet.goal > 0 ? Math.min((filledLines / sheet.goal) * 100, 100) : 0;
                           return (
                             <>
-                              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
+                                {sheet.goal > 0 ? `${filledLines}/${sheet.goal}` : "—"}
+                              </p>
                               <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
+                                <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                               </div>
                             </>
                           );
-                        })() : (
-                          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
-                        )}
+                        })()}
                       </div>
                     ) : (
                       <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                           {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                         </p>
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
                           {sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length}
                         </p>
+                        <div style={{ height: "4px" }} />
                       </div>
                     )}
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
@@ -447,17 +439,10 @@ export default function SheetsPage() {
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      {isPositive
-                        ? <TrendingUp size={13} color="var(--positive)" />
-                        : isNeutral
-                        ? <Minus size={13} color="var(--text-muted)" />
-                        : <TrendingDown size={13} color="var(--negative-text)" />}
-                      <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                        {isPositive ? "+" : ""}{fmt(total)}
-                      </span>
-                    </div>
+                    <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
+                    <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
+                      {isPositive ? "+" : ""}{fmt(total)}
+                    </span>
                   </div>
                 </Card>
               );
@@ -490,7 +475,8 @@ export default function SheetsPage() {
                   cursor: "pointer",
                   transition: "border-color 0.2s, transform 0.2s",
                   position: "relative",
-                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--border-strong)";
@@ -501,26 +487,17 @@ export default function SheetsPage() {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {/* Linha topo */}
-                <div
-                  style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-                    background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
-                    borderRadius: "12px 12px 0 0",
-                  }}
-                />
-
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
                   <div style={{ flex: 1, marginRight: "8px" }}>
                     <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {sheet.name}
                     </p>
-                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>
                       {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                     </p>
+                    <StatusDot status={sheet.status} size={6} />
                   </div>
-                  <StatusDot status={sheet.status} showLabel={false} size={8} style={{ marginTop: "3px", flexShrink: 0 }} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -601,32 +578,34 @@ export default function SheetsPage() {
                 )}
 
                 {/* Métricas */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px", flex: 1 }}>
                   {sheet.cooperation_type === "META" ? (
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                      {sheet.goal > 0 ? (() => {
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>Meta</p>
+                      {(() => {
                         const filledLines = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
+                        const pct = sheet.goal > 0 ? Math.min((filledLines / sheet.goal) * 100, 100) : 0;
                         return (
                           <>
-                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
+                              {sheet.goal > 0 ? `${filledLines}/${sheet.goal}` : "—"}
+                            </p>
                             <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
+                              <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                             </div>
                           </>
                         );
-                      })() : (
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
-                      )}
+                      })()}
                     </div>
                   ) : (
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                       </p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
                         {sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length}
                       </p>
+                      <div style={{ height: "4px" }} />
                     </div>
                   )}
                   <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
@@ -639,17 +618,10 @@ export default function SheetsPage() {
 
                 {/* Footer */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                    {isPositive
-                      ? <TrendingUp size={13} color="var(--positive)" />
-                      : isNeutral
-                      ? <Minus size={13} color="var(--text-muted)" />
-                      : <TrendingDown size={13} color="var(--negative-text)" />}
-                    <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                      {isPositive ? "+" : ""}{fmt(total)}
-                    </span>
-                  </div>
+                  <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
+                  <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
+                    {isPositive ? "+" : ""}{fmt(total)}
+                  </span>
                 </div>
               </Card>
             );
