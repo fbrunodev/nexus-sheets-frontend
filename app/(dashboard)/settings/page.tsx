@@ -35,7 +35,7 @@ export default function SettingsPage() {
               justifyContent: "center",
             }}
           >
-            <User size={15} color="var(--accent)" />
+            <User size={15} color="var(--text-secondary)" />
           </div>
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Perfil</p>
         </div>
@@ -91,13 +91,13 @@ export default function SettingsPage() {
               width: "32px",
               height: "32px",
               borderRadius: "8px",
-              background: "var(--warning-subtle)",
+              background: "var(--surface-hover)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Lock size={15} color="var(--warning)" />
+            <Lock size={15} color="var(--text-secondary)" />
           </div>
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Alterar senha</p>
         </div>

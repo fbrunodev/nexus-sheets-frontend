@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusDot } from "@/components/ui/status-dot";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const MODAL_LABEL: React.CSSProperties = {
@@ -160,9 +161,7 @@ export default function OperatorsPage() {
                     <Badge variant="neutral">{op.role}</Badge>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <Badge variant={op.is_active ? "positive" : "negative"}>
-                      {op.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
+                    <StatusDot status={op.is_active ? "ACTIVE" : "INACTIVE"} />
                   </td>
                   <td style={{ padding: "14px 20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     {new Date(op.created_at).toLocaleDateString("pt-BR")}

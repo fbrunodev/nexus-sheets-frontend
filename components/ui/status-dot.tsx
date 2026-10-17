@@ -4,12 +4,20 @@ const DOT_COLORS: Record<string, string> = {
   NOT_STARTED: "#5A5A62",
   IN_PROGRESS: "var(--accent)",
   FINISHED:    "var(--text-secondary)",
+  ACTIVE:      "var(--positive)",
+  INACTIVE:    "#5A5A62",
+  AVAILABLE:   "var(--positive)",
+  USED:        "#5A5A62",
 }
 
 const DOT_LABELS: Record<string, string> = {
   NOT_STARTED: "Não iniciada",
   IN_PROGRESS: "Em andamento",
   FINISHED:    "Concluída",
+  ACTIVE:      "Ativo",
+  INACTIVE:    "Inativo",
+  AVAILABLE:   "Disponível",
+  USED:        "Utilizada",
 }
 
 interface StatusDotProps {

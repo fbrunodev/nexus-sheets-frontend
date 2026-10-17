@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusDot } from "@/components/ui/status-dot";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -24,7 +25,7 @@ const MODAL_LABEL: React.CSSProperties = {
 
 type BadgeVariant = "neutral" | "positive" | "negative" | "warning";
 const KEY_TYPE_BADGE: Record<string, BadgeVariant> = {
-  LIFETIME: "positive",
+  LIFETIME: "neutral",
   MONTHLY:  "neutral",
   TRIAL:    "warning",
 };
@@ -372,9 +373,7 @@ export default function AdminPage() {
                       <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{k.type}</Badge>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={k.is_used ? "negative" : "positive"}>
-                        {k.is_used ? "Utilizada" : "Disponível"}
-                      </Badge>
+                      <StatusDot status={k.is_used ? "USED" : "AVAILABLE"} />
                     </td>
                     <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                       {new Date(k.created_at).toLocaleDateString("pt-BR")}
@@ -453,9 +452,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={u.is_active ? "positive" : "negative"}>
-                        {u.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
+                      <StatusDot status={u.is_active ? "ACTIVE" : "INACTIVE"} />
                     </td>
                     <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                       {new Date(u.created_at).toLocaleDateString("pt-BR")}
