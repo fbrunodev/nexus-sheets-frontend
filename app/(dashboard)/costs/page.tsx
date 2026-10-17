@@ -13,12 +13,9 @@ const CARET =
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
 
 interface CostType {
@@ -182,7 +179,7 @@ export default function CostsPage() {
             variant="compact"
             style={{ padding: "10px 20px", textAlign: "center" }}
           >
-            <p style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "2px" }}>
               Total do mês
             </p>
             <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--negative-text)" }}>
@@ -215,7 +212,7 @@ export default function CostsPage() {
                 {["Tipo", "Valor", "Descrição", "Data", ""].map((h) => (
                   <th
                     key={h}
-                    style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                    style={{ padding: "10px 12px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                   >
                     {h}
                   </th>

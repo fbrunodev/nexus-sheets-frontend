@@ -12,12 +12,9 @@ import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/compo
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
 
 export default function OperatorsPage() {
@@ -94,7 +91,7 @@ export default function OperatorsPage() {
             key={item.label}
             style={{ padding: "16px 20px" }}
           >
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
@@ -119,7 +116,7 @@ export default function OperatorsPage() {
                 {["Operador", "Role", "Status", "Criado em", "Último login"].map((h) => (
                   <th
                     key={h}
-                    style={{ padding: "14px 20px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                    style={{ padding: "14px 20px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                   >
                     {h}
                   </th>

@@ -9,12 +9,9 @@ import { PageHeader } from "@/components/ui/page-header";
 
 const LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
 };
 
 export default function SettingsPage() {

@@ -17,12 +17,9 @@ const CARET =
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
 
 type BadgeVariant = "neutral" | "positive" | "negative" | "warning";
@@ -243,7 +240,7 @@ export default function AdminPage() {
             key={item.label}
             style={{ padding: "16px 20px" }}
           >
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
@@ -299,7 +296,7 @@ export default function AdminPage() {
       {activeTab === "keys" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Gerenciar Keys
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -333,7 +330,7 @@ export default function AdminPage() {
                   {["Chave", "Tipo", "Status", "Criada em"].map((h) => (
                     <th
                       key={h}
-                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                     >
                       {h}
                     </th>
@@ -394,7 +391,7 @@ export default function AdminPage() {
       {activeTab === "users" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Operadores
             </p>
             <Button variant="primary" onClick={() => setShowOperatorModal(true)} style={{ gap: "7px" }}>
@@ -415,7 +412,7 @@ export default function AdminPage() {
                   {["Operador", "Status", "Criado em", ""].map((h) => (
                     <th
                       key={h}
-                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                     >
                       {h}
                     </th>
@@ -485,7 +482,7 @@ export default function AdminPage() {
       {activeTab === "platforms" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Plataformas
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -542,7 +539,7 @@ export default function AdminPage() {
       {activeTab === "costs" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Tipos de Custo
             </p>
             <div style={{ display: "flex", gap: "8px" }}>

@@ -264,7 +264,7 @@ export default function SheetPage() {
                 key="salary"
                 style={{ padding: "16px", position: "relative" }}
               >
-                <p style={{ fontSize: "10px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px", fontWeight: "600" }}>Salário</p>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>Salário</p>
                 {editingSalary ? (
                   <input
                     type="number"
@@ -298,7 +298,7 @@ export default function SheetPage() {
               tone={item.highlight ? (finalResult >= 0 ? "positive" : "negative") : undefined}
               style={{ padding: "16px" }}
             >
-              <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>
                 {item.label}
               </p>
               <p
@@ -387,12 +387,12 @@ export default function SheetPage() {
             borderBottom: "1px solid var(--border)",
           }}
         >
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textAlign: "center" }}>#</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>DEPÓSITO</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>SAQUE</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>BAÚ</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>BÔNUS</span>
-          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)", textAlign: "center" }}>#</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Depósito</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Saque</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Baú</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Bônus</span>
+          <span style={{ fontSize: "13px", color: "var(--text-secondary)", textAlign: "right" }}>Resultado</span>
           <span />
         </div>
 
