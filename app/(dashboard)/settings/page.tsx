@@ -2,6 +2,9 @@
 
 import { useAuthStore } from "@/store/authStore";
 import { User, Lock } from "lucide-react";
+
+const ROLE_LABEL: Record<string, string> = { ADMIN: "Administrador", OPERADOR: "Operador" };
+const PLAN_LABEL: Record<string, string> = { LIFETIME: "Vitalícia", MONTHLY: "Mensal" };
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -61,8 +64,8 @@ export default function SettingsPage() {
           <div>
             <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>{user?.email}</p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
-              <Badge variant="neutral">{user?.role}</Badge>
-              <Badge variant="warning">{user?.plan_type || "—"}</Badge>
+              <Badge variant="neutral">{user?.role ? (ROLE_LABEL[user.role] ?? user.role) : "—"}</Badge>
+              <Badge variant="neutral">{user?.plan_type ? (PLAN_LABEL[user.plan_type] ?? user.plan_type) : "—"}</Badge>
             </div>
           </div>
         </div>

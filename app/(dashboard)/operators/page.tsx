@@ -11,6 +11,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatusDot } from "@/components/ui/status-dot";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN:    "Administrador",
+  OPERADOR: "Operador",
+};
+
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
   fontSize: "13px",
@@ -114,7 +119,7 @@ export default function OperatorsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                {["Operador", "Role", "Status", "Criado em", "Último login"].map((h) => (
+                {["Operador", "Função", "Status", "Criado em", "Último login"].map((h) => (
                   <th
                     key={h}
                     style={{ padding: "14px 20px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
@@ -158,7 +163,7 @@ export default function OperatorsPage() {
                     </div>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <Badge variant="neutral">{op.role}</Badge>
+                    <Badge variant="neutral">{ROLE_LABEL[op.role] ?? op.role}</Badge>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
                     <StatusDot status={op.is_active ? "ACTIVE" : "INACTIVE"} />

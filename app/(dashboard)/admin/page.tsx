@@ -29,6 +29,11 @@ const KEY_TYPE_BADGE: Record<string, BadgeVariant> = {
   MONTHLY:  "neutral",
   TRIAL:    "warning",
 };
+const KEY_TYPE_LABEL: Record<string, string> = {
+  LIFETIME: "Vitalícia",
+  MONTHLY:  "Mensal",
+  TRIAL:    "Teste",
+};
 
 interface ActivationKey {
   id: string;
@@ -213,9 +218,9 @@ export default function AdminPage() {
 
   const TABS = [
     { id: "platforms", label: "Plataformas", icon: FileSpreadsheet },
-    { id: "keys",      label: "Activation Keys", icon: Key },
+    { id: "keys",      label: "Chaves de ativação", icon: Key },
     { id: "users",     label: "Operadores", icon: Users },
-    { id: "costs",     label: "Tipos de Custo", icon: DollarSign },
+    { id: "costs",     label: "Tipos de custo", icon: DollarSign },
   ] as const;
 
   return (
@@ -309,11 +314,11 @@ export default function AdminPage() {
               >
                 <option value="LIFETIME">Vitalícia</option>
                 <option value="MONTHLY">Mensal</option>
-                <option value="TRIAL">Trial</option>
+                <option value="TRIAL">Teste</option>
               </select>
               <Button variant="primary" onClick={generateKey} disabled={generating} style={{ gap: "8px" }}>
                 <Key size={14} />
-                {generating ? "Gerando..." : "Gerar Key"}
+                {generating ? "Gerando..." : "Gerar chave"}
               </Button>
             </div>
           </div>
@@ -370,7 +375,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{k.type}</Badge>
+                      <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{KEY_TYPE_LABEL[k.type] ?? k.type}</Badge>
                     </td>
                     <td style={{ padding: "12px" }}>
                       <StatusDot status={k.is_used ? "USED" : "AVAILABLE"} />
