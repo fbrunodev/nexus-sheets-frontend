@@ -7,11 +7,9 @@ import { Sheet } from "@/types";
 import {
   Plus,
   FileSpreadsheet,
-  Trophy,
   TrendingUp,
   TrendingDown,
   Minus,
-  Clock,
   Trash2,
   MoreVertical,
 } from "lucide-react";
@@ -362,45 +360,6 @@ export default function SheetsPage() {
             </button>
           );
         })}
-      </div>
-
-      {/* ── Contadores ── */}
-      <div className="grid-4" style={{ marginBottom: "20px" }}>
-        {[
-          { label: "Total",         value: totalSheets, color: "var(--text)",      icon: <FileSpreadsheet size={16} color="var(--text-muted)" /> },
-          { label: "Não Iniciadas", value: notStarted,  color: "var(--warning)",   icon: <Clock size={16} color="var(--warning)" /> },
-          { label: "Iniciadas",     value: inProgress,  color: "var(--accent)",    icon: <TrendingUp size={16} color="var(--accent)" /> },
-          { label: "Finalizadas",   value: finished,    color: "var(--positive)",  icon: <Trophy size={16} color="var(--positive)" /> },
-        ].map((item) => (
-          <Card
-            key={item.label}
-            variant="compact"
-            style={{
-              padding: "14px 16px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "10px",
-                  color: "var(--text-muted)",
-                  marginBottom: "4px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                }}
-              >
-                {item.label}
-              </p>
-              <p style={{ fontSize: "22px", fontWeight: "700", color: item.color }}>
-                {item.value}
-              </p>
-            </div>
-            {item.icon}
-          </Card>
-        ))}
       </div>
 
       {/* ── Cards ── */}
