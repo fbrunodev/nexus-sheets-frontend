@@ -458,11 +458,21 @@ html, body { overflow-x: hidden; max-width: 100%; }
   display: inline-flex; align-items: center; justify-content: center;
   height: 20px; padding: 0 8px; border-radius: 4px;
   font-size: 11px; font-weight: 500; white-space: nowrap; line-height: 1;
+  flex-shrink: 0;
 }
+.ui-badge-sm { height: 16px; padding: 0 5px; font-size: 9px; }
 .ui-badge-neutral  { background: var(--surface-hover); color: var(--text-secondary); }
 .ui-badge-positive { background: rgba(74,222,149,0.12); color: var(--positive); }
 .ui-badge-negative { background: var(--negative-subtle); color: var(--negative-text); }
 .ui-badge-warning  { background: rgba(245,185,74,0.12); color: var(--warning); }
+
+/* Cell input wrapper — focus highlight via CSS */
+.ui-cell {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; padding: 0 10px;
+  transition: border-color 0.15s;
+}
+.ui-cell:focus-within { border-color: var(--border-strong); }
 
 /* Modal overlay */
 .ui-modal-overlay {

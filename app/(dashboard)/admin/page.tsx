@@ -8,6 +8,7 @@ import { Key, Users, Copy, Check, ShieldAlert, Trash2, FileSpreadsheet, Plus, Do
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -244,15 +245,15 @@ export default function AdminPage() {
           { label: "Keys utilizadas",  value: usedKeys,      color: "var(--negative-text)" },
           { label: "Operadores",       value: users.length,  color: "var(--accent)" },
         ].map((item) => (
-          <div
+          <Card
             key={item.label}
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px" }}
+            style={{ padding: "16px 20px" }}
           >
             <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -302,7 +303,7 @@ export default function AdminPage() {
 
       {/* ── Tab: Activation Keys ── */}
       {activeTab === "keys" && (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+        <Card style={{ borderRadius: "14px", padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Gerenciar Keys
@@ -392,12 +393,12 @@ export default function AdminPage() {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── Tab: Operadores ── */}
       {activeTab === "users" && (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+        <Card style={{ borderRadius: "14px", padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Operadores
@@ -483,12 +484,12 @@ export default function AdminPage() {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── Tab: Plataformas ── */}
       {activeTab === "platforms" && (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+        <Card style={{ borderRadius: "14px", padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Plataformas
@@ -540,12 +541,12 @@ export default function AdminPage() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── Tab: Tipos de Custo ── */}
       {activeTab === "costs" && (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "24px" }}>
+        <Card style={{ borderRadius: "14px", padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Tipos de Custo
@@ -600,7 +601,7 @@ export default function AdminPage() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Modal — Novo Operador */}

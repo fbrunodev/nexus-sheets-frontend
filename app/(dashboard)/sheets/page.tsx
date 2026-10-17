@@ -18,6 +18,7 @@ import {
 import { StatusDot } from "@/components/ui/status-dot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -272,10 +273,8 @@ export default function SheetsPage() {
         </div>
 
         <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
+          <Card
             style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
               borderRadius: "8px",
               padding: "7px 14px",
               display: "flex",
@@ -297,7 +296,7 @@ export default function SheetsPage() {
             >
               {fmt(grandTotal)}
             </span>
-          </div>
+          </Card>
           <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px", fontSize: "12px" }}>
             <Plus size={14} />
             Nova Planilha
@@ -394,11 +393,9 @@ export default function SheetsPage() {
           { label: "Iniciadas",     value: inProgress,  color: "var(--accent)",    icon: <TrendingUp size={16} color="var(--accent)" /> },
           { label: "Finalizadas",   value: finished,    color: "var(--positive)",  icon: <Trophy size={16} color="var(--positive)" /> },
         ].map((item) => (
-          <div
+          <Card
             key={item.label}
             style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
               borderRadius: "10px",
               padding: "14px 16px",
               display: "flex",
@@ -423,7 +420,7 @@ export default function SheetsPage() {
               </p>
             </div>
             {item.icon}
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -445,13 +442,10 @@ export default function SheetsPage() {
               const roiNum     = parseFloat(roi);
 
               return (
-                <div
+                <Card
                   key={sheet.id}
                   onClick={() => router.push(`/sheets/${sheet.id}`)}
                   style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "12px",
                     padding: "18px",
                     cursor: "pointer",
                     transition: "border-color 0.2s, transform 0.2s",
@@ -540,7 +534,7 @@ export default function SheetsPage() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -563,13 +557,10 @@ export default function SheetsPage() {
             const roiNum     = parseFloat(roi);
 
             return (
-              <div
+              <Card
                 key={sheet.id}
                 onClick={() => router.push(`/sheets/${sheet.id}`)}
                 style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "12px",
                   padding: "18px",
                   cursor: "pointer",
                   transition: "border-color 0.2s, transform 0.2s",
@@ -735,7 +726,7 @@ export default function SheetsPage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

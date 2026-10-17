@@ -8,6 +8,7 @@ import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 export default function SheetPage() {
@@ -186,7 +187,7 @@ export default function SheetPage() {
               <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
                 {sheet.name}
               </p>
-              <Badge variant="neutral" style={{ flexShrink: 0, fontSize: "9px" }}>
+              <Badge variant="neutral" size="sm">
                 {sheet.cooperation_type}
               </Badge>
               {isReadOnly && (
@@ -259,15 +260,9 @@ export default function SheetPage() {
         ].map((item) => {
           if (item.isSalary) {
             return (
-              <div
+              <Card
                 key="salary"
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  position: "relative",
-                }}
+                style={{ padding: "16px", position: "relative" }}
               >
                 <p style={{ fontSize: "10px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px", fontWeight: "600" }}>Salário</p>
                 {editingSalary ? (
@@ -291,7 +286,7 @@ export default function SheetPage() {
                 {!isFinished && !isReadOnly && (
                   <Pencil size={11} color="var(--accent)" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />
                 )}
-              </div>
+              </Card>
             );
           }
           const color = (item.value ?? 0) !== 0 ? item.activeColor! : "var(--text-muted)";
@@ -300,10 +295,10 @@ export default function SheetPage() {
             ? `2px solid ${finalResult >= 0 ? "var(--positive-border)" : "var(--negative-border)"}`
             : "1px solid var(--border)";
           return (
-            <div
+            <Card
               key={item.label}
               style={{
-                background: item.highlight ? "var(--surface-hover)" : "var(--surface)",
+                background: item.highlight ? "var(--surface-hover)" : undefined,
                 border: borderStr,
                 borderRadius: "14px",
                 padding: "16px",
@@ -325,22 +320,14 @@ export default function SheetPage() {
               >
                 {showPlus ? "+" : ""}{fmt(item.value!)}
               </p>
-            </div>
+            </Card>
           );
         })}
       </div>
 
       {/* ── Progresso de meta ── */}
       {sheet.cooperation_type === "META" && sheet.goal > 0 && (
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "12px",
-            padding: "16px 20px",
-            marginBottom: "16px",
-          }}
-        >
+        <Card style={{ padding: "16px 20px", marginBottom: "16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text)" }}>Progresso da Meta</span>
             <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{filled}/{sheet.goal} operações</span>
@@ -361,7 +348,7 @@ export default function SheetPage() {
               ✓ Meta atingida!
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── Toolbar ── */}
@@ -394,14 +381,7 @@ export default function SheetPage() {
       </div>
 
       {/* ── Tabela ── */}
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "14px",
-          overflow: "hidden",
-        }}
-      >
+      <Card style={{ borderRadius: "14px", overflow: "hidden" }}>
         {/* Cabeçalho desktop */}
         <div
           className="table-header-desktop"
@@ -465,9 +445,7 @@ export default function SheetPage() {
                     <label style={{ display: "block", fontSize: "9px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {label}
                     </label>
-                    <div
-                      style={{ display: "flex", alignItems: "center", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "8px", padding: "0 8px", transition: "border-color 0.15s" }}
-                    >
+                    <div className="ui-cell">
                       <span style={{ fontSize: "10px", color: "var(--text-muted)", marginRight: "3px" }}>R$</span>
                       <input
                         ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
@@ -483,8 +461,7 @@ export default function SheetPage() {
                         onKeyDown={(e) => handleKeyDown(e, index, field)}
                         placeholder="0"
                         style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "inherit" }}
-                        onFocus={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "var(--border-strong)"; e.target.select(); }}
-                        onBlurCapture={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "var(--border)"; }}
+                        onFocus={(e) => e.target.select()}
                       />
                     </div>
                   </div>
@@ -509,7 +486,7 @@ export default function SheetPage() {
               {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
                 <div
                   key={field}
-                  style={{ display: "flex", alignItems: "center", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "8px", padding: "0 10px", transition: "border-color 0.15s" }}
+                  className="ui-cell"
                 >
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
                   <input
@@ -525,8 +502,7 @@ export default function SheetPage() {
                     onKeyDown={(e) => handleKeyDown(e, index, field)}
                     placeholder="0"
                     style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "inherit" }}
-                    onFocus={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "var(--border-strong)"; e.target.select(); }}
-                    onBlurCapture={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "var(--border)"; }}
+                    onFocus={(e) => e.target.select()}
                   />
                 </div>
               ))}
@@ -554,7 +530,7 @@ export default function SheetPage() {
             </div>
           </div>
         ))}
-      </div>
+      </Card>
 
       {/* ── Modal — Planilha finalizada ── */}
       <Modal

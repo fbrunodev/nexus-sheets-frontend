@@ -1,15 +1,18 @@
 import * as React from "react"
 
 export type BadgeVariant = "neutral" | "positive" | "negative" | "warning"
+export type BadgeSize = "default" | "sm"
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant
+  size?: BadgeSize
 }
 
-export function Badge({ variant = "neutral", className = "", ...props }: BadgeProps) {
+export function Badge({ variant = "neutral", size = "default", className = "", ...props }: BadgeProps) {
+  const sizeClass = size === "sm" ? " ui-badge-sm" : ""
   return (
     <span
-      className={`ui-badge ui-badge-${variant} ${className}`}
+      className={`ui-badge ui-badge-${variant}${sizeClass} ${className}`}
       {...props}
     />
   )

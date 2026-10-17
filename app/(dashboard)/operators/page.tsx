@@ -6,6 +6,7 @@ import { Operator } from "@/types";
 import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const MODAL_LABEL: React.CSSProperties = {
@@ -89,15 +90,15 @@ export default function OperatorsPage() {
           { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--positive)" },
           { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--negative-text)" },
         ].map((item) => (
-          <div
+          <Card
             key={item.label}
-            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px" }}
+            style={{ padding: "16px 20px" }}
           >
             <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -111,7 +112,7 @@ export default function OperatorsPage() {
           <p style={{ fontSize: "12px", marginTop: "4px" }}>Crie um novo operador para começar</p>
         </div>
       ) : (
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
+        <Card style={{ borderRadius: "14px", overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -176,7 +177,7 @@ export default function OperatorsPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Modal — Novo Operador */}

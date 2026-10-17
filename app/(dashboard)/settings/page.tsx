@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { User, Lock, Check } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 const LABEL: React.CSSProperties = {
   display: "block",
@@ -19,61 +19,6 @@ const LABEL: React.CSSProperties = {
 export default function SettingsPage() {
   const { user } = useAuthStore();
 
-  const [email, setEmail] = useState(user?.email || "");
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileSuccess, setProfileSuccess] = useState(false);
-  const [profileError, setProfileError] = useState("");
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
-
-  async function handleSaveProfile(e: React.FormEvent) {
-    e.preventDefault();
-    setSavingProfile(true);
-    setProfileError("");
-    setProfileSuccess(false);
-    try {
-      setProfileSuccess(true);
-      setTimeout(() => setProfileSuccess(false), 3000);
-    } catch (err: any) {
-      setProfileError(err.response?.data?.detail || "Erro ao salvar perfil.");
-    } finally {
-      setSavingProfile(false);
-    }
-  }
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setPasswordError("");
-    setPasswordSuccess(false);
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("As senhas não coincidem.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError("A senha deve ter no mínimo 6 caracteres.");
-      return;
-    }
-
-    setSavingPassword(true);
-    try {
-      setPasswordSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setPasswordSuccess(false), 3000);
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.detail || "Erro ao alterar senha.");
-    } finally {
-      setSavingPassword(false);
-    }
-  }
-
   return (
     <div style={{ maxWidth: "600px" }}>
       {/* Header */}
@@ -85,15 +30,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Card perfil */}
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "14px",
-          padding: "24px",
-          marginBottom: "16px",
-        }}
-      >
+      <Card style={{ borderRadius: "14px", padding: "24px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <div
             style={{
@@ -138,68 +75,24 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile}>
-          <div style={{ marginBottom: "16px" }}>
-            <label style={LABEL}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="ui-input"
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <label style={LABEL}>Email</label>
+          <input
+            type="email"
+            defaultValue={user?.email || ""}
+            disabled
+            className="ui-input"
+          />
+        </div>
 
-          {profileError && (
-            <p
-              style={{
-                fontSize: "12px",
-                color: "var(--negative-text)",
-                background: "var(--negative-subtle)",
-                border: "1px solid var(--negative-bar)",
-                borderRadius: "8px",
-                padding: "10px 14px",
-                marginBottom: "16px",
-              }}
-            >
-              {profileError}
-            </p>
-          )}
-
-          {profileSuccess && (
-            <div
-              style={{
-                background: "var(--positive-subtle)",
-                border: "1px solid var(--positive-border)",
-                borderRadius: "8px",
-                padding: "10px 14px",
-                color: "var(--positive)",
-                fontSize: "13px",
-                marginBottom: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <Check size={13} />
-              Perfil salvo com sucesso.
-            </div>
-          )}
-
-          <Button type="submit" variant="primary" disabled={savingProfile}>
-            {savingProfile ? "Salvando..." : "Salvar perfil"}
-          </Button>
-        </form>
-      </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Button variant="primary" disabled>Salvar perfil</Button>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
+        </div>
+      </Card>
 
       {/* Card senha */}
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "14px",
-          padding: "24px",
-        }}
-      >
+      <Card style={{ borderRadius: "14px", padding: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <div
             style={{
@@ -217,81 +110,26 @@ export default function SettingsPage() {
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Alterar senha</p>
         </div>
 
-        <form onSubmit={handleChangePassword}>
-          <div style={{ marginBottom: "16px" }}>
-            <label style={LABEL}>Senha atual</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="••••••••"
-              className="ui-input"
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <label style={LABEL}>Senha atual</label>
+          <input type="password" placeholder="••••••••" disabled className="ui-input" />
+        </div>
 
-          <div style={{ marginBottom: "16px" }}>
-            <label style={LABEL}>Nova senha</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              className="ui-input"
-            />
-          </div>
+        <div style={{ marginBottom: "16px" }}>
+          <label style={LABEL}>Nova senha</label>
+          <input type="password" placeholder="••••••••" disabled className="ui-input" />
+        </div>
 
-          <div style={{ marginBottom: "24px" }}>
-            <label style={LABEL}>Confirmar nova senha</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="ui-input"
-            />
-          </div>
+        <div style={{ marginBottom: "24px" }}>
+          <label style={LABEL}>Confirmar nova senha</label>
+          <input type="password" placeholder="••••••••" disabled className="ui-input" />
+        </div>
 
-          {passwordError && (
-            <p
-              style={{
-                fontSize: "12px",
-                color: "var(--negative-text)",
-                background: "var(--negative-subtle)",
-                border: "1px solid var(--negative-bar)",
-                borderRadius: "8px",
-                padding: "10px 14px",
-                marginBottom: "16px",
-              }}
-            >
-              {passwordError}
-            </p>
-          )}
-
-          {passwordSuccess && (
-            <div
-              style={{
-                background: "var(--positive-subtle)",
-                border: "1px solid var(--positive-border)",
-                borderRadius: "8px",
-                padding: "10px 14px",
-                color: "var(--positive)",
-                fontSize: "13px",
-                marginBottom: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <Check size={13} />
-              Senha alterada com sucesso.
-            </div>
-          )}
-
-          <Button type="submit" variant="primary" disabled={savingPassword}>
-            {savingPassword ? "Salvando..." : "Alterar senha"}
-          </Button>
-        </form>
-      </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Button variant="primary" disabled>Alterar senha</Button>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
+        </div>
+      </Card>
     </div>
   );
 }

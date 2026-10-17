@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { DollarSign, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -183,10 +184,8 @@ export default function CostsPage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
+          <Card
             style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
               borderRadius: "10px",
               padding: "10px 20px",
               textAlign: "center",
@@ -198,7 +197,7 @@ export default function CostsPage() {
             <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--negative-text)" }}>
               R$ {total.toFixed(2).replace(".", ",")}
             </p>
-          </div>
+          </Card>
           <Button
             variant="primary"
             onClick={() => { setShowModal(true); if (costTypes.length > 0) setNewCostTypeId(costTypes[0].id); }}
@@ -211,14 +210,7 @@ export default function CostsPage() {
       </div>
 
       {/* Lista de custos */}
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "14px",
-          padding: "24px",
-        }}
-      >
+      <Card style={{ borderRadius: "14px", padding: "24px" }}>
         {loading ? (
           <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
         ) : costs.length === 0 ? (
@@ -294,7 +286,7 @@ export default function CostsPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
       {/* Modal: Novo Custo */}
       <Modal
