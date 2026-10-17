@@ -4,6 +4,19 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { Operator } from "@/types";
 import { Plus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
+
+const MODAL_LABEL: React.CSSProperties = {
+  display: "block",
+  fontSize: "10px",
+  fontWeight: "600",
+  color: "var(--text-muted)",
+  marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.07em",
+};
 
 export default function OperatorsPage() {
   const [operators, setOperators] = useState<Operator[]>([]);
@@ -15,9 +28,7 @@ export default function OperatorsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchOperators();
-  }, []);
+  useEffect(() => { fetchOperators(); }, []);
 
   async function fetchOperators() {
     try {
@@ -62,27 +73,29 @@ export default function OperatorsPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
         <div>
-          <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Operadores</h1>
-          <p style={{ color: "#6060a0", fontSize: "13px" }}>Gerencie os operadores do sistema</p>
+          <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "var(--text)" }}>Operadores</h1>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie os operadores do sistema</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "#3b82f6", border: "none", borderRadius: "10px", padding: "10px 18px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-        >
+        <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "8px" }}>
           <Plus size={16} />
           Novo Operador
-        </button>
+        </Button>
       </div>
 
       {/* Contador */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
         {[
-          { label: "Total", value: operators.length, color: "#fff" },
-          { label: "Ativos", value: operators.filter((o) => o.is_active).length, color: "#22d3a5" },
-          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "#f87171" },
+          { label: "Total",    value: operators.length,                             color: "var(--text)" },
+          { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--positive)" },
+          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--negative-text)" },
         ].map((item) => (
-          <div key={item.label} style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "16px 20px" }}>
-            <p style={{ fontSize: "11px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</p>
+          <div
+            key={item.label}
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px 20px" }}
+          >
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {item.label}
+            </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
           </div>
         ))}
@@ -90,20 +103,23 @@ export default function OperatorsPage() {
 
       {/* Lista */}
       {loading ? (
-        <p style={{ color: "#6060a0", fontSize: "14px" }}>Carregando...</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>Carregando...</p>
       ) : operators.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px", color: "#3a3a5c" }}>
-          <Users size={40} style={{ marginBottom: "12px", opacity: 0.4 }} />
+        <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
+          <Users size={40} style={{ marginBottom: "12px", opacity: 0.3 }} />
           <p style={{ fontSize: "14px" }}>Nenhum operador cadastrado</p>
           <p style={{ fontSize: "12px", marginTop: "4px" }}>Crie um novo operador para começar</p>
         </div>
       ) : (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", overflow: "hidden" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
                 {["Operador", "Role", "Status", "Criado em", "Último login"].map((h) => (
-                  <th key={h} style={{ padding: "14px 20px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.06em" }}>
+                  <th
+                    key={h}
+                    style={{ padding: "14px 20px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                  >
                     {h}
                   </th>
                 ))}
@@ -113,35 +129,47 @@ export default function OperatorsPage() {
               {operators.map((op) => (
                 <tr
                   key={op.id}
-                  style={{ borderBottom: "1px solid #1a1a2e" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.01)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  style={{ borderBottom: "1px solid var(--border)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <td style={{ padding: "14px 20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "600", color: "#3b82f6", flexShrink: 0 }}>
+                      <div
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "8px",
+                          background: "var(--surface-hover)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: "var(--accent)",
+                          flexShrink: 0,
+                        }}
+                      >
                         {(op.name || op.email)[0].toUpperCase()}
                       </div>
                       <div>
-                        {op.name && <div style={{ fontSize: "13px", fontWeight: "500" }}>{op.name}</div>}
-                        <div style={{ fontSize: "12px", color: "#6060a0" }}>{op.email}</div>
+                        {op.name && <div style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>{op.name}</div>}
+                        <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{op.email}</div>
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <span style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                      {op.role}
-                    </span>
+                    <Badge variant="neutral">{op.role}</Badge>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <span style={{ background: op.is_active ? "rgba(34,211,165,0.1)" : "rgba(248,113,113,0.1)", color: op.is_active ? "#22d3a5" : "#f87171", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
+                    <Badge variant={op.is_active ? "positive" : "negative"}>
                       {op.is_active ? "Ativo" : "Inativo"}
-                    </span>
+                    </Badge>
                   </td>
-                  <td style={{ padding: "14px 20px", fontSize: "13px", color: "#6060a0" }}>
+                  <td style={{ padding: "14px 20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     {new Date(op.created_at).toLocaleDateString("pt-BR")}
                   </td>
-                  <td style={{ padding: "14px 20px", fontSize: "13px", color: "#6060a0" }}>
+                  <td style={{ padding: "14px 20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     {op.last_login ? new Date(op.last_login).toLocaleDateString("pt-BR") : "—"}
                   </td>
                 </tr>
@@ -151,74 +179,83 @@ export default function OperatorsPage() {
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "18px", padding: "32px", width: "100%", maxWidth: "400px" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "24px" }}>Novo Operador</h2>
-
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "500", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Nome</label>
+      {/* Modal — Novo Operador */}
+      <Modal
+        open={showModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowModal(false);
+            setError("");
+            setNewName("");
+            setNewEmail("");
+            setNewPassword("");
+          }
+        }}
+      >
+        <ModalContent title="Novo Operador" maxWidth={400}>
+          <ModalBody>
+            <div>
+              <label style={MODAL_LABEL}>Nome</label>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Nome do operador"
                 autoFocus
-                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", fontFamily: "Inter, sans-serif" }}
+                className="ui-input"
               />
             </div>
 
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "500", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Email</label>
+            <div>
+              <label style={MODAL_LABEL}>Email</label>
               <input
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="operador@email.com"
-                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", fontFamily: "Inter, sans-serif" }}
+                type="email"
+                className="ui-input"
               />
             </div>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "500", color: "#6060a0", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Senha</label>
+            <div>
+              <label style={MODAL_LABEL}>Senha</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                style={{ width: "100%", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", fontFamily: "Inter, sans-serif" }}
+                className="ui-input"
               />
             </div>
 
             {error && (
-              <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "10px", padding: "10px 14px", color: "#f87171", fontSize: "13px", marginBottom: "16px" }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--negative-text)",
+                  background: "var(--negative-subtle)",
+                  border: "1px solid var(--negative-bar)",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                }}
+              >
                 {error}
-              </div>
+              </p>
             )}
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: "transparent", border: "1px solid #1a1a2e", color: "#6060a0", fontSize: "14px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={creating || !newName.trim() || !newEmail.trim() || !newPassword.trim()}
-                style={{ flex: 1, padding: "11px", borderRadius: "10px", background: creating ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "14px", fontWeight: "600", cursor: creating ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                {creating ? "Criando..." : "Criar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </ModalClose>
+            <Button
+              variant="primary"
+              onClick={handleCreate}
+              disabled={creating || !newName.trim() || !newEmail.trim() || !newPassword.trim()}
+            >
+              {creating ? "Criando..." : "Criar"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
