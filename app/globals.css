@@ -80,6 +80,9 @@
   padding: 0;
 }
 
+/* Focus rings via keyboard only — never on mouse click */
+:focus:not(:focus-visible) { outline: none; }
+
 html,
 body {
   background-color: var(--bg);
