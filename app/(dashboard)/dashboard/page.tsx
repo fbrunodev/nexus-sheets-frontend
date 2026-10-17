@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/services/api";
-import { ChevronDown, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
+import { PeriodSelect } from "@/components/ui/period-select";
 import KpiStrip from "./_components/KpiStrip";
 import OperationResults from "./_components/OperationResults";
 import CostBreakdown from "./_components/CostBreakdown";
@@ -44,36 +45,14 @@ const PERIOD_OPTIONS = [
   { value: "today", label: "Hoje" },
 ] as const;
 
-function getPeriodLabel(period: string): string {
-  const now = new Date();
-  const d = (dt: Date) =>
-    dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
-  switch (period) {
-    case "today":
-      return `Hoje · ${d(now)}`;
-    case "week": {
-      const from = new Date(now);
-      from.setDate(from.getDate() - 7);
-      return `Últimos 7 dias · ${d(from)} – ${d(now)}`;
-    }
-    case "month": {
-      const from = new Date(now.getFullYear(), now.getMonth(), 1);
-      return `Este mês · ${d(from)} – ${d(now)}`;
-    }
-    default:
-      return "Todo o período";
-  }
-}
 
 export default function DashboardPage() {
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [stats, setStats]         = useState<SheetStats | null>(null);
   const [sheets, setSheets]       = useState<RecentSheet[]>([]);
   const [costStats, setCostStats] = useState<{ name: string; value: number }[]>([]);
   const [loading, setLoading]     = useState(true);
   const [period, setPeriod]       = useState("all");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Declaradas antes dos useEffects para satisfazer a regra de hoisting do lint
   async function fetchStats(p: string) {
@@ -122,17 +101,6 @@ export default function DashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
-  // Fecha dropdown ao clicar fora
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    function onOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [dropdownOpen]);
 
   return (
     <div
@@ -182,82 +150,11 @@ export default function DashboardPage() {
           </button>
 
           {/* Seletor de período */}
-          <div ref={dropdownRef} className="period-wrap">
-            <button
-              onClick={() => setDropdownOpen((o) => !o)}
-              className="period-btn"
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                background: "var(--surface)",
-                border: "1px solid var(--border-strong)",
-                color: "var(--text)",
-                fontSize: "13px",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              {getPeriodLabel(period)}
-              <ChevronDown
-                size={14}
-                color="var(--text-muted)"
-                style={{ flexShrink: 0 }}
-              />
-            </button>
-
-            {dropdownOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "calc(100% + 4px)",
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  zIndex: 20,
-                  minWidth: "210px",
-                  boxShadow: "var(--shadow-popover)",
-                }}
-              >
-                {PERIOD_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      setPeriod(opt.value);
-                      setDropdownOpen(false);
-                    }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "10px 14px",
-                      textAlign: "left",
-                      fontSize: "13px",
-                      color:
-                        period === opt.value
-                          ? "var(--text)"
-                          : "var(--text-secondary)",
-                      background:
-                        period === opt.value ? "var(--surface-hover)" : "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (period !== opt.value)
-                        e.currentTarget.style.background = "var(--surface-hover)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (period !== opt.value)
-                        e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <PeriodSelect
+            value={period}
+            onChange={setPeriod}
+            options={PERIOD_OPTIONS as unknown as { value: string; label: string }[]}
+          />
 
         </div>
       </div>

@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { PeriodSelect } from "@/components/ui/period-select";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -283,39 +284,15 @@ export default function SheetsPage() {
 
       {/* ── Filtro de período ── */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        <div
-          style={{
-            display: "flex",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          {(["all", "month", "week"] as const).map((v) => {
-            const label = v === "all" ? "Todos" : v === "month" ? "Mês" : "Semana";
-            const active = period === v;
-            return (
-              <button
-                key={v}
-                onClick={() => setPeriod(v)}
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "12px",
-                  fontWeight: active ? "600" : "400",
-                  color: active ? "var(--text)" : "var(--text-muted)",
-                  background: active ? "var(--surface-hover)" : "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        <PeriodSelect
+          value={period}
+          onChange={(v) => setPeriod(v as "all" | "month" | "week")}
+          options={[
+            { value: "all",   label: "Todo o período" },
+            { value: "month", label: "Este mês" },
+            { value: "week",  label: "Últimos 7 dias" },
+          ]}
+        />
       </div>
 
       {/* ── Tabs ── */}
