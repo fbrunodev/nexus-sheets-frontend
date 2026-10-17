@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { StatusDot, DOT_LABELS } from "@/components/ui/status-dot";
 
 interface SheetLine {
   deposit: number;
@@ -23,12 +24,6 @@ interface Props {
   totalCount: number;
   calcSheetResult: (sheet: RecentSheet) => number;
 }
-
-const STATUS_MAP: Record<string, { label: string; dot: string }> = {
-  NOT_STARTED: { label: "Não iniciada",  dot: "#5A5A62" },
-  IN_PROGRESS: { label: "Em andamento",  dot: "var(--accent)" },
-  FINISHED:    { label: "Concluída",     dot: "var(--text-muted)" },
-};
 
 const TABLE_HEADERS = ["Operação", "Data", "Status", "Linhas", "Resultado"];
 
@@ -123,10 +118,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                 const filled = sheet.lines.filter(
                   (l) => l.deposit > 0 || l.withdrawal > 0
                 ).length;
-                const s = STATUS_MAP[sheet.status] ?? {
-                  label: sheet.status,
-                  dot: "var(--text-muted)",
-                };
+
                 return (
                   <tr
                     key={sheet.id}
@@ -159,20 +151,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                       {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                     </td>
                     <td style={{ padding: "12px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        <div
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: s.dot,
-                            flexShrink: 0,
-                          }}
-                        />
-                        <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                          {s.label}
-                        </span>
-                      </div>
+                      <StatusDot status={sheet.status} />
                     </td>
                     <td
                       style={{
@@ -224,10 +203,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
             const filled = sheet.lines.filter(
               (l) => l.deposit > 0 || l.withdrawal > 0
             ).length;
-            const s = STATUS_MAP[sheet.status] ?? {
-              label: sheet.status,
-              dot: "var(--text-muted)",
-            };
+
             return (
               <div
                 key={sheet.id}
@@ -264,7 +240,8 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                     {sheet.name}
                   </p>
                   <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                    {new Date(sheet.created_at).toLocaleDateString("pt-BR")} · {s.label} ·{" "}
+                    {new Date(sheet.created_at).toLocaleDateString("pt-BR")} ·{" "}
+                    {DOT_LABELS[sheet.status] ?? sheet.status} ·{" "}
                     {filled} de {sheet.lines.length}
                   </p>
                 </div>
