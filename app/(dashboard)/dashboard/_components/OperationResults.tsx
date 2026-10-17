@@ -25,7 +25,7 @@ const fmt = (v: number) =>
   );
 
 export default function OperationResults({ sheets, calcSheetResult }: Props) {
-  // Agrupa por nome e soma os resultados
+  // Agrupa por nome, soma resultados
   const grouped: Record<string, { result: number; count: number }> = {};
   for (const sheet of sheets) {
     const r = calcSheetResult(sheet);
@@ -38,8 +38,13 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
     .map(([name, d]) => ({ name, ...d }))
     .sort((a, b) => b.result - a.result);
 
-  const maxAbs = items.length > 0 ? Math.max(...items.map((i) => Math.abs(i.result))) : 1;
-  const balance = items.reduce((s, i) => s + i.result, 0);
+  const balance    = items.reduce((s, i) => s + i.result, 0);
+  const hasNeg     = items.some((i) => i.result < 0);
+  const maxPos     = Math.max(...items.map((i) => Math.max(i.result, 0)), 0);
+  const maxNeg     = Math.max(...items.map((i) => Math.max(-i.result, 0)), 0);
+  // Posição do eixo zero como % da largura total da área de barras
+  const totalSpan  = hasNeg ? maxPos + maxNeg : maxPos || 1;
+  const axisLeft   = hasNeg ? (maxNeg / totalSpan) * 100 : 0;
 
   return (
     <div
@@ -97,8 +102,10 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
           {items.map((item) => {
             const isPos = item.result >= 0;
-            // Cada lado usa no máximo 47% da largura total, deixando espaço para o eixo
-            const barPct = (Math.abs(item.result) / maxAbs) * 47;
+            // Largura da barra como % do span total
+            const barPct = totalSpan > 0
+              ? (Math.abs(item.result) / totalSpan) * 100
+              : 0;
 
             return (
               <div key={item.name} className="op-item">
@@ -116,36 +123,32 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                     {item.name}
                   </p>
                   {item.count > 1 && (
-                    <p
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--text-muted)",
-                        marginTop: "1px",
-                      }}
-                    >
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
                       {item.count} planilhas
                     </p>
                   )}
                 </div>
 
-                {/* Barra divergente */}
+                {/* Área da barra */}
                 <div className="op-item-bar">
-                  {/* Eixo zero central */}
+                  {/* Linha do eixo zero */}
                   <div
                     style={{
                       position: "absolute",
-                      left: "50%",
+                      left: `${axisLeft}%`,
                       top: "3px",
                       bottom: "3px",
                       width: "1px",
-                      background: "var(--border)",
+                      background: "var(--border-strong)",
                     }}
                   />
+
                   {isPos ? (
+                    // Positivo: começa no eixo e vai para a direita
                     <div
                       style={{
                         position: "absolute",
-                        left: "50%",
+                        left: `${axisLeft}%`,
                         top: "50%",
                         transform: "translateY(-50%)",
                         height: "8px",
@@ -155,10 +158,11 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                       }}
                     />
                   ) : (
+                    // Negativo: começa no eixo e vai para a esquerda
                     <div
                       style={{
                         position: "absolute",
-                        right: "50%",
+                        right: `${100 - axisLeft}%`,
                         top: "50%",
                         transform: "translateY(-50%)",
                         height: "8px",

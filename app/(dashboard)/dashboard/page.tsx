@@ -137,8 +137,7 @@ export default function DashboardPage() {
   return (
     <div
       style={{
-        maxWidth: "1240px",
-        margin: "0 auto",
+        maxWidth: "1440px",
         width: "100%",
         fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
       }}

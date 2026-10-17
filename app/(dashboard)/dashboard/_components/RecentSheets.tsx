@@ -127,8 +127,6 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                   label: sheet.status,
                   dot: "var(--text-muted)",
                 };
-                const isPos = result >= 0;
-
                 return (
                   <tr
                     key={sheet.id}
@@ -192,10 +190,12 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                         fontSize: "14px",
                         fontWeight: "600",
                         fontVariantNumeric: "tabular-nums",
-                        color: isPos ? "var(--positive)" : "var(--negative-text)",
+                        color: result === 0
+                          ? "var(--text-muted)"
+                          : result > 0 ? "var(--positive)" : "var(--negative-text)",
                       }}
                     >
-                      {isPos ? "+" : "−"}{fmt(result)}
+                      {result === 0 ? "—" : `${result > 0 ? "+" : "−"}${fmt(result)}`}
                     </td>
                   </tr>
                 );
@@ -228,8 +228,6 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
               label: sheet.status,
               dot: "var(--text-muted)",
             };
-            const isPos = result >= 0;
-
             return (
               <div
                 key={sheet.id}
@@ -275,11 +273,13 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                     fontSize: "14px",
                     fontWeight: "600",
                     fontVariantNumeric: "tabular-nums",
-                    color: isPos ? "var(--positive)" : "var(--negative-text)",
+                    color: result === 0
+                      ? "var(--text-muted)"
+                      : result > 0 ? "var(--positive)" : "var(--negative-text)",
                     flexShrink: 0,
                   }}
                 >
-                  {isPos ? "+" : "−"}{fmt(result)}
+                  {result === 0 ? "—" : `${result > 0 ? "+" : "−"}${fmt(result)}`}
                 </span>
               </div>
             );

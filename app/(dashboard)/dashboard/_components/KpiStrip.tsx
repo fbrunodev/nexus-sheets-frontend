@@ -29,21 +29,17 @@ interface Props {
 }
 
 const fmt = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    Math.abs(v)
-  );
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
 export default function KpiStrip({ stats, sheets, calcSheetResult }: Props) {
-  const grandTotal = stats?.grand_total ?? 0;
-  const total = stats?.total ?? 0;
-  const finished = stats?.finished ?? 0;
-  const inProgress = stats?.in_progress ?? 0;
+  const grandTotal  = stats?.grand_total ?? 0;
+  const total       = stats?.total ?? 0;
+  const finished    = stats?.finished ?? 0;
+  const inProgress  = stats?.in_progress ?? 0;
 
   const avgPerSheet = total > 0 ? grandTotal / total : 0;
   const finishedPct = total > 0 ? (finished / total) * 100 : 0;
-  const profitable = sheets.filter((s) => calcSheetResult(s) > 0).length;
-
-  const isPos = (v: number) => v >= 0;
+  const profitable  = sheets.filter((s) => calcSheetResult(s) > 0).length;
 
   return (
     <div
@@ -66,28 +62,30 @@ export default function KpiStrip({ stats, sheets, calcSheetResult }: Props) {
             fontWeight: "600",
             lineHeight: "1",
             fontVariantNumeric: "tabular-nums",
-            color: isPos(grandTotal) ? "var(--positive)" : "var(--negative-text)",
+            color: grandTotal < 0 ? "var(--negative-text)" : "var(--text)",
           }}
         >
-          {isPos(grandTotal) ? "+" : "−"}{fmt(grandTotal)}
+          {grandTotal < 0 && "−"}{fmt(Math.abs(grandTotal))}
         </p>
       </div>
 
       {/* 2 — Lucro médio por planilha */}
       <div className="kpi-col kpi-col-avg">
         <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "10px" }}>
-          Por planilha
+          Lucro médio
         </p>
         <p
           style={{
             fontSize: "24px",
             fontWeight: "600",
             fontVariantNumeric: "tabular-nums",
-            color: isPos(avgPerSheet) ? "var(--positive)" : "var(--negative-text)",
+            color: avgPerSheet < 0 ? "var(--negative-text)" : "var(--text)",
+            marginBottom: "6px",
           }}
         >
-          {isPos(avgPerSheet) ? "+" : "−"}{fmt(avgPerSheet)}
+          {avgPerSheet < 0 && "−"}{fmt(Math.abs(avgPerSheet))}
         </p>
+        <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>por planilha</p>
       </div>
 
       {/* 3 — Planilhas */}
@@ -119,7 +117,7 @@ export default function KpiStrip({ stats, sheets, calcSheetResult }: Props) {
             style={{
               height: "100%",
               width: `${finishedPct}%`,
-              background: "var(--positive)",
+              background: "var(--text-secondary)",
               borderRadius: "2px",
               transition: "width 0.3s ease",
             }}

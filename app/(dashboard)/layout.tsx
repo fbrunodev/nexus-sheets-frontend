@@ -95,9 +95,11 @@ export default function DashboardLayout({
                 <Menu size={18} />
               </button>
             )}
-            <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff" }}>
-              {pageTitle}
-            </div>
+            {!pathname.startsWith("/dashboard") && (
+              <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff" }}>
+                {pageTitle}
+              </div>
+            )}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
