@@ -232,9 +232,9 @@ export default function AdminPage() {
       >
         {[
           { label: "Total de keys",    value: keys.length,   color: "var(--text)" },
-          { label: "Keys disponíveis", value: availableKeys, color: "var(--positive)" },
-          { label: "Keys utilizadas",  value: usedKeys,      color: "var(--negative-text)" },
-          { label: "Operadores",       value: users.length,  color: "var(--accent)" },
+          { label: "Keys disponíveis", value: availableKeys, color: "var(--text)" },
+          { label: "Keys utilizadas",  value: usedKeys,      color: "var(--text)" },
+          { label: "Operadores",       value: users.length,  color: "var(--text)" },
         ].map((item) => (
           <Card
             key={item.label}

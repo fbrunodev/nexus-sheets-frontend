@@ -84,8 +84,8 @@ export default function OperatorsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
         {[
           { label: "Total",    value: operators.length,                             color: "var(--text)" },
-          { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--positive)" },
-          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--negative-text)" },
+          { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--text)" },
+          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--text)" },
         ].map((item) => (
           <Card
             key={item.label}
