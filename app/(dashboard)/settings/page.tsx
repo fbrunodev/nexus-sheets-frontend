@@ -30,7 +30,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Card perfil */}
-      <Card variant="section" style={{ padding: "24px", marginBottom: "16px" }}>
+      <Card style={{ padding: "24px", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <div
             style={{
@@ -92,7 +92,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Card senha */}
-      <Card variant="section" style={{ padding: "24px" }}>
+      <Card style={{ padding: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
           <div
             style={{

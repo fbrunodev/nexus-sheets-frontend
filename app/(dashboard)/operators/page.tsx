@@ -112,7 +112,7 @@ export default function OperatorsPage() {
           <p style={{ fontSize: "12px", marginTop: "4px" }}>Crie um novo operador para começar</p>
         </div>
       ) : (
-        <Card variant="section" style={{ overflow: "hidden" }}>
+        <Card style={{ overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>

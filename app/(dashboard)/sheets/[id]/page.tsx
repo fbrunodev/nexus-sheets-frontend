@@ -291,15 +291,11 @@ export default function SheetPage() {
           }
           const color = (item.value ?? 0) !== 0 ? item.activeColor! : "var(--text-muted)";
           const showPlus = (item.value ?? 0) > 0;
-          const borderStr = item.highlight
-            ? `2px solid ${finalResult >= 0 ? "var(--positive-border)" : "var(--negative-border)"}`
-            : "1px solid var(--border)";
           return (
             <Card
               key={item.label}
-              variant="section"
               highlight={item.highlight}
-              border={borderStr}
+              tone={item.highlight ? (finalResult >= 0 ? "positive" : "negative") : undefined}
               style={{ padding: "16px" }}
             >
               <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>
@@ -379,7 +375,7 @@ export default function SheetPage() {
       </div>
 
       {/* ── Tabela ── */}
-      <Card variant="section" style={{ overflow: "hidden" }}>
+      <Card style={{ overflow: "hidden" }}>
         {/* Cabeçalho desktop */}
         <div
           className="table-header-desktop"

@@ -185,7 +185,7 @@ export default function CostsPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Card
-            variant="tile"
+            variant="compact"
             style={{ padding: "10px 20px", textAlign: "center" }}
           >
             <p style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
@@ -207,7 +207,7 @@ export default function CostsPage() {
       </div>
 
       {/* Lista de custos */}
-      <Card variant="section" style={{ padding: "24px" }}>
+      <Card style={{ padding: "24px" }}>
         {loading ? (
           <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
         ) : costs.length === 0 ? (

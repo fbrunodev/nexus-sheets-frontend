@@ -395,7 +395,7 @@ export default function SheetsPage() {
         ].map((item) => (
           <Card
             key={item.label}
-            variant="tile"
+            variant="compact"
             style={{
               padding: "14px 16px",
               display: "flex",
