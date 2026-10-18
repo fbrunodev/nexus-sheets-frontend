@@ -8,13 +8,36 @@ function parseMoneyStr(s: string): number {
   if (!t) return 0;
   const hasComma = t.includes(",");
   const hasDot   = t.includes(".");
+
   if (hasComma && hasDot) {
+    // Last separator is decimal; remove the other
     return t.lastIndexOf(",") > t.lastIndexOf(".")
       ? parseFloat(t.replace(/\./g, "").replace(",", ".")) || 0  // "1.000,50"
       : parseFloat(t.replace(/,/g, "")) || 0;                    // "1,000.50"
   }
-  if (hasComma) return parseFloat(t.replace(",", ".")) || 0;     // "1000,50"
-  return parseFloat(t) || 0;                                     // "1000.50"
+
+  if (hasComma) {
+    // Only comma → comma is decimal: "1000,50" → 1000.50
+    return parseFloat(t.replace(",", ".")) || 0;
+  }
+
+  if (hasDot) {
+    const dotCount = (t.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      // Multiple dots → all are thousand separators: "1.000.000" → 1000000
+      return parseFloat(t.replace(/\./g, "")) || 0;
+    }
+    const afterDot = t.split(".")[1] ?? "";
+    if (afterDot.length === 3) {
+      // Single dot + exactly 3 digits → thousand separator: "1.000" → 1000
+      return parseFloat(t.replace(".", "")) || 0;
+    }
+    // Single dot + 1–2 digits → decimal: "1.5" → 1.5, "150.50" → 150.50
+    return parseFloat(t) || 0;
+  }
+
+  // No separator → integer: "1000" → 1000
+  return parseFloat(t) || 0;
 }
 
 export interface MoneyInputProps {
