@@ -24,8 +24,10 @@ const MONTH_FULL: Record<string, string> = {
   "09": "Setembro",  "10": "Outubro",   "11": "Novembro", "12": "Dezembro",
 };
 
-const BAR_H = 72;
-const VAL_H = 22;
+const CHART_MAX_H = 80; // max bar height for the largest abs value
+const LABEL_H     = 16; // label container height (11px font, vertically centered)
+const LABEL_GAP   = 4;  // gap between bar tip and label
+const LABEL_AREA  = LABEL_H + LABEL_GAP + 6; // space reserved beyond the max bar
 
 function shortLabel(month: string) {
   return MONTH_SHORT[month.slice(5)] ?? month.slice(5);
@@ -37,7 +39,7 @@ function fullLabel(month: string) {
 }
 
 function costsDisplay(costs: number) {
-  return costs > 0 ? `−${formatBRL(costs)}` : "−R$ 0,00";
+  return costs > 0 ? `−${formatBRL(costs)}` : "−R$ 0,00";
 }
 
 export function MonthlyProfitSkeleton() {
@@ -58,17 +60,14 @@ export function MonthlyProfitSkeleton() {
         </div>
         <div className="skeleton mc-desktop-only" style={{ width: "190px", height: "12px", borderRadius: "5px" }} />
       </div>
-      <div style={{ display: "flex", gap: "4px" }}>
-        {[0.65, 1, 0.9, 0, 0, 0.55].map((ratio, i) => (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ height: `${BAR_H}px`, width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-              {ratio > 0 && (
-                <div className="skeleton" style={{ width: "100%", height: `${Math.round(ratio * BAR_H)}px`, borderRadius: "3px 3px 0 0" }} />
-              )}
-            </div>
-            <div style={{ width: "100%", height: "1px", background: "var(--border-strong)" }} />
-            <div style={{ height: `${BAR_H}px` }} />
-            <div className="skeleton" style={{ width: "24px", height: "10px", borderRadius: "3px", marginTop: "8px" }} />
+      <div style={{ display: "flex", gap: "4px", alignItems: "flex-end", height: "116px" }}>
+        {[0.65, 1, 0.9, 0.3, 0.1, 0.55].map((ratio, i) => (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+            <div
+              className="skeleton"
+              style={{ width: "min(40%, 56px)", height: `${Math.max(4, Math.round(ratio * 80))}px`, borderRadius: "3px 3px 0 0" }}
+            />
+            <div className="skeleton" style={{ width: "24px", height: "10px", borderRadius: "3px" }} />
           </div>
         ))}
       </div>
@@ -93,15 +92,25 @@ export default function MonthlyProfit() {
       .finally(() => setLoading(false));
   }, []);
 
-  const maxAbs = entries.length > 0
-    ? Math.max(...entries.map((e) => Math.abs(e.profit)), 1)
-    : 1;
+  // Proportional area heights derived from actual data
+  const maxPos = entries.length > 0 ? Math.max(0, ...entries.map((e) => e.profit))  : 0;
+  const maxNeg = entries.length > 0 ? Math.max(0, ...entries.map((e) => -e.profit)) : 0;
+  const maxAbs = Math.max(maxPos, maxNeg, 1);
+
+  const posBarMax = (maxPos / maxAbs) * CHART_MAX_H;
+  const negBarMax = (maxNeg / maxAbs) * CHART_MAX_H;
+
+  // posAreaH always has at least LABEL_AREA to house the "—" or smallest labels
+  const posAreaH = posBarMax + LABEL_AREA;
+  const negAreaH = maxNeg > 0 ? negBarMax + LABEL_AREA : 0;
+  const totalH   = posAreaH + 1 + negAreaH; // +1 for the zero line pixel
+
+  function bh(profit: number): number {
+    if (profit === 0) return 0;
+    return Math.max(2, (Math.abs(profit) / maxAbs) * CHART_MAX_H);
+  }
 
   const sel = entries.find((e) => e.month === selected) ?? null;
-
-  function bh(profit: number) {
-    return Math.max(2, (Math.abs(profit) / maxAbs) * BAR_H);
-  }
 
   if (loading) return <MonthlyProfitSkeleton />;
 
@@ -180,7 +189,7 @@ export default function MonthlyProfit() {
                 fontWeight: "600",
               }}
             >
-              {sel.profit === 0 ? "R$ 0,00" : formatSignedBRL(sel.profit)}
+              {sel.profit === 0 ? "R$ 0,00" : formatSignedBRL(sel.profit)}
             </span>
           </p>
         )}
@@ -214,118 +223,118 @@ export default function MonthlyProfit() {
                 minHeight: "44px",
               }}
             >
-              {/* Valor acima (positivo) — oculto no mobile */}
-              <div
-                className="mc-value"
-                style={{
-                  height: `${VAL_H}px`,
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                  paddingBottom: "3px",
-                  width: "100%",
-                }}
-              >
+              {/* Área do gráfico com posicionamento absoluto */}
+              <div style={{ position: "relative", width: "100%", height: `${totalH}px` }}>
+
+                {/* Linha do zero */}
+                <div style={{
+                  position: "absolute",
+                  top: posAreaH,
+                  left: 0,
+                  right: 0,
+                  height: "1px",
+                  background: "var(--border-strong)",
+                }} />
+
+                {/* Barra positiva — cresce para cima a partir do zero */}
                 {isPos && (
-                  <span
+                  <div style={{
+                    position: "absolute",
+                    top: posAreaH - h,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "min(40%, 56px)",
+                    height: `${h}px`,
+                    background: "var(--positive)",
+                    borderRadius: "3px 3px 0 0",
+                  }} />
+                )}
+
+                {/* Rótulo positivo — 4px acima do topo da barra */}
+                {isPos && (
+                  <div
+                    className="mc-value"
                     style={{
+                      position: "absolute",
+                      top: posAreaH - h - LABEL_GAP - LABEL_H,
+                      left: 0,
+                      right: 0,
+                      height: `${LABEL_H}px`,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{
                       fontSize: "11px",
                       fontVariantNumeric: "tabular-nums",
                       color: "var(--positive)",
                       whiteSpace: "nowrap",
                       lineHeight: 1,
-                    }}
-                  >
-                    {formatSignedBRL(entry.profit)}
-                  </span>
+                    }}>
+                      {formatSignedBRL(entry.profit)}
+                    </span>
+                  </div>
                 )}
-              </div>
 
-              {/* Área positiva */}
-              <div
-                style={{
-                  height: `${BAR_H}px`,
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                }}
-              >
-                {isPos && (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: `${h}px`,
-                      background: "var(--positive)",
-                      borderRadius: "3px 3px 0 0",
-                      opacity: isSel ? 1 : 0.55,
-                      transition: "opacity 0.15s",
-                    }}
-                  />
+                {/* Barra negativa — cresce para baixo a partir do zero */}
+                {isNeg && (
+                  <div style={{
+                    position: "absolute",
+                    top: posAreaH + 1,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "min(40%, 56px)",
+                    height: `${h}px`,
+                    background: "var(--negative-bar)",
+                    borderRadius: "0 0 3px 3px",
+                  }} />
                 )}
-              </div>
 
-              {/* Linha zero */}
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  background: "var(--border-strong)",
-                  flexShrink: 0,
-                }}
-              />
-
-              {/* Área negativa */}
-              <div
-                style={{
-                  height: `${BAR_H}px`,
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-start",
-                }}
-              >
+                {/* Rótulo negativo — 4px abaixo da base da barra */}
                 {isNeg && (
                   <div
+                    className="mc-value"
                     style={{
-                      width: "100%",
-                      height: `${h}px`,
-                      background: "var(--negative-bar)",
-                      borderRadius: "0 0 3px 3px",
-                      opacity: isSel ? 1 : 0.55,
-                      transition: "opacity 0.15s",
+                      position: "absolute",
+                      top: posAreaH + 1 + h + LABEL_GAP,
+                      left: 0,
+                      right: 0,
+                      height: `${LABEL_H}px`,
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
-                  />
-                )}
-              </div>
-
-              {/* Valor abaixo (negativo ou zero) — oculto no mobile */}
-              <div
-                className="mc-value"
-                style={{
-                  height: `${VAL_H}px`,
-                  alignItems: "flex-start",
-                  justifyContent: "center",
-                  paddingTop: "3px",
-                  width: "100%",
-                }}
-              >
-                {isNeg ? (
-                  <span
-                    style={{
+                  >
+                    <span style={{
                       fontSize: "11px",
                       fontVariantNumeric: "tabular-nums",
                       color: "var(--negative-text)",
                       whiteSpace: "nowrap",
                       lineHeight: 1,
+                    }}>
+                      {formatSignedBRL(entry.profit)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Zero "—" centralizado sobre a linha do zero */}
+                {!isPos && !isNeg && (
+                  <div
+                    className="mc-value"
+                    style={{
+                      position: "absolute",
+                      top: posAreaH - Math.round(LABEL_H / 2),
+                      left: 0,
+                      right: 0,
+                      height: `${LABEL_H}px`,
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    {formatSignedBRL(entry.profit)}
-                  </span>
-                ) : !isPos ? (
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1 }}>
-                    —
-                  </span>
-                ) : null}
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1 }}>
+                      —
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Rótulo do mês */}
@@ -334,7 +343,7 @@ export default function MonthlyProfit() {
                   fontSize: "11px",
                   color: isSel ? "var(--text)" : "var(--text-muted)",
                   fontWeight: isSel ? "600" : "400",
-                  marginTop: "4px",
+                  marginTop: "6px",
                   lineHeight: 1,
                 }}
               >
@@ -345,7 +354,7 @@ export default function MonthlyProfit() {
         })}
       </div>
 
-      {/* ── Composição (mobile — abaixo do gráfico) ── */}
+      {/* ── Composição do mês selecionado (mobile — abaixo do gráfico) ── */}
       {sel && (
         <div
           className="mc-mobile-only"
