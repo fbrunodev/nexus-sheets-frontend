@@ -229,23 +229,23 @@ export default function CostsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
-                  <td style={{ padding: "12px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
                     <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>
                       {c.cost_type.name}
                     </span>
                   </td>
-                  <td style={{ padding: "12px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
                     <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
                       R$ {Number(c.value).toFixed(2).replace(".", ",")}
                     </span>
                   </td>
-                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
+                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)", verticalAlign: "middle" }}>
                     {c.description || "—"}
                   </td>
-                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
+                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)", verticalAlign: "middle" }}>
                     {new Date(c.created_at).toLocaleDateString("pt-BR")}
                   </td>
-                  <td style={{ padding: "12px", textAlign: "right" }}>
+                  <td style={{ padding: "12px", textAlign: "right", verticalAlign: "middle" }}>
                     <button
                       aria-label="Excluir custo"
                       onClick={() => setDeleteTarget(c.id)}
