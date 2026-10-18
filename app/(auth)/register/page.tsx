@@ -76,7 +76,7 @@ export default function RegisterPage() {
               ref={emailRef}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
               placeholder="seu@email.com"
               required
               className="ui-input"
@@ -89,7 +89,7 @@ export default function RegisterPage() {
               ref={passwordRef}
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
               placeholder="••••••••"
               required
               className="ui-input"
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             <input
               ref={keyRef}
               value={activationKey}
-              onChange={(e) => setActivationKey(e.target.value.toUpperCase())}
+              onChange={(e) => { setActivationKey(e.target.value.toUpperCase()); setError(""); }}
               placeholder="NX-XXXX-XXXX-XXXX"
               required
               className="ui-input"

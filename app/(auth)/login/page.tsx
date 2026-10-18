@@ -66,7 +66,7 @@ export default function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
               placeholder="seu@email.com"
               required
               className="ui-input"
@@ -79,7 +79,7 @@ export default function LoginPage() {
               ref={passwordRef}
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
               placeholder="••••••••"
               required
               className="ui-input"
