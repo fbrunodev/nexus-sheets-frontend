@@ -19,6 +19,9 @@ const COLORS = [
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+const fmtPct = (v: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v / 100);
+
 export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
   const sorted = [...costStats].sort((a, b) => b.value - a.value);
 
@@ -97,7 +100,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
               return (
                 <div
                   key={item.name}
-                  title={`${item.name}: ${pct.toFixed(1)}%`}
+                  title={`${item.name}: ${fmtPct(pct)}`}
                   style={{
                     flex: `0 0 ${pct}%`,
                     background: COLORS[i % COLORS.length],
@@ -112,7 +115,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
           {/* Legenda */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {displayItems.map((item, i) => {
-              const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0";
+              const pct = total > 0 ? (item.value / total) * 100 : 0;
               return (
                 <div
                   key={item.name}
@@ -140,7 +143,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
                     {item.name}
                   </span>
                   <span style={{ fontSize: "12px", color: "var(--text-muted)", flexShrink: 0 }}>
-                    {pct}%
+                    {fmtPct(pct)}
                   </span>
                   <span
                     style={{
