@@ -19,7 +19,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
+  const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const keyRef = useRef<HTMLInputElement>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,8 +43,16 @@ export default function RegisterPage() {
       setAuth(data.user, data.access_token);
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erro ao criar conta. Verifique os dados.");
-      passwordRef.current?.focus();
+      const msg = err.response?.data?.detail || "Erro ao criar conta. Verifique os dados.";
+      setError(msg);
+      const lower = String(msg).toLowerCase();
+      if (lower.includes("chave") || lower.includes("key")) {
+        keyRef.current?.focus();
+      } else if (lower.includes("email") || lower.includes("e-mail") || lower.includes("cadastrado")) {
+        emailRef.current?.focus();
+      } else {
+        passwordRef.current?.focus();
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +73,7 @@ export default function RegisterPage() {
           <div style={{ marginBottom: "16px" }}>
             <label style={LABEL}>Email</label>
             <input
+              ref={emailRef}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -88,6 +99,7 @@ export default function RegisterPage() {
           <div style={{ marginBottom: "24px" }}>
             <label style={LABEL}>Chave de ativação</label>
             <input
+              ref={keyRef}
               value={activationKey}
               onChange={(e) => setActivationKey(e.target.value.toUpperCase())}
               placeholder="NX-XXXX-XXXX-XXXX"
