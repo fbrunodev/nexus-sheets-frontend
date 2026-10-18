@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/services/api";
 import { Sheet } from "@/types";
-import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ export default function SheetPage() {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [editingSalary, setEditingSalary] = useState(false);
   const [salaryValue, setSalaryValue] = useState(0);
   const [finishModal, setFinishModal] = useState<{ visible: boolean; name: string; result: number }>({ visible: false, name: "", result: 0 });
@@ -46,6 +48,8 @@ export default function SheetPage() {
 
   async function updateLine(lineId: string, field: string, value: number) {
     if (!sheet) return;
+    setSaving(true);
+    setSaveError(false);
     setSheet((prev) => prev ? { ...prev, lines: prev.lines.map((l) => l.id === lineId ? { ...l, [field]: value } : l) } : prev);
     try {
       const line = sheet.lines.find((l) => l.id === lineId);
@@ -63,9 +67,12 @@ export default function SheetPage() {
         const v = Number(data[field as keyof typeof data] ?? 0);
         inputRefs.current[refKey]!.value = v > 0 ? formatNumber(v) : "";
       }
-      setLastSaved(new Date().toLocaleTimeString("pt-BR"));
+      setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
     } catch (err) {
       console.error(err);
+      setSaveError(true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -92,11 +99,18 @@ export default function SheetPage() {
 
   async function updateCost(field: string, value: number) {
     if (!sheet) return;
+    setSaving(true);
+    setSaveError(false);
     setSheet((prev) => prev ? { ...prev, [field]: value } : prev);
     try {
       await api.patch(`/sheets/${id}`, { [field]: value });
-      setLastSaved(new Date().toLocaleTimeString("pt-BR"));
-    } catch (err) { console.error(err); }
+      setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+    } catch (err) {
+      console.error(err);
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function finishSheet() {
@@ -245,10 +259,14 @@ export default function SheetPage() {
 
         {/* Direita: saved + finalizar */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-          {lastSaved && (
-            <span style={{ fontSize: "11px", color: "var(--positive)", display: "flex", alignItems: "center", gap: "4px" }}>
-              <Check size={12} /> {lastSaved}
-            </span>
+          {saving && (
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Salvando…</span>
+          )}
+          {!saving && saveError && (
+            <span style={{ fontSize: "11px", color: "var(--negative-text)" }}>Erro ao salvar</span>
+          )}
+          {!saving && !saveError && lastSaved && (
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Salvo às {lastSaved}</span>
           )}
           {!isFinished && !isReadOnly ? (
             <Button variant="primary" onClick={finishSheet}>Finalizar</Button>

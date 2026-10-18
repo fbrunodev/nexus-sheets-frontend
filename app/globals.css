@@ -480,9 +480,9 @@ html, body { overflow-x: hidden; max-width: 100%; }
 
 /* Cell input wrapper — focus highlight via CSS */
 .ui-cell {
-  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
   display: flex; align-items: center; padding: 0 10px;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .ui-cell:hover { border-color: var(--border-strong); }
 .ui-cell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
