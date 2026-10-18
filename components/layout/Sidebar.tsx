@@ -112,6 +112,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
               <Link
                 key={item.href}
                 href={item.href}
+                className="sidebar-nav-link"
                 {...(item.newTab && { target: "_blank", rel: "noopener noreferrer" })}
                 style={{
                   display: "flex",
