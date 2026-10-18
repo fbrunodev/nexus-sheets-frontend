@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
@@ -18,6 +18,8 @@ const LABEL: React.CSSProperties = {
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
+
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +42,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Erro ao criar conta. Verifique os dados.");
+      passwordRef.current?.focus();
     } finally {
       setLoading(false);
     }
@@ -72,6 +75,7 @@ export default function RegisterPage() {
           <div style={{ marginBottom: "16px" }}>
             <label style={LABEL}>Senha</label>
             <input
+              ref={passwordRef}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
