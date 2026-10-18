@@ -31,6 +31,7 @@ export default function SheetPage() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [deleteLineTarget, setDeleteLineTarget] = useState<{ id: string; lineNumber: number } | null>(null);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const salaryEscapeRef = useRef(false);
 
   useEffect(() => { fetchSheet(); }, [id]);
 
@@ -304,15 +305,29 @@ export default function SheetPage() {
               <Card key="salary" style={{ padding: "16px", position: "relative" }}>
                 <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>Salário</p>
                 {editingSalary ? (
-                  <input
-                    type="number"
-                    autoFocus
-                    value={salaryValue}
-                    onChange={(e) => setSalaryValue(Number(e.target.value))}
-                    onBlur={() => { updateCost("salary", salaryValue); setEditingSalary(false); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    style={{ background: "transparent", border: "none", borderBottom: "1px solid var(--accent)", color: "var(--text)", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "2px 0", fontFamily: "inherit" }}
-                  />
+                  <div className="ui-cell" style={{ marginTop: "4px" }}>
+                    <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      autoFocus
+                      defaultValue={salaryValue > 0 ? formatNumber(salaryValue) : ""}
+                      onFocus={handleLineFocus}
+                      onBlur={(e) => {
+                        if (salaryEscapeRef.current) { salaryEscapeRef.current = false; return; }
+                        const newValue = parseFloat(e.currentTarget.value.replace(",", ".")) || 0;
+                        setSalaryValue(newValue);
+                        updateCost("salary", newValue);
+                        setEditingSalary(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); return; }
+                        if (e.key === "Escape") { salaryEscapeRef.current = true; setEditingSalary(false); }
+                      }}
+                      placeholder="0,00"
+                      style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "6px 0", fontFamily: "inherit" }}
+                    />
+                  </div>
                 ) : (
                   <p
                     onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
