@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
+import { formatBRL } from "@/lib/format";
 
 const CARET =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
@@ -185,7 +186,7 @@ export default function CostsPage() {
               Total do mês
             </p>
             <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--text)" }}>
-              R$ {total.toFixed(2).replace(".", ",")}
+              {formatBRL(total)}
             </p>
           </Card>
           <Button
@@ -236,7 +237,7 @@ export default function CostsPage() {
                   </td>
                   <td style={{ padding: "12px", verticalAlign: "middle" }}>
                     <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
-                      R$ {Number(c.value).toFixed(2).replace(".", ",")}
+                      {formatBRL(c.value)}
                     </span>
                   </td>
                   <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)", verticalAlign: "middle" }}>

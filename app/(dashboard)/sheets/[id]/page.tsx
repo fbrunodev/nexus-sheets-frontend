@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
+import { formatBRL } from "@/lib/format";
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -108,10 +109,6 @@ export default function SheetPage() {
       console.error("finishSheet error:", err);
       alert(err?.response?.data?.detail || err?.message || "Erro ao finalizar planilha");
     }
-  }
-
-  function fmt(value: number) {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   }
 
   function handleKeyDown(e: React.KeyboardEvent, rowIndex: number, field: string) {
@@ -280,7 +277,7 @@ export default function SheetPage() {
                     onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
                     style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "var(--accent)" : "var(--text-muted)", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
                   >
-                    {salaryValue > 0 ? "+" : ""}{fmt(salaryValue)}
+                    {salaryValue > 0 ? "+" : ""}{formatBRL(salaryValue)}
                   </p>
                 )}
                 {!isFinished && !isReadOnly && (
@@ -312,7 +309,7 @@ export default function SheetPage() {
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {showPlus ? "+" : ""}{fmt(item.value!)}
+                {showPlus ? "+" : ""}{formatBRL(item.value!)}
               </p>
             </Card>
           );
@@ -416,7 +413,7 @@ export default function SheetPage() {
                       color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
                     }}
                   >
-                    {line.result > 0 ? "+" : ""}{fmt(line.result)}
+                    {line.result > 0 ? "+" : ""}{formatBRL(line.result)}
                   </span>
                   {!isFinished && !isReadOnly && (
                     <button
@@ -509,7 +506,7 @@ export default function SheetPage() {
                   color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
                 }}
               >
-                {line.result > 0 ? "+" : ""}{fmt(line.result)}
+                {line.result > 0 ? "+" : ""}{formatBRL(line.result)}
               </span>
               {!isFinished && !isReadOnly ? (
                 <button
@@ -564,7 +561,7 @@ export default function SheetPage() {
                 marginBottom: "24px",
               }}
             >
-              {finishModal.result >= 0 ? "+" : ""}{fmt(finishModal.result)}
+              {finishModal.result >= 0 ? "+" : ""}{formatBRL(finishModal.result)}
             </p>
           </ModalBody>
           <ModalFooter style={{ justifyContent: "center" }}>

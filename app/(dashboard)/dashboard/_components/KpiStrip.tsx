@@ -29,8 +29,7 @@ interface Props {
   totalCosts?: number;
 }
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+import { formatBRL } from "@/lib/format";
 
 export default function KpiStrip({ stats, sheets, calcSheetResult, totalCosts = 0 }: Props) {
   const grandTotal  = stats?.grand_total ?? 0;
@@ -67,11 +66,11 @@ export default function KpiStrip({ stats, sheets, calcSheetResult, totalCosts = 
             marginBottom: totalCosts > 0 ? "6px" : "0",
           }}
         >
-          {grandTotal < 0 && "−"}{fmt(Math.abs(grandTotal))}
+          {grandTotal < 0 && "−"}{formatBRL(Math.abs(grandTotal))}
         </p>
         {totalCosts > 0 && (
           <p style={{ fontSize: "12px", color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>
-            após {fmt(totalCosts)} em custos
+            após {formatBRL(totalCosts)} em custos
           </p>
         )}
       </div>
@@ -90,7 +89,7 @@ export default function KpiStrip({ stats, sheets, calcSheetResult, totalCosts = 
             marginBottom: "6px",
           }}
         >
-          {avgPerSheet < 0 && "−"}{fmt(Math.abs(avgPerSheet))}
+          {avgPerSheet < 0 && "−"}{formatBRL(Math.abs(avgPerSheet))}
         </p>
         <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>por planilha</p>
       </div>

@@ -22,10 +22,7 @@ interface Props {
   calcSheetResult: (sheet: RecentSheet) => number;
 }
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    Math.abs(v)
-  );
+import { formatSignedBRL } from "@/lib/format";
 
 export default function OperationResults({ sheets, calcSheetResult }: Props) {
   const grouped: Record<string, { result: number; count: number }> = {};
@@ -106,7 +103,7 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
           }}
         >
           Últimas {sheets.length} planilhas · saldo{" "}
-          {balance >= 0 ? "+" : "−"}{fmt(balance)}
+          {formatSignedBRL(balance)}
         </span>
       </div>
 
@@ -235,7 +232,7 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                       color: isPos ? "var(--positive)" : "var(--negative-text)",
                     }}
                   >
-                    {isPos ? "+" : "−"}{fmt(item.result)}
+                    {formatSignedBRL(item.result)}
                   </span>
                 </div>
               </div>

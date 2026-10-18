@@ -27,10 +27,7 @@ interface Props {
 
 const TABLE_HEADERS = ["Operação", "Data", "Status", "Linhas", "Resultado"];
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    Math.abs(v)
-  );
+import { formatSignedBRL } from "@/lib/format";
 
 const FOOTER_NOTE =
   "Valores por planilha não incluem custos, que são descontados no lucro líquido.";
@@ -174,7 +171,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                           : result > 0 ? "var(--positive)" : "var(--negative-text)",
                       }}
                     >
-                      {result === 0 ? "—" : `${result > 0 ? "+" : "−"}${fmt(result)}`}
+                      {result === 0 ? "—" : formatSignedBRL(result)}
                     </td>
                   </tr>
                 );
@@ -256,7 +253,7 @@ export default function RecentSheets({ sheets, totalCount, calcSheetResult }: Pr
                     flexShrink: 0,
                   }}
                 >
-                  {result === 0 ? "—" : `${result > 0 ? "+" : "−"}${fmt(result)}`}
+                  {result === 0 ? "—" : formatSignedBRL(result)}
                 </span>
               </div>
             );

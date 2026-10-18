@@ -28,7 +28,7 @@ const MODAL_LABEL: React.CSSProperties = {
   marginBottom: "6px",
 };
 
-const fmtRoi = new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1 });
+import { formatBRL, formatPercent } from "@/lib/format";
 
 export default function SheetsPage() {
   const router = useRouter();
@@ -203,10 +203,6 @@ export default function SheetsPage() {
     } finally {
       setDeleting(false);
     }
-  }
-
-  function fmt(value: number) {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   }
 
   function calcTotal(sheet: Sheet) {
@@ -430,7 +426,7 @@ export default function SheetsPage() {
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
                       <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
                       <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                        {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
+                        {roiRatio > 0 ? "+" : ""}{formatPercent(roiRatio * 100)}
                       </p>
                     </div>
                   </div>
@@ -438,7 +434,7 @@ export default function SheetsPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
                     <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
                     <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                      {isPositive ? "+" : ""}{fmt(total)}
+                      {isPositive ? "+" : ""}{formatBRL(total)}
                     </span>
                   </div>
                 </Card>
@@ -608,7 +604,7 @@ export default function SheetsPage() {
                   <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
                     <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
                     <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                      {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
+                      {roiRatio > 0 ? "+" : ""}{formatPercent(roiRatio * 100)}
                     </p>
                   </div>
                 </div>
@@ -617,7 +613,7 @@ export default function SheetsPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
                   <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
                   <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                    {isPositive ? "+" : ""}{fmt(total)}
+                    {isPositive ? "+" : ""}{formatBRL(total)}
                   </span>
                 </div>
               </Card>

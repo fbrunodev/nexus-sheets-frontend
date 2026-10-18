@@ -16,11 +16,7 @@ const COLORS = [
   "var(--chart-5)",
 ];
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-
-const fmtPct = (v: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v / 100);
+import { formatBRL, formatPercent } from "@/lib/format";
 
 export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
   const sorted = [...costStats].sort((a, b) => b.value - a.value);
@@ -81,7 +77,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
               marginBottom: "16px",
             }}
           >
-            {fmt(total)}
+            {formatBRL(total)}
           </p>
 
           {/* Barra empilhada */}
@@ -100,7 +96,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
               return (
                 <div
                   key={item.name}
-                  title={`${item.name}: ${fmtPct(pct)}`}
+                  title={`${item.name}: ${formatPercent(pct)}`}
                   style={{
                     flex: `0 0 ${pct}%`,
                     background: COLORS[i % COLORS.length],
@@ -143,7 +139,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
                     {item.name}
                   </span>
                   <span style={{ fontSize: "12px", color: "var(--text-muted)", flexShrink: 0 }}>
-                    {fmtPct(pct)}
+                    {formatPercent(pct)}
                   </span>
                   <span
                     style={{
@@ -153,7 +149,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
                       flexShrink: 0,
                     }}
                   >
-                    {fmt(item.value)}
+                    {formatBRL(item.value)}
                   </span>
                 </div>
               );
@@ -176,7 +172,7 @@ export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
                     color: "var(--text)",
                   }}
                 >
-                  {fmt(total / sheetCount)}
+                  {formatBRL(total / sheetCount)}
                 </span>
               </div>
             </>
