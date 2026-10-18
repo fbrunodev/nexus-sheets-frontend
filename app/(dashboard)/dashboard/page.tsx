@@ -8,6 +8,7 @@ import KpiStrip from "./_components/KpiStrip";
 import OperationResults from "./_components/OperationResults";
 import CostBreakdown from "./_components/CostBreakdown";
 import RecentSheets from "./_components/RecentSheets";
+import MonthlyProfit from "./_components/MonthlyProfit";
 import {
   KpiStripSkeleton,
   ChartsSkeleton,
@@ -160,21 +161,24 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Conteúdo ── */}
+      {loading ? <KpiStripSkeleton /> : (
+        <KpiStrip
+          stats={stats}
+          sheets={sheets}
+          calcSheetResult={calcSheetResult}
+          totalCosts={costStats.reduce((s, c) => s + c.value, 0)}
+        />
+      )}
+
+      <MonthlyProfit />
+
       {loading ? (
         <>
-          <KpiStripSkeleton />
           <ChartsSkeleton />
           <RecentSheetsSkeleton />
         </>
       ) : (
         <>
-          <KpiStrip
-            stats={stats}
-            sheets={sheets}
-            calcSheetResult={calcSheetResult}
-            totalCosts={costStats.reduce((s, c) => s + c.value, 0)}
-          />
-
           <div
             style={{
               display: "flex",

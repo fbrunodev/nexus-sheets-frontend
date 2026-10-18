@@ -206,14 +206,6 @@ export default function SheetsPage() {
     }
   }
 
-  function calcTotal(sheet: Sheet) {
-    const bonus = sheet.lines.reduce((acc, l) => acc + (l.bonus || 0), 0);
-    const received = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
-    const deposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
-    const chest = sheet.lines.reduce((acc, l) => acc + l.chest, 0);
-    return received - deposited + chest + bonus + (sheet.salary ?? 0);
-  }
-
   function parseDeposits(text: string): number[] {
     return text
       .split("\n")
@@ -351,7 +343,7 @@ export default function SheetsPage() {
           ) : (
             <div className="grid-cards">
               {filtered.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
-              const total     = calcTotal(sheet);
+              const total     = sheet.result;
               const isPositive = total > 0;
               const isNeutral  = total === 0;
               const deposited  = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
@@ -454,7 +446,7 @@ export default function SheetsPage() {
       ) : (
         <div className="grid-cards">
           {sheets.map((sheet) => {
-            const total      = calcTotal(sheet);
+            const total      = sheet.result;
             const isPositive = total > 0;
             const isNeutral  = total === 0;
             const deposited  = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
