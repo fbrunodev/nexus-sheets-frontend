@@ -372,13 +372,13 @@ export default function MonthlyProfit() {
               {
                 label: "Planilhas",
                 value: formatSignedBRL(sel.sheets_result),
-                color: sel.sheets_result >= 0 ? "var(--text)" : "var(--negative-text)",
+                color: "var(--text)",
                 bold: false,
               },
               {
                 label: "Custos",
                 value: sel.costs > 0 ? `−${formatBRL(sel.costs)}` : "—",
-                color: sel.costs > 0 ? "var(--negative-text)" : "var(--text-muted)",
+                color: "var(--text)",
                 bold: false,
               },
               {
