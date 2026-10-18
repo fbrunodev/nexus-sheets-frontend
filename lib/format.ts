@@ -7,3 +7,6 @@ export const formatSignedBRL = (v: number) =>
   `${v >= 0 ? "+" : "−"}${brl.format(Math.abs(v))}`;
 
 export const formatPercent = (v: number) => pct.format(v / 100);
+
+export const formatSignedPercent = (v: number) =>
+  v === 0 ? pct.format(0) : `${v > 0 ? "+" : "−"}${pct.format(Math.abs(v) / 100)}`;
