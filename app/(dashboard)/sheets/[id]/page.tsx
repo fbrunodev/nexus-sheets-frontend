@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { formatBRL } from "@/lib/format";
+import { StatusDot } from "@/components/ui/status-dot";
+import { formatBRL, formatSignedBRL, formatNumber } from "@/lib/format";
+
+const CTYPE_LABEL: Record<string, string> = { META: "Meta", BAU: "Baú", RECARGA: "Recarga" };
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -23,6 +26,8 @@ export default function SheetPage() {
   const [editingSalary, setEditingSalary] = useState(false);
   const [salaryValue, setSalaryValue] = useState(0);
   const [finishModal, setFinishModal] = useState<{ visible: boolean; name: string; result: number }>({ visible: false, name: "", result: 0 });
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [deleteLineTarget, setDeleteLineTarget] = useState<{ id: string; lineNumber: number } | null>(null);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
@@ -55,7 +60,8 @@ export default function SheetPage() {
       setSheet((prev) => prev ? { ...prev, lines: prev.lines.map((l) => l.id === lineId ? data : l) } : prev);
       const refKey = `${lineId}-${field}`;
       if (inputRefs.current[refKey]) {
-        inputRefs.current[refKey]!.value = String(data[field as keyof typeof data] ?? 0);
+        const v = Number(data[field as keyof typeof data] ?? 0);
+        inputRefs.current[refKey]!.value = v > 0 ? formatNumber(v) : "";
       }
       setLastSaved(new Date().toLocaleTimeString("pt-BR"));
     } catch (err) {
@@ -78,7 +84,6 @@ export default function SheetPage() {
   }
 
   async function clearAll() {
-    if (!confirm("Zerar os valores de todas as linhas?")) return;
     try {
       const { data } = await api.post(`/sheets/${id}/clear`);
       setSheet(data);
@@ -119,7 +124,7 @@ export default function SheetPage() {
       const targetLine = sheet!.lines[rowIdx];
       if (!targetLine) return;
       const el = inputRefs.current[`${targetLine.id}-${fieldName}`];
-      if (el) { el.focus(); el.select(); }
+      if (el) el.focus();
     }
     switch (e.key) {
       case "ArrowDown": e.preventDefault(); focusCell(rowIndex + 1, field); break;
@@ -147,6 +152,26 @@ export default function SheetPage() {
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
+  const fmtInput = (v: number) => v > 0 ? formatNumber(v) : "";
+
+  function handleLineFocus(e: React.FocusEvent<HTMLInputElement>) {
+    const el = e.currentTarget;
+    const raw = parseFloat(el.value.replace(/\./g, "").replace(",", "."));
+    el.value = isNaN(raw) || raw === 0 ? "" : String(raw);
+    el.select();
+  }
+
+  function handleLineBlur(
+    e: React.FocusEvent<HTMLInputElement>,
+    lineId: string,
+    field: string,
+    currentValue: number
+  ) {
+    const newValue = parseFloat(e.currentTarget.value.replace(",", ".")) || 0;
+    if (newValue !== currentValue) updateLine(lineId, field, newValue);
+    e.currentTarget.value = fmtInput(newValue);
+  }
+
   const COLS = "44px 1fr 1fr 1fr 1fr 120px 36px";
 
   return (
@@ -169,7 +194,7 @@ export default function SheetPage() {
           gap: "12px",
         }}
       >
-        {/* Esquerda: voltar + nome + data */}
+        {/* Esquerda: voltar + nome + status */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
           <button
             onClick={() => router.push("/sheets")}
@@ -184,8 +209,9 @@ export default function SheetPage() {
               <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
                 {sheet.name}
               </p>
+              <StatusDot status={sheet.status} size={6} />
               <Badge variant="neutral" size="sm">
-                {sheet.cooperation_type}
+                {CTYPE_LABEL[sheet.cooperation_type] ?? sheet.cooperation_type}
               </Badge>
               {isReadOnly && (
                 <span
@@ -246,21 +272,18 @@ export default function SheetPage() {
 
       {/* ── Cards de totais ── */}
       <div className={sheet.cooperation_type === "BAU" ? "grid-5" : "grid-6"} style={{ marginBottom: "20px" }}>
-        {[
-          { label: "Total Depositado", value: totalDeposited,  activeColor: "var(--text-secondary)" },
-          { label: "Total Recebido",   value: totalReceived,   activeColor: "var(--positive)" },
-          { label: "Total em Baús",    value: totalChest,      activeColor: "var(--warning)" },
-          ...(sheet.cooperation_type === "BAU" ? [{ label: "Total em Bônus", value: totalBonus, activeColor: "var(--text-secondary)" }] : []),
-          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Salário", isSalary: true }] : []),
-          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Média", value: averageDeposit, activeColor: "var(--text-secondary)" }] : []),
-          { label: "Resultado Final", value: finalResult, activeColor: finalResult >= 0 ? "var(--positive)" : "var(--negative-text)", highlight: true },
-        ].map((item) => {
+        {([
+          { label: "Total depositado", value: totalDeposited },
+          { label: "Total recebido",   value: totalReceived },
+          { label: "Total em baús",    value: totalChest },
+          ...(sheet.cooperation_type === "BAU" ? [{ label: "Total em bônus", value: totalBonus }] : []),
+          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Salário", isSalary: true as const }] : []),
+          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Depósito médio", value: averageDeposit }] : []),
+          { label: "Resultado final", value: finalResult, isResult: true as const },
+        ] as Array<{ label: string; value?: number; isSalary?: true; isResult?: true }>).map((item) => {
           if (item.isSalary) {
             return (
-              <Card
-                key="salary"
-                style={{ padding: "16px", position: "relative" }}
-              >
+              <Card key="salary" style={{ padding: "16px", position: "relative" }}>
                 <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>Salário</p>
                 {editingSalary ? (
                   <input
@@ -275,9 +298,9 @@ export default function SheetPage() {
                 ) : (
                   <p
                     onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
-                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "var(--accent)" : "var(--text-muted)", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
+                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "var(--text)" : "var(--text-muted)", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
                   >
-                    {salaryValue > 0 ? "+" : ""}{formatBRL(salaryValue)}
+                    {formatBRL(salaryValue)}
                   </p>
                 )}
                 {!isFinished && !isReadOnly && (
@@ -286,30 +309,48 @@ export default function SheetPage() {
               </Card>
             );
           }
-          const color = (item.value ?? 0) !== 0 ? item.activeColor! : "var(--text-muted)";
-          const showPlus = (item.value ?? 0) > 0;
+
+          if (item.isResult) {
+            return (
+              <Card
+                key={item.label}
+                highlight
+                tone={finalResult >= 0 ? "positive" : "negative"}
+                style={{ padding: "16px" }}
+              >
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>{item.label}</p>
+                <p
+                  style={{
+                    fontSize: "clamp(18px, 5vw, 26px)",
+                    fontWeight: "700",
+                    color: finalResult >= 0 ? "var(--positive)" : "var(--negative-text)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {formatSignedBRL(finalResult)}
+                </p>
+              </Card>
+            );
+          }
+
           return (
-            <Card
-              key={item.label}
-              highlight={item.highlight}
-              tone={item.highlight ? (finalResult >= 0 ? "positive" : "negative") : undefined}
-              style={{ padding: "16px" }}
-            >
-              <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>
-                {item.label}
-              </p>
+            <Card key={item.label} style={{ padding: "16px" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>{item.label}</p>
               <p
                 style={{
-                  fontSize: item.highlight ? "clamp(18px, 5vw, 26px)" : "20px",
+                  fontSize: "20px",
                   fontWeight: "700",
-                  color,
+                  color: (item.value ?? 0) !== 0 ? "var(--text)" : "var(--text-muted)",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {showPlus ? "+" : ""}{formatBRL(item.value!)}
+                {formatBRL(item.value!)}
               </p>
             </Card>
           );
@@ -320,7 +361,7 @@ export default function SheetPage() {
       {sheet.cooperation_type === "META" && sheet.goal > 0 && (
         <Card style={{ padding: "16px 20px", marginBottom: "16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text)" }}>Progresso da Meta</span>
+            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text)" }}>Progresso da meta</span>
             <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{filled}/{sheet.goal} operações</span>
           </div>
           <div style={{ background: "var(--border)", borderRadius: "100px", height: "8px", overflow: "hidden" }}>
@@ -364,7 +405,7 @@ export default function SheetPage() {
             <Button variant="secondary" onClick={addLines} style={{ gap: "5px", fontSize: "12px" }}>
               <Plus size={14} /> 5 linhas
             </Button>
-            <Button variant="ghost" onClick={clearAll} style={{ gap: "5px", fontSize: "12px" }}>
+            <Button variant="ghost" onClick={() => setShowClearModal(true)} style={{ gap: "5px", fontSize: "12px" }}>
               <Trash2 size={14} /> Limpar tudo
             </Button>
           </div>
@@ -393,134 +434,141 @@ export default function SheetPage() {
           <span />
         </div>
 
-        {sheet.lines.map((line, index) => (
-          <div key={line.id}>
-            {/* ===== Mobile: card ===== */}
-            <div
-              className="row-mobile"
-              style={{ padding: "14px 16px", borderBottom: "1px solid var(--surface-hover)" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
-                  Operação #{line.line_number}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "700",
-                      fontVariantNumeric: "tabular-nums",
-                      color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
-                    }}
-                  >
-                    {line.result > 0 ? "+" : ""}{formatBRL(line.result)}
-                  </span>
-                  {!isFinished && !isReadOnly && (
-                    <button
-                      onClick={() => removeLine(line.id)}
-                      style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                {[
-                  { field: "deposit",    label: "Depósito" },
-                  { field: "withdrawal", label: "Saque" },
-                  { field: "chest",      label: "Baú" },
-                  { field: "bonus",      label: "Bônus" },
-                ].map(({ field, label }) => (
-                  <div key={field}>
-                    <label style={{ display: "block", fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
-                      {label}
-                    </label>
-                    <div className="ui-cell">
-                      <span style={{ fontSize: "10px", color: "var(--text-muted)", marginRight: "3px" }}>R$</span>
-                      <input
-                        ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
-                        type="number"
-                        inputMode="decimal"
-                        defaultValue={(line as any)[field] || ""}
-                        disabled={isFinished || isReadOnly}
-                        onBlur={(e) => {
-                          const newValue = Number(e.target.value);
-                          const currentValue = (line as any)[field] || 0;
-                          if (newValue !== currentValue) updateLine(line.id, field, newValue);
-                        }}
-                        onKeyDown={(e) => handleKeyDown(e, index, field)}
-                        placeholder="0"
-                        style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "inherit" }}
-                        onFocus={(e) => e.target.select()}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {sheet.lines.map((line, index) => {
+          const isEmpty   = line.deposit === 0 && line.withdrawal === 0 && line.chest === 0 && (line.bonus || 0) === 0;
+          const hasValues = !isEmpty;
 
-            {/* ===== Desktop: linha em grid ===== */}
-            <div
-              className="row-desktop"
-              style={{
-                gridTemplateColumns: COLS,
-                gap: "16px",
-                alignItems: "center",
-                padding: "5px 16px",
-                borderBottom: "1px solid var(--surface-hover)",
-              }}
-            >
-              <span style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
-                {line.line_number}
-              </span>
-              {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
-                <div
-                  key={field}
-                  className="ui-cell"
-                >
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
-                  <input
-                    ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
-                    type="number"
-                    defaultValue={(line as any)[field] || ""}
-                    disabled={isFinished || isReadOnly}
-                    onBlur={(e) => {
-                      const newValue = Number(e.target.value);
-                      const currentValue = (line as any)[field] || 0;
-                      if (newValue !== currentValue) updateLine(line.id, field, newValue);
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, index, field)}
-                    placeholder="0"
-                    style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "inherit" }}
-                    onFocus={(e) => e.target.select()}
-                  />
+          return (
+            <div key={line.id}>
+              {/* ===== Mobile: card ===== */}
+              <div
+                className="row-mobile"
+                style={{ padding: "14px 16px", borderBottom: "1px solid var(--surface-hover)" }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
+                    Operação #{line.line_number}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "700",
+                        fontVariantNumeric: "tabular-nums",
+                        color: isEmpty
+                          ? "var(--text-muted)"
+                          : line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
+                      }}
+                    >
+                      {isEmpty ? "—" : formatSignedBRL(line.result)}
+                    </span>
+                    {!isFinished && !isReadOnly && (
+                      <button
+                        aria-label={`Remover linha ${line.line_number}`}
+                        onClick={() => {
+                          if (hasValues) setDeleteLineTarget({ id: line.id, lineNumber: line.line_number });
+                          else removeLine(line.id);
+                        }}
+                        style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ))}
-              <span
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+                  {[
+                    { field: "deposit",    label: "Depósito" },
+                    { field: "withdrawal", label: "Saque" },
+                    { field: "chest",      label: "Baú" },
+                    { field: "bonus",      label: "Bônus" },
+                  ].map(({ field, label }) => (
+                    <div key={field}>
+                      <label style={{ display: "block", fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
+                        {label}
+                      </label>
+                      <div className="ui-cell">
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)", marginRight: "3px" }}>R$</span>
+                        <input
+                          ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
+                          type="text"
+                          inputMode="decimal"
+                          defaultValue={fmtInput((line as any)[field] || 0)}
+                          disabled={isFinished || isReadOnly}
+                          onFocus={handleLineFocus}
+                          onBlur={(e) => handleLineBlur(e, line.id, field, (line as any)[field] || 0)}
+                          onKeyDown={(e) => handleKeyDown(e, index, field)}
+                          placeholder="0,00"
+                          style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "inherit" }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ===== Desktop: linha em grid ===== */}
+              <div
+                className="row-desktop"
                 style={{
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  textAlign: "right",
-                  fontVariantNumeric: "tabular-nums",
-                  color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
+                  gridTemplateColumns: COLS,
+                  gap: "16px",
+                  alignItems: "center",
+                  padding: "5px 16px",
+                  borderBottom: "1px solid var(--surface-hover)",
                 }}
               >
-                {line.result > 0 ? "+" : ""}{formatBRL(line.result)}
-              </span>
-              {!isFinished && !isReadOnly ? (
-                <button
-                  onClick={() => removeLine(line.id)}
-                  style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.15s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+                <span style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
+                  {line.line_number}
+                </span>
+                {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
+                  <div key={field} className="ui-cell">
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
+                    <input
+                      ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={fmtInput((line as any)[field] || 0)}
+                      disabled={isFinished || isReadOnly}
+                      onFocus={handleLineFocus}
+                      onBlur={(e) => handleLineBlur(e, line.id, field, (line as any)[field] || 0)}
+                      onKeyDown={(e) => handleKeyDown(e, index, field)}
+                      placeholder="0,00"
+                      style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "inherit" }}
+                    />
+                  </div>
+                ))}
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    textAlign: "right",
+                    fontVariantNumeric: "tabular-nums",
+                    color: isEmpty
+                      ? "var(--text-muted)"
+                      : line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
+                  }}
                 >
-                  <X size={15} />
-                </button>
-              ) : <span />}
+                  {isEmpty ? "—" : formatSignedBRL(line.result)}
+                </span>
+                {!isFinished && !isReadOnly ? (
+                  <button
+                    aria-label={`Remover linha ${line.line_number}`}
+                    onClick={() => {
+                      if (hasValues) setDeleteLineTarget({ id: line.id, lineNumber: line.line_number });
+                      else removeLine(line.id);
+                    }}
+                    style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+                  >
+                    <X size={15} />
+                  </button>
+                ) : <span />}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </Card>
 
       {/* ── Modal — Planilha finalizada ── */}
@@ -561,7 +609,7 @@ export default function SheetPage() {
                 marginBottom: "24px",
               }}
             >
-              {finishModal.result >= 0 ? "+" : ""}{formatBRL(finishModal.result)}
+              {formatSignedBRL(finishModal.result)}
             </p>
           </ModalBody>
           <ModalFooter style={{ justifyContent: "center" }}>
@@ -571,6 +619,70 @@ export default function SheetPage() {
             >
               OK
             </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* ── Modal — Confirmar limpeza ── */}
+      <Modal open={showClearModal} onOpenChange={(open) => { if (!open) setShowClearModal(false); }}>
+        <ModalContent maxWidth={360} showClose={false}>
+          <ModalBody style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "var(--negative-subtle)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+              }}
+            >
+              <Trash2 size={22} color="var(--negative-text)" />
+            </div>
+            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", marginBottom: "8px" }}>
+              Zerar todas as linhas?
+            </h3>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              Todos os valores serão apagados. Essa ação não pode ser desfeita.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={() => setShowClearModal(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={() => { clearAll(); setShowClearModal(false); }}>Zerar tudo</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* ── Modal — Confirmar remoção de linha ── */}
+      <Modal open={!!deleteLineTarget} onOpenChange={(open) => { if (!open) setDeleteLineTarget(null); }}>
+        <ModalContent maxWidth={320} showClose={false}>
+          <ModalBody style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "var(--negative-subtle)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+              }}
+            >
+              <X size={22} color="var(--negative-text)" />
+            </div>
+            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text)", marginBottom: "8px" }}>
+              Remover linha {deleteLineTarget?.lineNumber}?
+            </h3>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              A linha tem valores preenchidos e será removida permanentemente.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={() => setDeleteLineTarget(null)}>Cancelar</Button>
+            <Button variant="danger" onClick={() => { removeLine(deleteLineTarget!.id); setDeleteLineTarget(null); }}>Remover</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

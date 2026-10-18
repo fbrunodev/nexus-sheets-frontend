@@ -484,7 +484,9 @@ html, body { overflow-x: hidden; max-width: 100%; }
   display: flex; align-items: center; padding: 0 10px;
   transition: border-color 0.15s;
 }
-.ui-cell:focus-within { border-color: var(--border-strong); }
+.ui-cell:hover { border-color: var(--border-strong); }
+.ui-cell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ui-cell input::placeholder { color: var(--text-muted); opacity: 1; }
 
 /* Modal overlay */
 .ui-modal-overlay {
