@@ -237,9 +237,9 @@ export default function AdminPage() {
         }}
       >
         {[
-          { label: "Total de keys",    value: keys.length,   color: "var(--text)" },
-          { label: "Keys disponíveis", value: availableKeys, color: "var(--text)" },
-          { label: "Keys utilizadas",  value: usedKeys,      color: "var(--text)" },
+          { label: "Total de chaves",    value: keys.length,   color: "var(--text)" },
+          { label: "Chaves disponíveis", value: availableKeys, color: "var(--text)" },
+          { label: "Chaves utilizadas",  value: usedKeys,      color: "var(--text)" },
           { label: "Operadores",       value: users.length,  color: "var(--text)" },
         ].map((item) => (
           <Card
@@ -301,11 +301,7 @@ export default function AdminPage() {
       {/* ── Tab: Activation Keys ── */}
       {activeTab === "keys" && (
         <Card style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-              Gerenciar Keys
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
               <select
                 value={keyType}
                 onChange={(e) => setKeyType(e.target.value)}
@@ -320,7 +316,6 @@ export default function AdminPage() {
                 <Key size={14} />
                 {generating ? "Gerando..." : "Gerar chave"}
               </Button>
-            </div>
           </div>
 
           {loadingKeys ? (
