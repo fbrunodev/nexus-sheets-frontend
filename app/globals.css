@@ -169,7 +169,7 @@ html, body {
   .app-sidebar { display: none !important; }
   .app-mobile-nav { display: flex !important; }
   .app-content { margin-left: 0 !important; }
-  .app-main { padding: 16px 16px 90px !important; }
+  .app-main { padding: 16px 16px calc(64px + env(safe-area-inset-bottom)) !important; }
   .topbar-menu-btn { display: none !important; }
   .date-long { display: none; }
   .date-short { display: inline; }

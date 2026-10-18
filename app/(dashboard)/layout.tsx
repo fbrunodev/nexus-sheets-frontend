@@ -95,8 +95,31 @@ export default function DashboardLayout({
                 <Menu size={18} />
               </button>
             )}
-            {!pathname.startsWith("/dashboard") && (
-              <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff" }}>
+            {pathname.startsWith("/dashboard") ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "8px",
+                    background: "var(--text)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "13px",
+                    fontWeight: "800",
+                    color: "var(--bg)",
+                    flexShrink: 0,
+                  }}
+                >
+                  N
+                </div>
+                <span style={{ fontSize: "15px", fontWeight: "700", color: "var(--text)" }}>
+                  Nexus
+                </span>
+              </div>
+            ) : (
+              <div style={{ fontSize: "15px", fontWeight: "600", color: "var(--text)" }}>
                 {pageTitle}
               </div>
             )}
