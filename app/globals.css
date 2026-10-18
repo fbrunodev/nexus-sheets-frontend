@@ -80,6 +80,13 @@
   padding: 0;
 }
 
+/* Focus rings via keyboard only — never on mouse click */
+:focus:not(:focus-visible) { outline: none; }
+
+/* Sidebar nav links: suppress browser default outline; use box-shadow for keyboard-only focus */
+.sidebar-nav-link:focus { outline: none; }
+.sidebar-nav-link:focus-visible { box-shadow: 0 0 0 2px var(--accent); border-radius: 8px; }
+
 html,
 body {
   background-color: var(--bg);

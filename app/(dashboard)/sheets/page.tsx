@@ -7,11 +7,6 @@ import { Sheet } from "@/types";
 import {
   Plus,
   FileSpreadsheet,
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Clock,
   Trash2,
   MoreVertical,
 } from "lucide-react";
@@ -19,6 +14,8 @@ import { StatusDot } from "@/components/ui/status-dot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { PeriodSelect } from "@/components/ui/period-select";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -26,13 +23,12 @@ const CARET =
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
+
+const fmtRoi = new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1 });
 
 export default function SheetsPage() {
   const router = useRouter();
@@ -56,6 +52,7 @@ export default function SheetsPage() {
   const [stats, setStats] = useState<any>(null);
   const [operatorSheets, setOperatorSheets] = useState<any[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperator, setSelectedOperator] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -66,9 +63,7 @@ export default function SheetsPage() {
   const searchMounted = useRef(false);
 
   useEffect(() => {
-    if (activeStatus !== "operators") {
-      fetchSheets();
-    }
+    fetchSheets();
     fetchStats();
   }, [activeStatus, period]);
 
@@ -240,22 +235,30 @@ export default function SheetsPage() {
   const totalSheets  = stats?.total ?? 0;
 
   const tabs = [
-    { label: "Todas",       value: "all",         count: totalSheets },
+    { label: "Todas",        value: "all",         count: totalSheets },
     { label: "Não iniciada", value: "NOT_STARTED", count: notStarted },
-    { label: "Iniciada",    value: "IN_PROGRESS",  count: inProgress },
-    { label: "Finalizada",  value: "FINISHED",     count: finished },
-    ...(operators.length > 0
-      ? [{ label: "Operadores", value: "operators", count: operatorSheets.length }]
-      : []),
+    { label: "Em andamento", value: "IN_PROGRESS",  count: inProgress },
+    { label: "Concluída",   value: "FINISHED",     count: finished },
   ];
 
   const canCreate = !creating && (cooperationType === "BAU" || !!selectedPlatform);
 
   return (
     <div>
-      {/* ── Header ── */}
-      <div className="page-header" style={{ marginBottom: "20px" }}>
-        <div className="page-header-search" style={{ position: "relative" }}>
+      <PageHeader
+        title="Planilhas"
+        subtitle="Acompanhe o resultado de cada operação"
+        actions={
+          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px" }}>
+            <Plus size={14} />
+            Nova Planilha
+          </Button>
+        }
+      />
+
+      {/* ── Filtros ── */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -271,74 +274,28 @@ export default function SheetsPage() {
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
         </div>
-
-        <div className="page-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Card
-            variant="compact"
-            style={{
-              padding: "7px 14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              flex: 1,
-              justifyContent: "center",
-            }}
+        {operators.length > 0 && (
+          <select
+            value={selectedOperator}
+            onChange={(e) => setSelectedOperator(e.target.value)}
+            className="ui-select"
+            style={{ width: "220px", flexShrink: 0, backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: "32px" }}
           >
-            <FileSpreadsheet size={13} color="var(--accent)" />
-            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Total Geral</span>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: "700",
-                fontVariantNumeric: "tabular-nums",
-                color: grandTotal >= 0 ? "var(--positive)" : "var(--negative-text)",
-              }}
-            >
-              {fmt(grandTotal)}
-            </span>
-          </Card>
-          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px", fontSize: "12px" }}>
-            <Plus size={14} />
-            Nova Planilha
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Filtro de período ── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        <div
-          style={{
-            display: "flex",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          {(["all", "month", "week"] as const).map((v) => {
-            const label = v === "all" ? "Todos" : v === "month" ? "Mês" : "Semana";
-            const active = period === v;
-            return (
-              <button
-                key={v}
-                onClick={() => setPeriod(v)}
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "12px",
-                  fontWeight: active ? "600" : "400",
-                  color: active ? "var(--text)" : "var(--text-muted)",
-                  background: active ? "var(--surface-hover)" : "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+            <option value="">Todos os operadores</option>
+            {operators.map((op: any) => (
+              <option key={op.id} value={op.id}>{op.name || op.email}</option>
+            ))}
+          </select>
+        )}
+        <PeriodSelect
+          value={period}
+          onChange={(v) => setPeriod(v as "all" | "month" | "week")}
+          options={[
+            { value: "all",   label: "Todo o período" },
+            { value: "month", label: "Este mês" },
+            { value: "week",  label: "Últimos 7 dias" },
+          ]}
+        />
       </div>
 
       {/* ── Tabs ── */}
@@ -385,61 +342,23 @@ export default function SheetsPage() {
         })}
       </div>
 
-      {/* ── Contadores ── */}
-      <div className="grid-4" style={{ marginBottom: "20px" }}>
-        {[
-          { label: "Total",         value: totalSheets, color: "var(--text)",      icon: <FileSpreadsheet size={16} color="var(--text-muted)" /> },
-          { label: "Não Iniciadas", value: notStarted,  color: "var(--warning)",   icon: <Clock size={16} color="var(--warning)" /> },
-          { label: "Iniciadas",     value: inProgress,  color: "var(--accent)",    icon: <TrendingUp size={16} color="var(--accent)" /> },
-          { label: "Finalizadas",   value: finished,    color: "var(--positive)",  icon: <Trophy size={16} color="var(--positive)" /> },
-        ].map((item) => (
-          <Card
-            key={item.label}
-            variant="compact"
-            style={{
-              padding: "14px 16px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "10px",
-                  color: "var(--text-muted)",
-                  marginBottom: "4px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                }}
-              >
-                {item.label}
-              </p>
-              <p style={{ fontSize: "22px", fontWeight: "700", color: item.color }}>
-                {item.value}
-              </p>
-            </div>
-            {item.icon}
-          </Card>
-        ))}
-      </div>
-
       {/* ── Cards ── */}
-      {activeStatus === "operators" ? (
-        operatorSheets.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
-            <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
-            <p style={{ fontSize: "13px" }}>Nenhuma planilha de operador encontrada</p>
-          </div>
-        ) : (
-          <div className="grid-cards">
-            {operatorSheets.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
+      {selectedOperator !== "" ? (
+        (() => {
+          const filtered = operatorSheets.filter((item: any) => item.sheet.owner_id === selectedOperator || item.operator_id === selectedOperator);
+          return filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
+              <FileSpreadsheet size={36} style={{ marginBottom: "12px", opacity: 0.3 }} />
+              <p style={{ fontSize: "13px" }}>Nenhuma planilha encontrada para este operador</p>
+            </div>
+          ) : (
+            <div className="grid-cards">
+              {filtered.map(({ sheet, operator_name }: { sheet: Sheet; operator_name: string }) => {
               const total     = calcTotal(sheet);
               const isPositive = total > 0;
               const isNeutral  = total === 0;
               const deposited  = sheet.lines.reduce((acc: number, l: any) => acc + l.deposit, 0);
-              const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-              const roiNum     = parseFloat(roi);
+              const roiRatio   = deposited > 0 ? (total / deposited) : 0;
 
               return (
                 <Card
@@ -450,7 +369,8 @@ export default function SheetsPage() {
                     cursor: "pointer",
                     transition: "border-color 0.2s, transform 0.2s",
                     position: "relative",
-                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "var(--border-strong)";
@@ -461,14 +381,6 @@ export default function SheetsPage() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-                      background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
-                      borderRadius: "12px 12px 0 0",
-                    }}
-                  />
-
                   <div style={{ marginBottom: "10px" }}>
                     <Badge variant="neutral">{operator_name}</Badge>
                   </div>
@@ -478,67 +390,63 @@ export default function SheetsPage() {
                       <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {sheet.name}
                       </p>
-                      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>
                         {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                       </p>
+                      <StatusDot status={sheet.status} size={6} />
                     </div>
-                    <StatusDot status={sheet.status} showLabel={false} size={8} style={{ flexShrink: 0 }} />
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px", flex: 1 }}>
                     {sheet.cooperation_type === "META" ? (
                       <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                        {sheet.goal > 0 ? (() => {
+                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>Meta</p>
+                        {(() => {
                           const filledLines = sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length;
+                          const pct = sheet.goal > 0 ? Math.min((filledLines / sheet.goal) * 100, 100) : 0;
                           return (
                             <>
-                              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                              <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
+                                {sheet.goal > 0 ? `${filledLines}/${sheet.goal}` : "—"}
+                              </p>
                               <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
+                                <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                               </div>
                             </>
                           );
-                        })() : (
-                          <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
-                        )}
+                        })()}
                       </div>
                     ) : (
                       <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                        <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                           {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                         </p>
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
                           {sheet.lines.filter((l: any) => l.deposit > 0 || l.withdrawal > 0).length}
                         </p>
+                        <div style={{ height: "4px" }} />
                       </div>
                     )}
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                        {roiNum > 0 ? "+" : ""}{roi}%
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
+                        {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
                       </p>
                     </div>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      {isPositive
-                        ? <TrendingUp size={13} color="var(--positive)" />
-                        : isNeutral
-                        ? <Minus size={13} color="var(--text-muted)" />
-                        : <TrendingDown size={13} color="var(--negative-text)" />}
-                      <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                        {isPositive ? "+" : ""}{fmt(total)}
-                      </span>
-                    </div>
+                    <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
+                    <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
+                      {isPositive ? "+" : ""}{fmt(total)}
+                    </span>
                   </div>
                 </Card>
               );
             })}
           </div>
-        )
+        );
+      })()
       ) : loading ? (
         <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
       ) : sheets.length === 0 ? (
@@ -553,8 +461,7 @@ export default function SheetsPage() {
             const isPositive = total > 0;
             const isNeutral  = total === 0;
             const deposited  = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
-            const roi        = deposited > 0 ? ((total / deposited) * 100).toFixed(1) : "0.0";
-            const roiNum     = parseFloat(roi);
+            const roiRatio   = deposited > 0 ? (total / deposited) : 0;
 
             return (
               <Card
@@ -565,7 +472,8 @@ export default function SheetsPage() {
                   cursor: "pointer",
                   transition: "border-color 0.2s, transform 0.2s",
                   position: "relative",
-                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--border-strong)";
@@ -576,26 +484,17 @@ export default function SheetsPage() {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {/* Linha topo */}
-                <div
-                  style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-                    background: isPositive ? "var(--positive)" : isNeutral ? "var(--border-strong)" : "var(--negative-bar)",
-                    borderRadius: "12px 12px 0 0",
-                  }}
-                />
-
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
                   <div style={{ flex: 1, marginRight: "8px" }}>
                     <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {sheet.name}
                     </p>
-                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "6px" }}>
                       {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
                     </p>
+                    <StatusDot status={sheet.status} size={6} />
                   </div>
-                  <StatusDot status={sheet.status} showLabel={false} size={8} style={{ marginTop: "3px", flexShrink: 0 }} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -676,55 +575,50 @@ export default function SheetsPage() {
                 )}
 
                 {/* Métricas */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px", flex: 1 }}>
                   {sheet.cooperation_type === "META" ? (
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>Meta</p>
-                      {sheet.goal > 0 ? (() => {
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>Meta</p>
+                      {(() => {
                         const filledLines = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
+                        const pct = sheet.goal > 0 ? Math.min((filledLines / sheet.goal) * 100, 100) : 0;
                         return (
                           <>
-                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>{filledLines}/{sheet.goal}</p>
+                            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
+                              {sheet.goal > 0 ? `${filledLines}/${sheet.goal}` : "—"}
+                            </p>
                             <div style={{ background: "var(--border)", borderRadius: "100px", height: "4px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${Math.min((filledLines / sheet.goal) * 100, 100)}%`, background: filledLines >= sheet.goal ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
+                              <div style={{ height: "100%", width: `${pct}%`, background: pct >= 100 ? "var(--positive)" : "var(--accent)", borderRadius: "100px" }} />
                             </div>
                           </>
                         );
-                      })() : (
-                        <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>—</p>
-                      )}
+                      })()}
                     </div>
                   ) : (
                     <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                      <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
+                      <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {sheet.cooperation_type === "BAU" ? "Ciclos" : "Contas"}
                       </p>
-                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)" }}>
+                      <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>
                         {sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length}
                       </p>
+                      <div style={{ height: "4px" }} />
                     </div>
                   )}
                   <div style={{ background: "var(--surface-hover)", borderRadius: "8px", padding: "10px 12px" }}>
-                    <p style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>ROI</p>
-                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiNum > 0 ? "var(--positive)" : roiNum < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
-                      {roiNum > 0 ? "+" : ""}{roi}%
+                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>ROI</p>
+                    <p style={{ fontSize: "13px", fontWeight: "600", color: roiRatio > 0 ? "var(--positive)" : roiRatio < 0 ? "var(--negative-text)" : "var(--text-muted)" }}>
+                      {roiRatio > 0 ? "+" : ""}{fmtRoi.format(roiRatio)}
                     </p>
                   </div>
                 </div>
 
                 {/* Footer */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                    {isPositive
-                      ? <TrendingUp size={13} color="var(--positive)" />
-                      : isNeutral
-                      ? <Minus size={13} color="var(--text-muted)" />
-                      : <TrendingDown size={13} color="var(--negative-text)" />}
-                    <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
-                      {isPositive ? "+" : ""}{fmt(total)}
-                    </span>
-                  </div>
+                  <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Total</span>
+                  <span style={{ fontSize: "16px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: isPositive ? "var(--positive)" : isNeutral ? "var(--text-muted)" : "var(--negative-text)" }}>
+                    {isPositive ? "+" : ""}{fmt(total)}
+                  </span>
                 </div>
               </Card>
             );

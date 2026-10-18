@@ -2,18 +2,18 @@
 
 import { useAuthStore } from "@/store/authStore";
 import { User, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+const ROLE_LABEL: Record<string, string> = { ADMIN: "Administrador", OPERADOR: "Operador" };
+const PLAN_LABEL: Record<string, string> = { LIFETIME: "Vitalícia", MONTHLY: "Mensal" };
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 
 const LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
 };
 
 export default function SettingsPage() {
@@ -21,13 +21,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: "600px" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "var(--text)" }}>
-          Configurações
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie suas preferências e segurança</p>
-      </div>
+      <PageHeader title="Configurações" subtitle="Gerencie suas preferências e segurança" />
 
       {/* Card perfil */}
       <Card style={{ padding: "24px", marginBottom: "16px" }}>
@@ -43,7 +37,7 @@ export default function SettingsPage() {
               justifyContent: "center",
             }}
           >
-            <User size={15} color="var(--accent)" />
+            <User size={15} color="var(--text-secondary)" />
           </div>
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Perfil</p>
         </div>
@@ -69,66 +63,35 @@ export default function SettingsPage() {
           <div>
             <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>{user?.email}</p>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
-              <Badge variant="neutral">{user?.role}</Badge>
-              <Badge variant="warning">{user?.plan_type || "—"}</Badge>
+              <Badge variant="neutral">{user?.role ? (ROLE_LABEL[user.role] ?? user.role) : "—"}</Badge>
+              <Badge variant="neutral">{user?.plan_type ? (PLAN_LABEL[user.plan_type] ?? user.plan_type) : "—"}</Badge>
             </div>
           </div>
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Email</label>
-          <input
-            type="email"
-            defaultValue={user?.email || ""}
-            disabled
-            className="ui-input"
-          />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button variant="primary" disabled>Salvar perfil</Button>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
-        </div>
       </Card>
 
       {/* Card senha */}
       <Card style={{ padding: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
           <div
             style={{
               width: "32px",
               height: "32px",
               borderRadius: "8px",
-              background: "var(--warning-subtle)",
+              background: "var(--surface-hover)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Lock size={15} color="var(--warning)" />
+            <Lock size={15} color="var(--text-secondary)" />
           </div>
           <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Alterar senha</p>
         </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Senha atual</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Nova senha</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ marginBottom: "24px" }}>
-          <label style={LABEL}>Confirmar nova senha</label>
-          <input type="password" placeholder="••••••••" disabled className="ui-input" />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button variant="primary" disabled>Alterar senha</Button>
-          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Em breve</span>
-        </div>
+        <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+          Alteração de senha disponível em breve.
+        </p>
       </Card>
     </div>
   );

@@ -9,6 +9,8 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusDot } from "@/components/ui/status-dot";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 
 const CARET =
@@ -16,19 +18,21 @@ const CARET =
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
 
 type BadgeVariant = "neutral" | "positive" | "negative" | "warning";
 const KEY_TYPE_BADGE: Record<string, BadgeVariant> = {
-  LIFETIME: "positive",
+  LIFETIME: "neutral",
   MONTHLY:  "neutral",
   TRIAL:    "warning",
+};
+const KEY_TYPE_LABEL: Record<string, string> = {
+  LIFETIME: "Vitalícia",
+  MONTHLY:  "Mensal",
+  TRIAL:    "Teste",
 };
 
 interface ActivationKey {
@@ -214,21 +218,14 @@ export default function AdminPage() {
 
   const TABS = [
     { id: "platforms", label: "Plataformas", icon: FileSpreadsheet },
-    { id: "keys",      label: "Activation Keys", icon: Key },
+    { id: "keys",      label: "Chaves de ativação", icon: Key },
     { id: "users",     label: "Operadores", icon: Users },
-    { id: "costs",     label: "Tipos de Custo", icon: DollarSign },
+    { id: "costs",     label: "Tipos de custo", icon: DollarSign },
   ] as const;
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-          <ShieldAlert size={20} color="var(--accent)" />
-          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)" }}>Painel Admin</h1>
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie usuários, chaves e configurações globais</p>
-      </div>
+      <PageHeader title="Painel admin" subtitle="Gerencie usuários, chaves e configurações globais" />
 
       {/* Métricas */}
       <div
@@ -240,16 +237,16 @@ export default function AdminPage() {
         }}
       >
         {[
-          { label: "Total de keys",    value: keys.length,   color: "var(--text)" },
-          { label: "Keys disponíveis", value: availableKeys, color: "var(--positive)" },
-          { label: "Keys utilizadas",  value: usedKeys,      color: "var(--negative-text)" },
-          { label: "Operadores",       value: users.length,  color: "var(--accent)" },
+          { label: "Total de chaves",    value: keys.length,   color: "var(--text)" },
+          { label: "Chaves disponíveis", value: availableKeys, color: "var(--text)" },
+          { label: "Chaves utilizadas",  value: usedKeys,      color: "var(--text)" },
+          { label: "Operadores",       value: users.length,  color: "var(--text)" },
         ].map((item) => (
           <Card
             key={item.label}
             style={{ padding: "16px 20px" }}
           >
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
@@ -304,11 +301,7 @@ export default function AdminPage() {
       {/* ── Tab: Activation Keys ── */}
       {activeTab === "keys" && (
         <Card style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Gerenciar Keys
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
               <select
                 value={keyType}
                 onChange={(e) => setKeyType(e.target.value)}
@@ -317,13 +310,12 @@ export default function AdminPage() {
               >
                 <option value="LIFETIME">Vitalícia</option>
                 <option value="MONTHLY">Mensal</option>
-                <option value="TRIAL">Trial</option>
+                <option value="TRIAL">Teste</option>
               </select>
               <Button variant="primary" onClick={generateKey} disabled={generating} style={{ gap: "8px" }}>
                 <Key size={14} />
-                {generating ? "Gerando..." : "Gerar Key"}
+                {generating ? "Gerando..." : "Gerar chave"}
               </Button>
-            </div>
           </div>
 
           {loadingKeys ? (
@@ -339,7 +331,7 @@ export default function AdminPage() {
                   {["Chave", "Tipo", "Status", "Criada em"].map((h) => (
                     <th
                       key={h}
-                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                     >
                       {h}
                     </th>
@@ -378,12 +370,10 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{k.type}</Badge>
+                      <Badge variant={KEY_TYPE_BADGE[k.type] ?? "neutral"}>{KEY_TYPE_LABEL[k.type] ?? k.type}</Badge>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={k.is_used ? "negative" : "positive"}>
-                        {k.is_used ? "Utilizada" : "Disponível"}
-                      </Badge>
+                      <StatusDot status={k.is_used ? "USED" : "AVAILABLE"} />
                     </td>
                     <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                       {new Date(k.created_at).toLocaleDateString("pt-BR")}
@@ -400,7 +390,7 @@ export default function AdminPage() {
       {activeTab === "users" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Operadores
             </p>
             <Button variant="primary" onClick={() => setShowOperatorModal(true)} style={{ gap: "7px" }}>
@@ -421,7 +411,7 @@ export default function AdminPage() {
                   {["Operador", "Status", "Criado em", ""].map((h) => (
                     <th
                       key={h}
-                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                      style={{ padding: "10px 12px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                     >
                       {h}
                     </th>
@@ -462,9 +452,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td style={{ padding: "12px" }}>
-                      <Badge variant={u.is_active ? "positive" : "negative"}>
-                        {u.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
+                      <StatusDot status={u.is_active ? "ACTIVE" : "INACTIVE"} />
                     </td>
                     <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                       {new Date(u.created_at).toLocaleDateString("pt-BR")}
@@ -491,7 +479,7 @@ export default function AdminPage() {
       {activeTab === "platforms" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Plataformas
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -548,7 +536,7 @@ export default function AdminPage() {
       {activeTab === "costs" && (
         <Card style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
               Tipos de Custo
             </p>
             <div style={{ display: "flex", gap: "8px" }}>

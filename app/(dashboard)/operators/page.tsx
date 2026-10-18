@@ -7,16 +7,20 @@ import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusDot } from "@/components/ui/status-dot";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
+
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN:    "Administrador",
+  OPERADOR: "Operador",
+};
 
 const MODAL_LABEL: React.CSSProperties = {
   display: "block",
-  fontSize: "10px",
-  fontWeight: "600",
-  color: "var(--text-muted)",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
   marginBottom: "6px",
-  textTransform: "uppercase",
-  letterSpacing: "0.07em",
 };
 
 export default function OperatorsPage() {
@@ -71,30 +75,29 @@ export default function OperatorsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
-        <div>
-          <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px", color: "var(--text)" }}>Operadores</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie os operadores do sistema</p>
-        </div>
-        <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "8px" }}>
-          <Plus size={16} />
-          Novo Operador
-        </Button>
-      </div>
+      <PageHeader
+        title="Operadores"
+        subtitle="Gerencie os operadores do sistema"
+        actions={
+          <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "8px" }}>
+            <Plus size={16} />
+            Novo Operador
+          </Button>
+        }
+      />
 
       {/* Contador */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
         {[
           { label: "Total",    value: operators.length,                             color: "var(--text)" },
-          { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--positive)" },
-          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--negative-text)" },
+          { label: "Ativos",   value: operators.filter((o) => o.is_active).length,  color: "var(--text)" },
+          { label: "Inativos", value: operators.filter((o) => !o.is_active).length, color: "var(--text)" },
         ].map((item) => (
           <Card
             key={item.label}
             style={{ padding: "16px 20px" }}
           >
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
               {item.label}
             </p>
             <p style={{ fontSize: "28px", fontWeight: "700", color: item.color }}>{item.value}</p>
@@ -116,10 +119,10 @@ export default function OperatorsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                {["Operador", "Role", "Status", "Criado em", "Último login"].map((h) => (
+                {["Operador", "Função", "Status", "Criado em", "Último login"].map((h) => (
                   <th
                     key={h}
-                    style={{ padding: "14px 20px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                    style={{ padding: "14px 20px", textAlign: "left", fontSize: "13px", color: "var(--text-secondary)" }}
                   >
                     {h}
                   </th>
@@ -160,12 +163,10 @@ export default function OperatorsPage() {
                     </div>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <Badge variant="neutral">{op.role}</Badge>
+                    <Badge variant="neutral">{ROLE_LABEL[op.role] ?? op.role}</Badge>
                   </td>
                   <td style={{ padding: "14px 20px" }}>
-                    <Badge variant={op.is_active ? "positive" : "negative"}>
-                      {op.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
+                    <StatusDot status={op.is_active ? "ACTIVE" : "INACTIVE"} />
                   </td>
                   <td style={{ padding: "14px 20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     {new Date(op.created_at).toLocaleDateString("pt-BR")}
