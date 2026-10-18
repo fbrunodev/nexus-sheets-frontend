@@ -4,7 +4,17 @@ import { forwardRef, useState, useRef, useEffect } from "react";
 import { formatNumber } from "@/lib/format";
 
 function parseMoneyStr(s: string): number {
-  return parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0;
+  const t = s.trim();
+  if (!t) return 0;
+  const hasComma = t.includes(",");
+  const hasDot   = t.includes(".");
+  if (hasComma && hasDot) {
+    return t.lastIndexOf(",") > t.lastIndexOf(".")
+      ? parseFloat(t.replace(/\./g, "").replace(",", ".")) || 0  // "1.000,50"
+      : parseFloat(t.replace(/,/g, "")) || 0;                    // "1,000.50"
+  }
+  if (hasComma) return parseFloat(t.replace(",", ".")) || 0;     // "1000,50"
+  return parseFloat(t) || 0;                                     // "1000.50"
 }
 
 export interface MoneyInputProps {
@@ -35,7 +45,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
       isEditing.current = true;
       const raw = parseMoneyStr(str);
-      setStr(raw === 0 ? "" : String(raw));
+      setStr(raw === 0 ? "" : raw.toFixed(2).replace(".", ","));
       const el = e.currentTarget;
       requestAnimationFrame(() => el?.select());
     }

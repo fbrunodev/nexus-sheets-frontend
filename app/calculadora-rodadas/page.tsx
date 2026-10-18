@@ -35,14 +35,34 @@ export default function CalculadoraRodadas() {
 
   useEffect(() => {
     if (!mounted) return;
-    const saved = localStorage.getItem("calculadora-state-v2");
-    if (saved) {
+    let raw = localStorage.getItem("calculadora-state-v2");
+    if (!raw) {
+      const v1 = localStorage.getItem("calculadora-state");
+      if (v1) {
+        try {
+          const s = JSON.parse(v1);
+          const migrated = {
+            x:       parseFloat((s.xStr       || "1").replace(",", ".")) || 1,
+            limite:  parseInt(s.limiteStr     || "999")                  || 999,
+            divisor: parseFloat((s.divisorStr || "0").replace(",", ".")) || 0,
+            contas:  (s.contas || []).map((c: any) => ({
+              id:       c.id,
+              deposito: parseFloat((c.deposito || "0").replace(",", ".")) || 0,
+            })),
+          };
+          raw = JSON.stringify(migrated);
+          localStorage.setItem("calculadora-state-v2", raw);
+          localStorage.removeItem("calculadora-state");
+        } catch (e) {}
+      }
+    }
+    if (raw) {
       try {
-        const state = JSON.parse(saved);
-        if (state.x) setX(state.x);
-        if (state.limite) setLimite(state.limite);
+        const state = JSON.parse(raw);
+        if (state.x       !== undefined) setX(state.x);
+        if (state.limite  !== undefined) setLimite(state.limite);
         if (state.divisor !== undefined) setDivisor(state.divisor);
-        if (state.contas) setContas(state.contas);
+        if (state.contas)                setContas(state.contas);
       } catch (e) {}
     }
   }, [mounted]);
