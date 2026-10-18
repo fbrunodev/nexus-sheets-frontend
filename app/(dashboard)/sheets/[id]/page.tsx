@@ -436,7 +436,7 @@ export default function SheetPage() {
                   { field: "bonus",      label: "Bônus" },
                 ].map(({ field, label }) => (
                   <div key={field}>
-                    <label style={{ display: "block", fontSize: "9px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <label style={{ display: "block", fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                       {label}
                     </label>
                     <div className="ui-cell">
@@ -549,7 +549,7 @@ export default function SheetPage() {
             >
               🎯
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "6px" }}>
               Planilha finalizada
             </p>
             <p style={{ fontSize: "18px", fontWeight: "700", color: "var(--text)", marginBottom: "12px" }}>
