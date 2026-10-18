@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+const LABEL: React.CSSProperties = {
+  display: "block",
+  fontSize: "13px",
+  color: "var(--text-secondary)",
+  marginBottom: "6px",
+};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,83 +45,77 @@ export default function RegisterPage() {
     }
   }
 
-  const labelStyle = {
-    display: "block" as const,
-    fontSize: "12px",
-    fontWeight: "500" as const,
-    color: "#6060a0",
-    marginBottom: "6px",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.06em",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    background: "#080810",
-    border: "1px solid #1a1a2e",
-    borderRadius: "10px",
-    padding: "10px 14px",
-    color: "#ffffff",
-    fontSize: "14px",
-    outline: "none",
-    fontFamily: "Inter, sans-serif",
-  };
-
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#080810" }}>
-      <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "18px", padding: "40px", width: "100%", maxWidth: "420px" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+      <Card style={{ padding: "40px", width: "100%", maxWidth: "420px" }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.02em" }}>
             <span style={{ color: "#3b82f6" }}>Nexus</span>
-            <span style={{ color: "#ffffff" }}> Sheets</span>
+            <span style={{ color: "var(--text)" }}> Sheets</span>
           </h1>
-          <p style={{ color: "#6060a0", fontSize: "13px", marginTop: "6px" }}>Crie sua conta</p>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "6px" }}>Crie sua conta</p>
         </div>
 
         <form onSubmit={handleRegister}>
           <div style={{ marginBottom: "16px" }}>
-            <label style={labelStyle}>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required style={inputStyle} />
+            <label style={LABEL}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              required
+              className="ui-input"
+            />
           </div>
 
           <div style={{ marginBottom: "16px" }}>
-            <label style={labelStyle}>Senha</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required style={inputStyle} />
+            <label style={LABEL}>Senha</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="ui-input"
+            />
           </div>
 
           <div style={{ marginBottom: "24px" }}>
-            <label style={labelStyle}>Chave de Ativação</label>
+            <label style={LABEL}>Chave de ativação</label>
             <input
               value={activationKey}
               onChange={(e) => setActivationKey(e.target.value.toUpperCase())}
               placeholder="NX-XXXX-XXXX-XXXX"
               required
-              style={{ ...inputStyle, fontFamily: "monospace", letterSpacing: "0.05em" }}
+              className="ui-input"
+              style={{ fontFamily: "monospace", letterSpacing: "0.05em" }}
             />
           </div>
 
           {error && (
-            <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "10px", padding: "10px 14px", color: "#f87171", fontSize: "13px", marginBottom: "16px" }}>
+            <div style={{ background: "var(--negative-subtle)", border: "1px solid var(--negative-border)", borderRadius: "10px", padding: "10px 14px", color: "var(--negative-text)", fontSize: "13px", marginBottom: "16px" }}>
               {error}
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading}
-            style={{ width: "100%", background: loading ? "#1a1a2e" : "#3b82f6", border: "none", borderRadius: "10px", padding: "12px", color: "#ffffff", fontSize: "14px", fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif", transition: "background 0.2s" }}
+            style={{ width: "100%" }}
           >
             {loading ? "Criando conta..." : "Criar conta"}
-          </button>
+          </Button>
         </form>
 
-        <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#6060a0" }}>
+        <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-muted)" }}>
           Já tem conta?{" "}
-          <Link href="/login" style={{ color: "#3b82f6", textDecoration: "none", fontWeight: "500" }}>
+          <Link href="/login" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: "500" }}>
             Entrar
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }
