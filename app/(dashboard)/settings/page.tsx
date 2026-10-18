@@ -69,15 +69,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label style={LABEL}>Email</label>
-          <input
-            type="email"
-            defaultValue={user?.email || ""}
-            disabled
-            className="ui-input"
-          />
-        </div>
       </Card>
 
       {/* Card senha */}
