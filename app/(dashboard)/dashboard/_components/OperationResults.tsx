@@ -1,3 +1,6 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+
 interface SheetLine {
   deposit: number;
   withdrawal: number;
@@ -25,7 +28,6 @@ const fmt = (v: number) =>
   );
 
 export default function OperationResults({ sheets, calcSheetResult }: Props) {
-  // Agrupa por nome, soma resultados
   const grouped: Record<string, { result: number; count: number }> = {};
   for (const sheet of sheets) {
     const r = calcSheetResult(sheet);
@@ -38,13 +40,36 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
     .map(([name, d]) => ({ name, ...d }))
     .sort((a, b) => b.result - a.result);
 
-  const balance    = items.reduce((s, i) => s + i.result, 0);
-  const hasNeg     = items.some((i) => i.result < 0);
-  const maxPos     = Math.max(...items.map((i) => Math.max(i.result, 0)), 0);
-  const maxNeg     = Math.max(...items.map((i) => Math.max(-i.result, 0)), 0);
-  // Posição do eixo zero como % da largura total da área de barras
-  const totalSpan  = hasNeg ? maxPos + maxNeg : maxPos || 1;
-  const axisLeft   = hasNeg ? (maxNeg / totalSpan) * 100 : 0;
+  const balance   = items.reduce((s, i) => s + i.result, 0);
+  const hasNeg    = items.some((i) => i.result < 0);
+  const maxPos    = Math.max(...items.map((i) => Math.max(i.result, 0)), 0);
+  const maxNeg    = Math.max(...items.map((i) => Math.max(-i.result, 0)), 0);
+  const totalSpan = hasNeg ? maxPos + maxNeg : maxPos || 1;
+  const axisLeft  = hasNeg ? (maxNeg / totalSpan) * 100 : 0;
+
+  // Single axis line spanning all rows.
+  // barRef measures the bar column of the first row; containerRef is the
+  // items wrapper. On every resize we recompute the pixel x of the zero axis
+  // so the line stays aligned regardless of viewport or column width changes.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const barRef       = useRef<HTMLDivElement>(null);
+  const [axisXPx, setAxisXPx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!hasNeg) { setAxisXPx(null); return; }
+
+    function measure() {
+      if (!barRef.current || !containerRef.current) return;
+      const barRect  = barRef.current.getBoundingClientRect();
+      const contRect = containerRef.current.getBoundingClientRect();
+      setAxisXPx(barRect.left - contRect.left + barRect.width * (axisLeft / 100));
+    }
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [hasNeg, axisLeft, items.length]);
 
   return (
     <div
@@ -99,10 +124,29 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
           Nenhuma planilha para exibir
         </p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-          {items.map((item) => {
-            const isPos = item.result >= 0;
-            // Largura da barra como % do span total
+        <div
+          ref={containerRef}
+          style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, position: "relative" }}
+        >
+          {/* Linha do eixo zero — única, atravessa todos os rows e os gaps */}
+          {hasNeg && axisXPx !== null && (
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: `${axisXPx}px`,
+                top: 0,
+                bottom: 0,
+                width: "1px",
+                background: "var(--border-strong)",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            />
+          )}
+
+          {items.map((item, index) => {
+            const isPos  = item.result >= 0;
             const barPct = totalSpan > 0
               ? (Math.abs(item.result) / totalSpan) * 100
               : 0;
@@ -129,22 +173,13 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                   )}
                 </div>
 
-                {/* Área da barra */}
-                <div className="op-item-bar">
-                  {/* Linha do eixo zero */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: `${axisLeft}%`,
-                      top: "3px",
-                      bottom: "3px",
-                      width: "1px",
-                      background: "var(--border-strong)",
-                    }}
-                  />
-
+                {/* Área da barra — ref apenas no primeiro item para medir posição */}
+                <div
+                  ref={index === 0 ? barRef : undefined}
+                  className="op-item-bar"
+                  style={{ zIndex: 1 }}
+                >
                   {isPos ? (
-                    // Positivo: começa no eixo e vai para a direita
                     <div
                       style={{
                         position: "absolute",
@@ -158,7 +193,6 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                       }}
                     />
                   ) : (
-                    // Negativo: começa no eixo e vai para a esquerda
                     <div
                       style={{
                         position: "absolute",
