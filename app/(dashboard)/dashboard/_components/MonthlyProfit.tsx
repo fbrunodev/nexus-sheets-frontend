@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/services/api";
-import { formatSignedBRL, formatBRL } from "@/lib/format";
+import { formatSignedBRL, formatBRL, formatCompactBRL } from "@/lib/format";
 
 interface MonthlyEntry {
   month: string;
@@ -24,10 +24,10 @@ const MONTH_FULL: Record<string, string> = {
   "09": "Setembro",  "10": "Outubro",   "11": "Novembro", "12": "Dezembro",
 };
 
-const CHART_MAX_H = 80; // max bar height for the largest abs value
-const LABEL_H     = 16; // label container height (11px font, vertically centered)
-const LABEL_GAP   = 4;  // gap between bar tip and label
-const LABEL_AREA  = LABEL_H + LABEL_GAP + 6; // space reserved beyond the max bar
+const CHART_MAX_H = 80;
+const LABEL_H     = 16;
+const LABEL_GAP   = 4;
+const LABEL_AREA  = LABEL_H + LABEL_GAP + 6;
 
 function shortLabel(month: string) {
   return MONTH_SHORT[month.slice(5)] ?? month.slice(5);
@@ -42,7 +42,18 @@ function costsDisplay(costs: number) {
   return costs > 0 ? `−${formatBRL(costs)}` : "−R$ 0,00";
 }
 
+function defaultSelected(data: MonthlyEntry[]): string {
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const current = data.find((e) => e.month === currentKey);
+  if (current && current.profit !== 0) return currentKey;
+  const withMovement = data.filter((e) => e.profit !== 0);
+  if (withMovement.length > 0) return withMovement[withMovement.length - 1].month;
+  return data[data.length - 1].month;
+}
+
 export function MonthlyProfitSkeleton() {
+  const ratios = [0.5, 0.8, 1, 0.6, 0.3, 0.7, 0.9, 0.4, 0.6, 0.1, 0.5, 0.75];
   return (
     <div
       style={{
@@ -56,18 +67,18 @@ export function MonthlyProfitSkeleton() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
         <div>
           <div className="skeleton" style={{ width: "120px", height: "15px", borderRadius: "6px" }} />
-          <div className="skeleton" style={{ width: "260px", height: "12px", borderRadius: "5px", marginTop: "6px" }} />
+          <div className="skeleton" style={{ width: "220px", height: "12px", borderRadius: "5px", marginTop: "6px" }} />
         </div>
         <div className="skeleton mc-desktop-only" style={{ width: "190px", height: "12px", borderRadius: "5px" }} />
       </div>
       <div style={{ display: "flex", gap: "4px", alignItems: "flex-end", height: "116px" }}>
-        {[0.65, 1, 0.9, 0.3, 0.1, 0.55].map((ratio, i) => (
+        {ratios.map((ratio, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
             <div
               className="skeleton"
-              style={{ width: "min(40%, 56px)", height: `${Math.max(4, Math.round(ratio * 80))}px`, borderRadius: "3px 3px 0 0" }}
+              style={{ width: "min(40%, 40px)", height: `${Math.max(4, Math.round(ratio * 80))}px`, borderRadius: "3px 3px 0 0" }}
             />
-            <div className="skeleton" style={{ width: "24px", height: "10px", borderRadius: "3px" }} />
+            <div className="skeleton" style={{ width: "20px", height: "10px", borderRadius: "3px" }} />
           </div>
         ))}
       </div>
@@ -83,27 +94,24 @@ export default function MonthlyProfit() {
 
   useEffect(() => {
     api
-      .get("/sheets/monthly?months=6")
+      .get("/sheets/monthly?months=12")
       .then(({ data }) => {
         setEntries(data);
-        if (data.length > 0) setSelected(data[data.length - 1].month);
+        if (data.length > 0) setSelected(defaultSelected(data));
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
-  // Proportional area heights derived from actual data
-  const maxPos = entries.length > 0 ? Math.max(0, ...entries.map((e) => e.profit))  : 0;
-  const maxNeg = entries.length > 0 ? Math.max(0, ...entries.map((e) => -e.profit)) : 0;
-  const maxAbs = Math.max(maxPos, maxNeg, 1);
-
+  const totalSum  = entries.reduce((s, e) => s + e.profit, 0);
+  const maxPos    = entries.length > 0 ? Math.max(0, ...entries.map((e) => e.profit))  : 0;
+  const maxNeg    = entries.length > 0 ? Math.max(0, ...entries.map((e) => -e.profit)) : 0;
+  const maxAbs    = Math.max(maxPos, maxNeg, 1);
   const posBarMax = (maxPos / maxAbs) * CHART_MAX_H;
   const negBarMax = (maxNeg / maxAbs) * CHART_MAX_H;
-
-  // posAreaH always has at least LABEL_AREA to house the "—" or smallest labels
-  const posAreaH = posBarMax + LABEL_AREA;
-  const negAreaH = maxNeg > 0 ? negBarMax + LABEL_AREA : 0;
-  const totalH   = posAreaH + 1 + negAreaH; // +1 for the zero line pixel
+  const posAreaH  = posBarMax + LABEL_AREA;
+  const negAreaH  = maxNeg > 0 ? negBarMax + LABEL_AREA : 0;
+  const totalH    = posAreaH + 1 + negAreaH;
 
   function bh(profit: number): number {
     if (profit === 0) return 0;
@@ -158,7 +166,10 @@ export default function MonthlyProfit() {
             Lucro por mês
           </p>
           <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-            Últimos 6 meses · resultado das planilhas menos custos do mês
+            Últimos 12 meses · soma{" "}
+            <span style={{ color: "var(--text-secondary)" }}>
+              {formatSignedBRL(totalSum)}
+            </span>
           </p>
         </div>
 
@@ -197,11 +208,12 @@ export default function MonthlyProfit() {
 
       {/* ── Barras ── */}
       <div style={{ display: "flex", gap: "4px" }}>
-        {entries.map((entry) => {
-          const isSel = entry.month === selected;
-          const isPos = entry.profit > 0;
-          const isNeg = entry.profit < 0;
-          const h = bh(entry.profit);
+        {entries.map((entry, idx) => {
+          const isSel    = entry.month === selected;
+          const isPos    = entry.profit > 0;
+          const isNeg    = entry.profit < 0;
+          const h        = bh(entry.profit);
+          const showYear = idx === 0 || entry.month.slice(5) === "01";
 
           return (
             <button
@@ -214,16 +226,17 @@ export default function MonthlyProfit() {
                 border: "none",
                 borderRadius: "8px",
                 cursor: "pointer",
-                padding: "4px 2px 6px",
+                padding: "4px 1px 6px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 fontFamily: "inherit",
                 transition: "background 0.15s",
                 minHeight: "44px",
+                minWidth: 0,
               }}
             >
-              {/* Área do gráfico com posicionamento absoluto */}
+              {/* Área do gráfico */}
               <div style={{ position: "relative", width: "100%", height: `${totalH}px` }}>
 
                 {/* Linha do zero */}
@@ -236,21 +249,21 @@ export default function MonthlyProfit() {
                   background: "var(--border-strong)",
                 }} />
 
-                {/* Barra positiva — cresce para cima a partir do zero */}
+                {/* Barra positiva */}
                 {isPos && (
                   <div style={{
                     position: "absolute",
                     top: posAreaH - h,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: "min(40%, 56px)",
+                    width: "min(40%, 40px)",
                     height: `${h}px`,
                     background: "var(--positive)",
                     borderRadius: "3px 3px 0 0",
                   }} />
                 )}
 
-                {/* Rótulo positivo — 4px acima do topo da barra */}
+                {/* Rótulo positivo */}
                 {isPos && (
                   <div
                     className="mc-value"
@@ -271,26 +284,26 @@ export default function MonthlyProfit() {
                       whiteSpace: "nowrap",
                       lineHeight: 1,
                     }}>
-                      {formatSignedBRL(entry.profit)}
+                      {formatCompactBRL(entry.profit)}
                     </span>
                   </div>
                 )}
 
-                {/* Barra negativa — cresce para baixo a partir do zero */}
+                {/* Barra negativa */}
                 {isNeg && (
                   <div style={{
                     position: "absolute",
                     top: posAreaH + 1,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: "min(40%, 56px)",
+                    width: "min(40%, 40px)",
                     height: `${h}px`,
                     background: "var(--negative-bar)",
                     borderRadius: "0 0 3px 3px",
                   }} />
                 )}
 
-                {/* Rótulo negativo — 4px abaixo da base da barra */}
+                {/* Rótulo negativo */}
                 {isNeg && (
                   <div
                     className="mc-value"
@@ -311,12 +324,12 @@ export default function MonthlyProfit() {
                       whiteSpace: "nowrap",
                       lineHeight: 1,
                     }}>
-                      {formatSignedBRL(entry.profit)}
+                      {formatCompactBRL(entry.profit)}
                     </span>
                   </div>
                 )}
 
-                {/* Zero "—" centralizado sobre a linha do zero */}
+                {/* Zero "—" */}
                 {!isPos && !isNeg && (
                   <div
                     className="mc-value"
@@ -345,9 +358,27 @@ export default function MonthlyProfit() {
                   fontWeight: isSel ? "600" : "400",
                   marginTop: "6px",
                   lineHeight: 1,
+                  overflow: "hidden",
+                  maxWidth: "100%",
                 }}
               >
                 {shortLabel(entry.month)}
+              </span>
+
+              {/* Rótulo do ano — só no 1º mês e em janeiro; reserva espaço sempre */}
+              <span
+                className="mc-desktop-only"
+                style={{
+                  fontSize: "10px",
+                  color: "var(--text-muted)",
+                  marginTop: "2px",
+                  lineHeight: 1,
+                  visibility: showYear ? "visible" : "hidden",
+                  overflow: "hidden",
+                  maxWidth: "100%",
+                }}
+              >
+                {entry.month.slice(0, 4)}
               </span>
             </button>
           );

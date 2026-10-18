@@ -13,3 +13,13 @@ export const formatNumber = (v: number) => num.format(v);
 
 export const formatSignedPercent = (v: number) =>
   v === 0 ? pct.format(0) : `${v > 0 ? "+" : "−"}${pct.format(Math.abs(v) / 100)}`;
+
+const compact = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+export const formatCompactBRL = (v: number): string => {
+  const sign = v >= 0 ? "+" : "−";
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `${sign}${compact.format(abs / 1_000_000)} mi`;
+  if (abs >= 10_000)    return `${sign}${compact.format(abs / 1_000)} mil`;
+  return formatSignedBRL(v);
+};
