@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
 import { formatBRL } from "@/lib/format";
+import { MoneyInput } from "@/components/ui/money-input";
 
 const CARET =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
@@ -53,7 +54,7 @@ export default function CostsPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [newCostTypeId, setNewCostTypeId] = useState("");
-  const [newValue, setNewValue] = useState("");
+  const [newValue, setNewValue] = useState(0);
   const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -84,19 +85,19 @@ export default function CostsPage() {
   }
 
   async function createCost() {
-    if (!newCostTypeId || !newValue) return;
+    if (!newCostTypeId || newValue <= 0) return;
     setCreating(true);
     try {
       const { data } = await api.post("/costs/", {
         cost_type_id: newCostTypeId,
-        value: parseFloat(newValue),
+        value: newValue,
         month,
         year,
         description: newDescription.trim() || null,
       });
       setCosts((prev) => [data, ...prev]);
       setShowModal(false);
-      setNewValue("");
+      setNewValue(0);
       setNewDescription("");
     } catch (err: any) {
       alert(err.response?.data?.detail || "Erro ao criar custo.");
@@ -268,7 +269,7 @@ export default function CostsPage() {
       <Modal
         open={showModal}
         onOpenChange={(open) => {
-          if (!open) { setShowModal(false); setNewValue(""); setNewDescription(""); }
+          if (!open) { setShowModal(false); setNewValue(0); setNewDescription(""); }
         }}
       >
         <ModalContent title="Novo Custo" maxWidth={400}>
@@ -290,15 +291,7 @@ export default function CostsPage() {
 
             <div>
               <label style={MODAL_LABEL}>Valor (R$)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={newValue}
-                onChange={(e) => setNewValue(e.target.value)}
-                placeholder="0,00"
-                className="ui-input"
-              />
+              <MoneyInput value={newValue} onBlur={setNewValue} />
             </div>
 
             <div>

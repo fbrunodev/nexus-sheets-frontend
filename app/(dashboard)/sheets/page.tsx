@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PeriodSelect } from "@/components/ui/period-select";
 import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
+import { NumberInput } from "@/components/ui/number-input";
 
 const CARET =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
@@ -732,12 +733,11 @@ export default function SheetsPage() {
                     );
                   })}
                 </div>
-                <input
-                  type="number"
+                <NumberInput
                   value={newGoal}
-                  onChange={(e) => setNewGoal(Number(e.target.value))}
+                  onChange={setNewGoal}
                   min={0}
-                  placeholder="0"
+                  placeholder="Ex.: 30"
                   className="ui-input"
                 />
               </div>
@@ -790,10 +790,9 @@ export default function SheetsPage() {
               !pasteMode ? (
                 <div>
                   <label style={MODAL_LABEL}>Linhas iniciais</label>
-                  <input
-                    type="number"
+                  <NumberInput
                     value={newLines}
-                    onChange={(e) => setNewLines(Number(e.target.value))}
+                    onChange={setNewLines}
                     min={1}
                     max={200}
                     className="ui-input"
@@ -816,10 +815,9 @@ export default function SheetsPage() {
             ) : (
               <div>
                 <label style={MODAL_LABEL}>Linhas iniciais</label>
-                <input
-                  type="number"
+                <NumberInput
                   value={newLines}
-                  onChange={(e) => setNewLines(Number(e.target.value))}
+                  onChange={setNewLines}
                   min={1}
                   max={200}
                   className="ui-input"

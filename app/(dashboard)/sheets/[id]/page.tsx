@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { StatusDot } from "@/components/ui/status-dot";
-import { formatBRL, formatSignedBRL, formatNumber } from "@/lib/format";
+import { formatBRL, formatSignedBRL } from "@/lib/format";
+import { MoneyInput } from "@/components/ui/money-input";
 
 const CTYPE_LABEL: Record<string, string> = { META: "Meta", BAU: "Baú", RECARGA: "Recarga" };
 
@@ -63,11 +64,6 @@ export default function SheetPage() {
       };
       const { data } = await api.patch(`/sheets/${id}/lines/${lineId}`, updated);
       setSheet((prev) => prev ? { ...prev, lines: prev.lines.map((l) => l.id === lineId ? data : l) } : prev);
-      const refKey = `${lineId}-${field}`;
-      if (inputRefs.current[refKey]) {
-        const v = Number(data[field as keyof typeof data] ?? 0);
-        inputRefs.current[refKey]!.value = v > 0 ? formatNumber(v) : "";
-      }
       setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
     } catch (err) {
       console.error(err);
@@ -166,26 +162,6 @@ export default function SheetPage() {
   const isReadOnly     = sheet.owner_id !== user?.id;
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
-
-  const fmtInput = (v: number) => v > 0 ? formatNumber(v) : "";
-
-  function handleLineFocus(e: React.FocusEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
-    const raw = parseFloat(el.value.replace(/\./g, "").replace(",", "."));
-    el.value = isNaN(raw) || raw === 0 ? "" : String(raw);
-    el.select();
-  }
-
-  function handleLineBlur(
-    e: React.FocusEvent<HTMLInputElement>,
-    lineId: string,
-    field: string,
-    currentValue: number
-  ) {
-    const newValue = parseFloat(e.currentTarget.value.replace(",", ".")) || 0;
-    if (newValue !== currentValue) updateLine(lineId, field, newValue);
-    e.currentTarget.value = fmtInput(newValue);
-  }
 
   const COLS = "44px 1fr 1fr 1fr 1fr 120px 36px";
 
@@ -305,29 +281,22 @@ export default function SheetPage() {
               <Card key="salary" style={{ padding: "16px", position: "relative" }}>
                 <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>Salário</p>
                 {editingSalary ? (
-                  <div className="ui-cell" style={{ marginTop: "4px" }}>
-                    <span style={{ fontSize: "14px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      autoFocus
-                      defaultValue={salaryValue > 0 ? formatNumber(salaryValue) : ""}
-                      onFocus={handleLineFocus}
-                      onBlur={(e) => {
-                        if (salaryEscapeRef.current) { salaryEscapeRef.current = false; return; }
-                        const newValue = parseFloat(e.currentTarget.value.replace(",", ".")) || 0;
-                        setSalaryValue(newValue);
-                        updateCost("salary", newValue);
-                        setEditingSalary(false);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); return; }
-                        if (e.key === "Escape") { salaryEscapeRef.current = true; setEditingSalary(false); }
-                      }}
-                      placeholder="0,00"
-                      style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "6px 0", fontFamily: "inherit" }}
-                    />
-                  </div>
+                  <MoneyInput
+                    value={salaryValue}
+                    autoFocus
+                    onBlur={(v) => {
+                      if (salaryEscapeRef.current) { salaryEscapeRef.current = false; return; }
+                      setSalaryValue(v);
+                      updateCost("salary", v);
+                      setEditingSalary(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); return; }
+                      if (e.key === "Escape") { salaryEscapeRef.current = true; setEditingSalary(false); }
+                    }}
+                    style={{ marginTop: "4px" }}
+                    inputStyle={{ fontSize: "20px", fontWeight: "700", padding: "6px 0" }}
+                  />
                 ) : (
                   <p
                     onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
@@ -520,21 +489,14 @@ export default function SheetPage() {
                       <label style={{ display: "block", fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
                         {label}
                       </label>
-                      <div className="ui-cell">
-                        <span style={{ fontSize: "10px", color: "var(--text-muted)", marginRight: "3px" }}>R$</span>
-                        <input
-                          ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
-                          type="text"
-                          inputMode="decimal"
-                          defaultValue={fmtInput((line as any)[field] || 0)}
-                          disabled={isFinished || isReadOnly}
-                          onFocus={handleLineFocus}
-                          onBlur={(e) => handleLineBlur(e, line.id, field, (line as any)[field] || 0)}
-                          onKeyDown={(e) => handleKeyDown(e, index, field)}
-                          placeholder="0,00"
-                          style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "inherit" }}
-                        />
-                      </div>
+                      <MoneyInput
+                        ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
+                        value={(line as any)[field] || 0}
+                        onBlur={(v) => { if (v !== ((line as any)[field] || 0)) updateLine(line.id, field, v); }}
+                        onKeyDown={(e) => handleKeyDown(e, index, field)}
+                        disabled={isFinished || isReadOnly}
+                        inputStyle={{ padding: "9px 0" }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -555,21 +517,14 @@ export default function SheetPage() {
                   {line.line_number}
                 </span>
                 {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
-                  <div key={field} className="ui-cell">
-                    <span style={{ fontSize: "11px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
-                    <input
-                      ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
-                      type="text"
-                      inputMode="decimal"
-                      defaultValue={fmtInput((line as any)[field] || 0)}
-                      disabled={isFinished || isReadOnly}
-                      onFocus={handleLineFocus}
-                      onBlur={(e) => handleLineBlur(e, line.id, field, (line as any)[field] || 0)}
-                      onKeyDown={(e) => handleKeyDown(e, index, field)}
-                      placeholder="0,00"
-                      style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "inherit" }}
-                    />
-                  </div>
+                  <MoneyInput
+                    key={field}
+                    ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
+                    value={(line as any)[field] || 0}
+                    onBlur={(v) => { if (v !== ((line as any)[field] || 0)) updateLine(line.id, field, v); }}
+                    onKeyDown={(e) => handleKeyDown(e, index, field)}
+                    disabled={isFinished || isReadOnly}
+                  />
                 ))}
                 <span
                   style={{

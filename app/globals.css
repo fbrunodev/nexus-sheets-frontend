@@ -488,6 +488,17 @@ html, body { overflow-x: hidden; max-width: 100%; }
 .ui-cell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
 .ui-cell input::placeholder { color: var(--text-muted); opacity: 1; }
 
+/* Calculator config inputs — underline style */
+.calc-input {
+  width: 100%; background: transparent; border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 16px; font-weight: 600;
+  outline: none; font-family: inherit; padding: 4px 0;
+  box-sizing: border-box; transition: border-color 0.15s;
+}
+.calc-input:focus { border-bottom-color: var(--accent); }
+.calc-input::placeholder { color: var(--text-muted); opacity: 1; }
+
 /* Modal overlay */
 .ui-modal-overlay {
   position: fixed; inset: 0; z-index: 200;
