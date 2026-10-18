@@ -1,23 +1,18 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "@/services/api";
-import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
+import KpiStrip from "./_components/KpiStrip";
+import OperationResults from "./_components/OperationResults";
+import CostBreakdown from "./_components/CostBreakdown";
+import RecentSheets from "./_components/RecentSheets";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import { TrendingUp, TrendingDown, FileSpreadsheet, ArrowUpRight } from "lucide-react";
+  KpiStripSkeleton,
+  ChartsSkeleton,
+  RecentSheetsSkeleton,
+} from "./_components/Skeletons";
 
-// Tipagem do retorno de /sheets/stats
 interface SheetStats {
   total: number;
   not_started: number;
@@ -26,77 +21,89 @@ interface SheetStats {
   grand_total: number;
 }
 
-// Tipagem simplificada de planilha para a tabela recente
+interface SheetLine {
+  deposit: number;
+  withdrawal: number;
+  chest: number;
+  bonus: number;
+}
+
 interface RecentSheet {
   id: string;
   name: string;
   status: string;
   created_at: string;
   salary: number;
-  lines: { deposit: number; withdrawal: number; chest: number; bonus: number }[];
+  lines: SheetLine[];
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  NOT_STARTED: { label: "Não iniciada", color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
-  IN_PROGRESS: { label: "Iniciada",     color: "#3b82f6", bg: "rgba(59,130,246,0.1)"  },
-  FINISHED:    { label: "Concluída",    color: "#22d3a5", bg: "rgba(34,211,165,0.1)"  },
-};
+const PERIOD_OPTIONS = [
+  { value: "all",   label: "Todo o período" },
+  { value: "month", label: "Este mês" },
+  { value: "week",  label: "Últimos 7 dias" },
+  { value: "today", label: "Hoje" },
+] as const;
+
+function getPeriodLabel(period: string): string {
+  const now = new Date();
+  const d = (dt: Date) =>
+    dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+  switch (period) {
+    case "today":
+      return `Hoje · ${d(now)}`;
+    case "week": {
+      const from = new Date(now);
+      from.setDate(from.getDate() - 7);
+      return `Últimos 7 dias · ${d(from)} – ${d(now)}`;
+    }
+    case "month": {
+      const from = new Date(now.getFullYear(), now.getMonth(), 1);
+      return `Este mês · ${d(from)} – ${d(now)}`;
+    }
+    default:
+      return "Todo o período";
+  }
+}
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [stats, setStats] = useState<SheetStats | null>(null);
-  const [sheets, setSheets] = useState<RecentSheet[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [stats, setStats]         = useState<SheetStats | null>(null);
+  const [sheets, setSheets]       = useState<RecentSheet[]>([]);
   const [costStats, setCostStats] = useState<{ name: string; value: number }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState("all");
+  const [loading, setLoading]     = useState(true);
+  const [period, setPeriod]       = useState("all");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  useEffect(() => {
-    Promise.all([fetchRecentSheets(), fetchStats(), fetchCostStats()]).finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-    fetchRecentSheets();
-    fetchCostStats();
-  }, [period]);
-
-  async function fetchStats() {
+  // Declaradas antes dos useEffects para satisfazer a regra de hoisting do lint
+  async function fetchStats(p: string) {
     try {
-      const { data } = await api.get(`/sheets/stats?period=${period}`);
+      const { data } = await api.get(`/sheets/stats?period=${p}`);
       setStats(data);
     } catch (err) {
       console.error("Erro ao carregar stats:", err);
     }
   }
 
-  async function fetchCostStats() {
+  async function fetchCostStats(p: string) {
     try {
-      const { data } = await api.get(`/costs/stats?period=${period}`);
+      const { data } = await api.get(`/costs/stats?period=${p}`);
       setCostStats(data);
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao carregar custos:", err);
     }
   }
 
-  async function fetchRecentSheets() {
+  async function fetchRecentSheets(p: string) {
     try {
-      const statusParam = period !== "all" ? `&period=${period}` : "";
-      const { data } = await api.get(`/sheets/?limit=10&offset=0${statusParam}`);
+      const periodParam = p !== "all" ? `&period=${p}` : "";
+      const { data } = await api.get(`/sheets/?limit=10&offset=0${periodParam}`);
       setSheets(data.items);
     } catch (err) {
       console.error("Erro ao carregar planilhas:", err);
     }
   }
 
-  function fmt(value: number) {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  }
-
-  // Calcula o resultado de uma planilha individual para a tabela
-  // Fórmula: sum(withdrawal) - sum(deposit) + sum(chest) + salary
   function calcSheetResult(sheet: RecentSheet): number {
     const linesTotal = sheet.lines.reduce(
       (acc, l) => acc + l.withdrawal - l.deposit + l.chest + (l.bonus || 0),
@@ -105,250 +112,169 @@ export default function DashboardPage() {
     return linesTotal + (sheet.salary ?? 0);
   }
 
-  // Monta dados do gráfico a partir das planilhas recentes
-  // X = nome da planilha, Y = resultado
-  const chartData = sheets.map((s) => ({
-    name: s.name.length > 12 ? s.name.slice(0, 12) + "…" : s.name,
-    resultado: parseFloat(calcSheetResult(s).toFixed(2)),
-  }));
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchStats(period),
+      fetchRecentSheets(period),
+      fetchCostStats(period),
+    ]).finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
-  const periodLabel = period === "all" ? "Todas" : period === "month" ? "Este mês" : period === "week" ? "Esta semana" : "Hoje";
-  const grandTotal = stats?.grand_total ?? 0;
-  const isPositive = grandTotal >= 0;
+  // Fecha dropdown ao clicar fora
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function onOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [dropdownOpen]);
 
   return (
-    <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden" }}>
-      {loading ? (
-        <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
-      ) : (
-        <>
-          {/* ── Filtro de período ── */}
-          <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
-            {[
-              { label: "Todos", value: "all" },
-              { label: "Mês", value: "month" },
-              { label: "Semana", value: "week" },
-              { label: "Hoje", value: "today" },
-            ].map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: period === p.value ? "600" : "400",
-                  color: period === p.value ? "#fff" : "#6060a0",
-                  background: period === p.value ? "rgba(59,130,246,0.12)" : "transparent",
-                  border: `1px solid ${period === p.value ? "rgba(59,130,246,0.3)" : "#1a1a2e"}`,
-                  cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  transition: "all 0.15s",
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
+    <div
+      style={{
+        maxWidth: "1440px",
+        width: "100%",
+        fontFamily: "'IBM Plex Sans', 'Inter', sans-serif",
+      }}
+    >
+      {/* ── Header ── */}
+      <div className="dash-header" style={{ marginBottom: "24px" }}>
+        <div>
+          <h1
+            style={{
+              fontSize: "22px",
+              fontWeight: "600",
+              color: "var(--text)",
+              lineHeight: "1.2",
+              marginBottom: "4px",
+            }}
+          >
+            Visão geral
+          </h1>
+          <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
+            Resultado consolidado de todas as operações
+          </p>
+        </div>
 
-          {/* ── Cards de métricas ── */}
-          <div className="grid-4" style={{ marginBottom: "16px" }}>
-            {[
-              {
-                label: "Lucro Total",
-                value: fmt(grandTotal),
-                color: isPositive ? "#22d3a5" : "#f87171",
-                icon: isPositive
-                  ? <TrendingUp size={16} color="#22d3a5" />
-                  : <TrendingDown size={16} color="#f87171" />,
-                highlight: true,
-              },
-              {
-                label: "Planilhas",
-                value: String(stats?.total ?? 0),
-                color: "#fff",
-                icon: <FileSpreadsheet size={16} color="#6060a0" />,
-              },
-              {
-                label: "Em Andamento",
-                value: String(stats?.in_progress ?? 0),
-                color: "#3b82f6",
-                icon: <ArrowUpRight size={16} color="#3b82f6" />,
-              },
-              {
-                label: "Concluídas",
-                value: String(stats?.finished ?? 0),
-                color: "#22d3a5",
-                icon: <ArrowUpRight size={16} color="#22d3a5" />,
-              },
-            ].map((item) => (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Seletor de período */}
+          <div ref={dropdownRef} className="period-wrap">
+            <button
+              onClick={() => setDropdownOpen((o) => !o)}
+              className="period-btn"
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                background: "var(--surface)",
+                border: "1px solid var(--border-strong)",
+                color: "var(--text)",
+                fontSize: "13px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {getPeriodLabel(period)}
+              <ChevronDown
+                size={14}
+                color="var(--text-muted)"
+                style={{ flexShrink: 0 }}
+              />
+            </button>
+
+            {dropdownOpen && (
               <div
-                key={item.label}
                 style={{
-                  background: item.highlight ? "rgba(59,130,246,0.06)" : "#0f0f1a",
-                  border: `1px solid ${item.highlight ? "rgba(59,130,246,0.25)" : "#1a1a2e"}`,
-                  borderRadius: "10px",
-                  padding: "14px 16px",
+                  position: "absolute",
+                  right: 0,
+                  top: "calc(100% + 4px)",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  zIndex: 20,
+                  minWidth: "210px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {item.label}
-                  </span>
-                  {item.icon}
-                </div>
-                <p style={{ fontSize: "18px", fontWeight: "700", color: item.color }}>
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Gráficos: linha + pie lado a lado ── */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px" }}>
-
-            {/* Gráfico de linha */}
-            <div style={{ flex: "2 1 280px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                <p style={{ fontSize: "13px", fontWeight: "600" }}>Resultado por Operação</p>
-                <span style={{ fontSize: "11px", color: "#6060a0" }}>{periodLabel} · {sheets.length} planilhas</span>
-              </div>
-              {chartData.length === 0 ? (
-                <p style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center", padding: "40px 0" }}>
-                  Nenhuma planilha para exibir
-                </p>
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={chartData}>
-                    <XAxis dataKey="name" stroke="#3a3a5c" tick={{ fontSize: 10 }} />
-                    <YAxis stroke="#3a3a5c" tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      formatter={(v) => [fmt(Number(v ?? 0)), "Resultado"]}
-                      contentStyle={{ background: "#141422", border: "1px solid #1a1a2e", borderRadius: "8px", fontSize: "11px" }}
-                    />
-                    <Line type="monotone" dataKey="resultado" stroke="#3b82f6" dot={{ fill: "#3b82f6", r: 3 }} strokeWidth={2.5} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
-            {/* Pie de custos */}
-            {costStats.length > 0 && (
-              <div style={{ flex: "1 1 200px", background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <p style={{ fontSize: "13px", fontWeight: "600", marginBottom: "16px", alignSelf: "flex-start" }}>Distribuição de Custos</p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie
-                      data={costStats}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return percent > 0.05 ? (
-                          <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        ) : null;
-                      }}
-                      labelLine={false}
-                    >
-                      {costStats.map((_, index) => (
-                        <Cell key={index} fill={["#3b82f6","#22d3a5","#fbbf24","#f87171","#a78bfa","#f97316"][index % 6]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ background: "#141422", border: "1px solid #1a1a2e", borderRadius: "8px", fontSize: "11px" }}
-                      formatter={(v: any) => [`R$ ${Number(v).toFixed(2)}`, ""]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px", justifyContent: "center" }}>
-                  {costStats.map((item, index) => (
-                    <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: ["#3b82f6","#22d3a5","#fbbf24","#f87171","#a78bfa","#f97316"][index % 6], flexShrink: 0 }} />
-                      <span style={{ fontSize: "10px", color: "#6060a0" }}>{item.name}</span>
-                    </div>
-                  ))}
-                </div>
+                {PERIOD_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      setPeriod(opt.value);
+                      setDropdownOpen(false);
+                    }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "10px 14px",
+                      textAlign: "left",
+                      fontSize: "13px",
+                      color:
+                        period === opt.value
+                          ? "var(--text)"
+                          : "var(--text-secondary)",
+                      background:
+                        period === opt.value ? "var(--surface-hover)" : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (period !== opt.value)
+                        e.currentTarget.style.background = "var(--surface-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (period !== opt.value)
+                        e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             )}
-
           </div>
 
-          {/* ── Tabela de planilhas recentes ── */}
-          <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid #1a1a2e" }}>
-              <p style={{ fontSize: "13px", fontWeight: "600" }}>Últimas Planilhas</p>
-              <button
-                onClick={() => router.push("/sheets")}
-                style={{ fontSize: "12px", color: "#3b82f6", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                Ver todas →
-              </button>
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
-                  {["Nome", "Data", "Status", "Linhas", "Resultado"].map((h) => (
-                    <th
-                      key={h}
-                      style={{ padding: "10px 20px", textAlign: "left", fontSize: "10px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.07em", textTransform: "uppercase" }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sheets.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "24px 20px", textAlign: "center", fontSize: "13px", color: "#3a3a5c" }}>
-                      Nenhuma planilha encontrada
-                    </td>
-                  </tr>
-                ) : (
-                  sheets.map((sheet) => {
-                    const result = calcSheetResult(sheet);
-                    const filled = sheet.lines.filter((l) => l.deposit > 0 || l.withdrawal > 0).length;
-                    const s = STATUS_MAP[sheet.status];
+        </div>
+      </div>
 
-                    return (
-                      <tr
-                        key={sheet.id}
-                        onClick={() => router.push(`/sheets/${sheet.id}`)}
-                        style={{ borderBottom: "1px solid #1a1a2e", cursor: "pointer" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.01)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <td style={{ padding: "12px 20px", fontSize: "13px", fontWeight: "500" }}>{sheet.name}</td>
-                        <td style={{ padding: "12px 20px", fontSize: "12px", color: "#6060a0" }}>
-                          {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
-                        </td>
-                        <td style={{ padding: "12px 20px" }}>
-                          <span style={{ background: s.bg, color: s.color, borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: "500" }}>
-                            {s.label}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 20px", fontSize: "12px", color: "#6060a0" }}>
-                          {filled}/{sheet.lines.length}
-                        </td>
-                        <td style={{ padding: "12px 20px", fontSize: "13px", fontWeight: "600", color: result >= 0 ? "#22d3a5" : "#f87171" }}>
-                          {result >= 0 ? "+" : ""}{fmt(result)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+      {/* ── Conteúdo ── */}
+      {loading ? (
+        <>
+          <KpiStripSkeleton />
+          <ChartsSkeleton />
+          <RecentSheetsSkeleton />
+        </>
+      ) : (
+        <>
+          <KpiStrip
+            stats={stats}
+            sheets={sheets}
+            calcSheetResult={calcSheetResult}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "16px",
+              marginBottom: "16px",
+            }}
+          >
+            <OperationResults sheets={sheets} calcSheetResult={calcSheetResult} />
+            <CostBreakdown costStats={costStats} />
           </div>
+
+          <RecentSheets
+            sheets={sheets}
+            totalCount={stats?.total ?? 0}
+            calcSheetResult={calcSheetResult}
+          />
         </>
       )}
     </div>
