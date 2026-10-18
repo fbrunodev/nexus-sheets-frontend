@@ -247,6 +247,7 @@ export default function SheetsPage() {
     <div>
       <PageHeader
         title="Planilhas"
+        subtitle="Acompanhe o resultado de cada operação"
         actions={
           <Button variant="primary" onClick={() => setShowModal(true)} style={{ gap: "6px" }}>
             <Plus size={14} />
@@ -255,9 +256,9 @@ export default function SheetsPage() {
         }
       />
 
-      {/* ── Busca ── */}
-      <div className="page-header" style={{ marginBottom: "16px" }}>
-        <div className="page-header-search" style={{ position: "relative" }}>
+      {/* ── Filtros ── */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -278,7 +279,7 @@ export default function SheetsPage() {
             value={selectedOperator}
             onChange={(e) => setSelectedOperator(e.target.value)}
             className="ui-select"
-            style={{ backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: "32px" }}
+            style={{ width: "220px", flexShrink: 0, backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", paddingRight: "32px" }}
           >
             <option value="">Todos os operadores</option>
             {operators.map((op: any) => (
@@ -286,10 +287,6 @@ export default function SheetsPage() {
             ))}
           </select>
         )}
-      </div>
-
-      {/* ── Filtro de período ── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
         <PeriodSelect
           value={period}
           onChange={(v) => setPeriod(v as "all" | "month" | "week")}
