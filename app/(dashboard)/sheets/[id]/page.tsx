@@ -6,7 +6,10 @@ import api from "@/services/api";
 import { Sheet } from "@/types";
 import { ArrowLeft, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-// import { registerPushSubscription } from "@/lib/push";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Modal, ModalContent, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 export default function SheetPage() {
   const { id } = useParams();
@@ -22,7 +25,6 @@ export default function SheetPage() {
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => { fetchSheet(); }, [id]);
-  // useEffect(() => { registerPushSubscription().catch((err) => console.error("Push registration error:", err)); }, []);
 
   async function fetchSheet() {
     try {
@@ -43,10 +45,10 @@ export default function SheetPage() {
       const line = sheet.lines.find((l) => l.id === lineId);
       if (!line) return;
       const updated = {
-        deposit: field === "deposit" ? value : line.deposit,
+        deposit:    field === "deposit"    ? value : line.deposit,
         withdrawal: field === "withdrawal" ? value : line.withdrawal,
-        chest: field === "chest" ? value : line.chest,
-        bonus: field === "bonus" ? value : line.bonus,
+        chest:      field === "chest"      ? value : line.chest,
+        bonus:      field === "bonus"      ? value : line.bonus,
       };
       const { data } = await api.patch(`/sheets/${id}/lines/${lineId}`, updated);
       setSheet((prev) => prev ? { ...prev, lines: prev.lines.map((l) => l.id === lineId ? data : l) } : prev);
@@ -134,8 +136,8 @@ export default function SheetPage() {
     }
   }
 
-  if (loading) return <p style={{ color: "#6060a0" }}>Carregando...</p>;
-  if (!sheet) return <p style={{ color: "#f87171" }}>Planilha não encontrada.</p>;
+  if (loading) return <p style={{ color: "var(--text-muted)" }}>Carregando...</p>;
+  if (!sheet)  return <p style={{ color: "var(--negative-text)" }}>Planilha não encontrada.</p>;
 
   const totalDeposited = sheet.lines.reduce((acc, l) => acc + l.deposit, 0);
   const totalReceived  = sheet.lines.reduce((acc, l) => acc + l.withdrawal, 0);
@@ -148,40 +150,71 @@ export default function SheetPage() {
   const depositLines   = sheet.lines.filter((l) => l.deposit > 0).length;
   const averageDeposit = depositLines > 0 ? totalDeposited / depositLines : 0;
 
-  // Cor condicional: só aparece quando o valor for diferente de zero
-  function metricColor(value: number, activeColor: string) {
-    return value !== 0 ? activeColor : "#3a3a5c";
-  }
-
   const COLS = "44px 1fr 1fr 1fr 1fr 120px 36px";
 
   return (
     <div>
       {/* ── Topbar sticky ── */}
       <div
-        style={{ background: "#0a0a16", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "12px 20px", marginBottom: "20px", position: "sticky", top: "0", zIndex: 20, display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: "12px" }}
+        style={{
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+          borderRadius: "12px",
+          padding: "12px 20px",
+          marginBottom: "20px",
+          position: "sticky",
+          top: "0",
+          zIndex: 20,
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "12px",
+        }}
       >
         {/* Esquerda: voltar + nome + data */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
-          <button onClick={() => router.push("/sheets")} style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
+          <button
+            onClick={() => router.push("/sheets")}
+            style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, transition: "color 0.15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+          >
             <ArrowLeft size={18} />
           </button>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
-              <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sheet.name}</p>
-              <span style={{ flexShrink: 0, fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", background: sheet.cooperation_type === "META" ? "rgba(59,130,246,0.12)" : sheet.cooperation_type === "BAU" ? "rgba(251,191,36,0.12)" : "rgba(34,211,165,0.12)", color: sheet.cooperation_type === "META" ? "#3b82f6" : sheet.cooperation_type === "BAU" ? "#fbbf24" : "#22d3a5", border: `1px solid ${sheet.cooperation_type === "META" ? "rgba(59,130,246,0.25)" : sheet.cooperation_type === "BAU" ? "rgba(251,191,36,0.25)" : "rgba(34,211,165,0.25)"}` }}>
+              <p style={{ fontSize: "15px", fontWeight: "700", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
+                {sheet.name}
+              </p>
+              <Badge variant="neutral" size="sm">
                 {sheet.cooperation_type}
-              </span>
+              </Badge>
               {isReadOnly && (
-                <span style={{ flexShrink: 0, background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "6px", padding: "2px 8px", fontSize: "10px", fontWeight: "600" }}>
+                <span
+                  style={{
+                    flexShrink: 0,
+                    background: "var(--warning-subtle)",
+                    color: "var(--warning)",
+                    border: "1px solid var(--warning-border)",
+                    borderRadius: "6px",
+                    padding: "2px 8px",
+                    fontSize: "10px",
+                    fontWeight: "600",
+                  }}
+                >
                   Somente leitura
                 </span>
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <p style={{ fontSize: "10px", color: "#6060a0" }}>{new Date(sheet.created_at).toLocaleDateString("pt-BR")}</p>
+              <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                {new Date(sheet.created_at).toLocaleDateString("pt-BR")}
+              </p>
               {sheet.cooperation_type === "META" && sheet.goal > 0 && (
-                <p style={{ fontSize: "10px", color: "#6060a0" }}>Meta: <span style={{ color: "#fff", fontWeight: "600" }}>{sheet.goal}</span></p>
+                <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                  Meta: <span style={{ color: "var(--text)", fontWeight: "600" }}>{sheet.goal}</span>
+                </p>
               )}
             </div>
           </div>
@@ -190,39 +223,48 @@ export default function SheetPage() {
         {/* Direita: saved + finalizar */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
           {lastSaved && (
-            <span style={{ fontSize: "11px", color: "#22d3a5", display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ fontSize: "11px", color: "var(--positive)", display: "flex", alignItems: "center", gap: "4px" }}>
               <Check size={12} /> {lastSaved}
             </span>
           )}
-
-          {/* Finalizar / Concluída */}
           {!isFinished && !isReadOnly ? (
-            <button onClick={finishSheet} style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "#3b82f6", color: "#fff", border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-              Finalizar
-            </button>
+            <Button variant="primary" onClick={finishSheet}>Finalizar</Button>
           ) : isFinished ? (
-            <span style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "rgba(34,211,165,0.1)", color: "#22d3a5", border: "1px solid rgba(34,211,165,0.25)" }}>
+            <span
+              style={{
+                padding: "8px 16px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "600",
+                background: "var(--positive-subtle)",
+                color: "var(--positive)",
+                border: "1px solid var(--positive-border)",
+              }}
+            >
               ✓ Concluída
             </span>
           ) : null}
         </div>
       </div>
 
-      {/* ── Cards de totais (grid-6) ── */}
+      {/* ── Cards de totais ── */}
       <div className={sheet.cooperation_type === "BAU" ? "grid-5" : "grid-6"} style={{ marginBottom: "20px" }}>
         {[
-          { label: "Total Depositado", value: totalDeposited,  activeColor: "#a78bfa" },
-          { label: "Total Recebido",   value: totalReceived,   activeColor: "#22d3a5" },
-          { label: "Total em Baús",    value: totalChest,      activeColor: "#fbbf24" },
-          ...(sheet.cooperation_type === "BAU" ? [{ label: "Total em Bônus", value: totalBonus, activeColor: "#f97316" }] : []),
+          { label: "Total Depositado", value: totalDeposited,  activeColor: "var(--text-secondary)" },
+          { label: "Total Recebido",   value: totalReceived,   activeColor: "var(--positive)" },
+          { label: "Total em Baús",    value: totalChest,      activeColor: "var(--warning)" },
+          ...(sheet.cooperation_type === "BAU" ? [{ label: "Total em Bônus", value: totalBonus, activeColor: "var(--text-secondary)" }] : []),
           ...(sheet.cooperation_type !== "BAU" ? [{ label: "Salário", isSalary: true }] : []),
-          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Média", value: averageDeposit, activeColor: "#a78bfa" }] : []),
-          { label: "Resultado Final",  value: finalResult,     activeColor: finalResult >= 0 ? "#22d3a5" : "#f87171", highlight: true },
+          ...(sheet.cooperation_type !== "BAU" ? [{ label: "Média", value: averageDeposit, activeColor: "var(--text-secondary)" }] : []),
+          { label: "Resultado Final", value: finalResult, activeColor: finalResult >= 0 ? "var(--positive)" : "var(--negative-text)", highlight: true },
         ].map((item) => {
           if (item.isSalary) {
             return (
-              <div key="salary" style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "12px", padding: "16px", position: "relative" }}>
-                <p style={{ fontSize: "9px", color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Salário</p>
+              <Card
+                key="salary"
+                style={{ padding: "16px", position: "relative" }}
+              >
+                <p style={{ fontSize: "10px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px", fontWeight: "600" }}>Salário</p>
                 {editingSalary ? (
                   <input
                     type="number"
@@ -231,97 +273,156 @@ export default function SheetPage() {
                     onChange={(e) => setSalaryValue(Number(e.target.value))}
                     onBlur={() => { updateCost("salary", salaryValue); setEditingSalary(false); }}
                     onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    style={{ background: "transparent", border: "none", borderBottom: "1px solid #3b82f6", color: "#fff", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "2px 0", fontFamily: "Inter, sans-serif" }}
+                    style={{ background: "transparent", border: "none", borderBottom: "1px solid var(--accent)", color: "var(--text)", fontSize: "20px", fontWeight: "700", outline: "none", width: "100%", padding: "2px 0", fontFamily: "inherit" }}
                   />
                 ) : (
                   <p
                     onClick={() => { if (!isFinished && !isReadOnly) setEditingSalary(true); }}
-                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "#3b82f6" : "#3a3a5c", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
+                    style={{ fontSize: "20px", fontWeight: "700", color: salaryValue > 0 ? "var(--accent)" : "var(--text-muted)", cursor: (isFinished || isReadOnly) ? "default" : "pointer" }}
                   >
                     {salaryValue > 0 ? "+" : ""}{fmt(salaryValue)}
                   </p>
                 )}
-                {!isFinished && !isReadOnly && <Pencil size={11} color="#3b82f6" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />}
-              </div>
+                {!isFinished && !isReadOnly && (
+                  <Pencil size={11} color="var(--accent)" style={{ position: "absolute", top: "12px", right: "12px", opacity: 0.5 }} />
+                )}
+              </Card>
             );
           }
-          const color = metricColor(item.value!, item.activeColor!);
-          const showPlus = item.value! > 0;
-          const border = item.highlight
-            ? `2px solid ${finalResult >= 0 ? "rgba(34,211,165,0.4)" : "rgba(248,113,113,0.4)"}`
-            : "1px solid #1a1a2e";
+          const color = (item.value ?? 0) !== 0 ? item.activeColor! : "var(--text-muted)";
+          const showPlus = (item.value ?? 0) > 0;
           return (
-            <div
+            <Card
               key={item.label}
-              style={{ background: item.highlight ? "rgba(59,130,246,0.06)" : "#0f0f1a", border, borderRadius: "14px", padding: "16px" }}
+              highlight={item.highlight}
+              tone={item.highlight ? (finalResult >= 0 ? "positive" : "negative") : undefined}
+              style={{ padding: "16px" }}
             >
-              <p style={{ fontSize: "10px", color: "#6060a0", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.label}</p>
-              <p style={{ fontSize: item.highlight ? "clamp(18px, 5vw, 26px)" : "20px", fontWeight: "700", color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <p style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>
+                {item.label}
+              </p>
+              <p
+                style={{
+                  fontSize: item.highlight ? "clamp(18px, 5vw, 26px)" : "20px",
+                  fontWeight: "700",
+                  color,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
                 {showPlus ? "+" : ""}{fmt(item.value!)}
               </p>
-            </div>
+            </Card>
           );
         })}
       </div>
 
+      {/* ── Progresso de meta ── */}
       {sheet.cooperation_type === "META" && sheet.goal > 0 && (
-        <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "12px", padding: "16px 20px", marginBottom: "16px" }}>
+        <Card style={{ padding: "16px 20px", marginBottom: "16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <span style={{ fontSize: "12px", fontWeight: "600", color: "#fff" }}>Progresso da Meta</span>
-            <span style={{ fontSize: "12px", color: "#6060a0" }}>{filled}/{sheet.goal} operações</span>
+            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text)" }}>Progresso da Meta</span>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{filled}/{sheet.goal} operações</span>
           </div>
-          <div style={{ background: "#1a1a2e", borderRadius: "100px", height: "8px", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${Math.min((filled / sheet.goal) * 100, 100)}%`, background: filled >= sheet.goal ? "#22d3a5" : "#3b82f6", borderRadius: "100px", transition: "width 0.3s ease" }} />
+          <div style={{ background: "var(--border)", borderRadius: "100px", height: "8px", overflow: "hidden" }}>
+            <div
+              style={{
+                height: "100%",
+                width: `${Math.min((filled / sheet.goal) * 100, 100)}%`,
+                background: filled >= sheet.goal ? "var(--positive)" : "var(--accent)",
+                borderRadius: "100px",
+                transition: "width 0.3s ease",
+              }}
+            />
           </div>
           {filled >= sheet.goal && (
-            <p style={{ fontSize: "11px", color: "#22d3a5", marginTop: "8px", fontWeight: "600" }}>✓ Meta atingida!</p>
+            <p style={{ fontSize: "11px", color: "var(--positive)", marginTop: "8px", fontWeight: "600" }}>
+              ✓ Meta atingida!
+            </p>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── Toolbar ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "14px", fontWeight: "600" }}>Operações</span>
-          <span style={{ fontSize: "9px", background: "#1a1a2e", color: "#6060a0", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace" }}>Enter / Setas</span>
+          <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>Operações</span>
+          <span
+            style={{
+              fontSize: "9px",
+              background: "var(--border)",
+              color: "var(--text-muted)",
+              padding: "2px 6px",
+              borderRadius: "4px",
+              fontFamily: "monospace",
+            }}
+          >
+            Enter / Setas
+          </span>
         </div>
         {!isFinished && !isReadOnly && (
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addLines} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "rgba(59,130,246,0.12)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+            <Button variant="secondary" onClick={addLines} style={{ gap: "5px", fontSize: "12px" }}>
               <Plus size={14} /> 5 linhas
-            </button>
-            <button onClick={clearAll} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", background: "transparent", color: "#6060a0", border: "1px solid #1a1a2e", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+            </Button>
+            <Button variant="ghost" onClick={clearAll} style={{ gap: "5px", fontSize: "12px" }}>
               <Trash2 size={14} /> Limpar tudo
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* ── Tabela ── */}
-      <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", overflow: "hidden" }}>
+      <Card style={{ overflow: "hidden" }}>
         {/* Cabeçalho desktop */}
-        <div className="table-header-desktop" style={{ gridTemplateColumns: COLS, gap: "16px", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid #1a1a2e" }}>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "center" }}>#</span>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>DEPÓSITO</span>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>SAQUE</span>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>BAÚ</span>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600" }}>BÔNUS</span>
-          <span style={{ fontSize: "11px", color: "#6060a0", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
+        <div
+          className="table-header-desktop"
+          style={{
+            gridTemplateColumns: COLS,
+            gap: "16px",
+            alignItems: "center",
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textAlign: "center" }}>#</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>DEPÓSITO</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>SAQUE</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>BAÚ</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600" }}>BÔNUS</span>
+          <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", textAlign: "right" }}>RESULTADO</span>
           <span />
         </div>
 
         {sheet.lines.map((line, index) => (
           <div key={line.id}>
-            {/* ===== Layout MOBILE: card ===== */}
-            <div className="row-mobile" style={{ padding: "14px 16px", borderBottom: "1px solid #141422" }}>
+            {/* ===== Mobile: card ===== */}
+            <div
+              className="row-mobile"
+              style={{ padding: "14px 16px", borderBottom: "1px solid var(--surface-hover)" }}
+            >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                <span style={{ fontSize: "12px", color: "#6060a0", fontWeight: "600" }}>Operação #{line.line_number}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
+                  Operação #{line.line_number}
+                </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ fontSize: "15px", fontWeight: "700", color: line.result > 0 ? "#22d3a5" : line.result < 0 ? "#f87171" : "#3a3a5c" }}>
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "700",
+                      fontVariantNumeric: "tabular-nums",
+                      color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
+                    }}
+                  >
                     {line.result > 0 ? "+" : ""}{fmt(line.result)}
                   </span>
                   {!isFinished && !isReadOnly && (
-                    <button onClick={() => removeLine(line.id)} style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                    <button
+                      onClick={() => removeLine(line.id)}
+                      style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                    >
                       <X size={16} />
                     </button>
                   )}
@@ -335,9 +436,11 @@ export default function SheetPage() {
                   { field: "bonus",      label: "Bônus" },
                 ].map(({ field, label }) => (
                   <div key={field}>
-                    <label style={{ display: "block", fontSize: "9px", color: "#6060a0", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</label>
-                    <div style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 8px" }}>
-                      <span style={{ fontSize: "10px", color: "#3a3a5c", marginRight: "3px" }}>R$</span>
+                    <label style={{ display: "block", fontSize: "9px", color: "var(--text-muted)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {label}
+                    </label>
+                    <div className="ui-cell">
+                      <span style={{ fontSize: "10px", color: "var(--text-muted)", marginRight: "3px" }}>R$</span>
                       <input
                         ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                         type="number"
@@ -347,15 +450,12 @@ export default function SheetPage() {
                         onBlur={(e) => {
                           const newValue = Number(e.target.value);
                           const currentValue = (line as any)[field] || 0;
-                          if (newValue !== currentValue) {
-                            updateLine(line.id, field, newValue);
-                          }
+                          if (newValue !== currentValue) updateLine(line.id, field, newValue);
                         }}
                         onKeyDown={(e) => handleKeyDown(e, index, field)}
                         placeholder="0"
-                        style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "Inter, sans-serif" }}
-                        onFocus={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#3b82f6"; e.target.select(); }}
-                        onBlurCapture={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#1a1a2e"; }}
+                        style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "9px 0", fontFamily: "inherit" }}
+                        onFocus={(e) => e.target.select()}
                       />
                     </div>
                   </div>
@@ -363,12 +463,26 @@ export default function SheetPage() {
               </div>
             </div>
 
-            {/* ===== Layout DESKTOP: linha em grid ===== */}
-            <div className="row-desktop" style={{ gridTemplateColumns: COLS, gap: "16px", alignItems: "center", padding: "5px 16px", borderBottom: "1px solid #141422" }}>
-              <span style={{ fontSize: "12px", color: "#3a3a5c", textAlign: "center" }}>{line.line_number}</span>
+            {/* ===== Desktop: linha em grid ===== */}
+            <div
+              className="row-desktop"
+              style={{
+                gridTemplateColumns: COLS,
+                gap: "16px",
+                alignItems: "center",
+                padding: "5px 16px",
+                borderBottom: "1px solid var(--surface-hover)",
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
+                {line.line_number}
+              </span>
               {["deposit", "withdrawal", "chest", "bonus"].map((field) => (
-                <div key={field} style={{ display: "flex", alignItems: "center", background: "#080810", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "0 10px" }}>
-                  <span style={{ fontSize: "11px", color: "#3a3a5c", marginRight: "5px" }}>R$</span>
+                <div
+                  key={field}
+                  className="ui-cell"
+                >
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", marginRight: "5px" }}>R$</span>
                   <input
                     ref={(el) => { inputRefs.current[`${line.id}-${field}`] = el; }}
                     type="number"
@@ -377,64 +491,92 @@ export default function SheetPage() {
                     onBlur={(e) => {
                       const newValue = Number(e.target.value);
                       const currentValue = (line as any)[field] || 0;
-                      if (newValue !== currentValue) {
-                        updateLine(line.id, field, newValue);
-                      }
+                      if (newValue !== currentValue) updateLine(line.id, field, newValue);
                     }}
                     onKeyDown={(e) => handleKeyDown(e, index, field)}
                     placeholder="0"
-                    style={{ background: "transparent", border: "none", color: "#fff", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "Inter, sans-serif" }}
-                    onFocus={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#3b82f6"; e.target.select(); }}
-                    onBlurCapture={(e) => { (e.target.parentElement as HTMLElement).style.borderColor = "#1a1a2e"; }}
+                    style={{ background: "transparent", border: "none", color: "var(--text)", fontSize: "13px", outline: "none", width: "100%", padding: "7px 0", fontFamily: "inherit" }}
+                    onFocus={(e) => e.target.select()}
                   />
                 </div>
               ))}
-              <span style={{ fontSize: "14px", fontWeight: "600", textAlign: "right", color: line.result > 0 ? "#22d3a5" : line.result < 0 ? "#f87171" : "#3a3a5c" }}>
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  textAlign: "right",
+                  fontVariantNumeric: "tabular-nums",
+                  color: line.result > 0 ? "var(--positive)" : line.result < 0 ? "var(--negative-text)" : "var(--text-muted)",
+                }}
+              >
                 {line.result > 0 ? "+" : ""}{fmt(line.result)}
               </span>
               {!isFinished && !isReadOnly ? (
-                <button onClick={() => removeLine(line.id)} style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <button
+                  onClick={() => removeLine(line.id)}
+                  style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+                >
                   <X size={15} />
                 </button>
               ) : <span />}
             </div>
           </div>
         ))}
-      </div>
+      </Card>
 
-      {finishModal.visible && (
-        <div
-          onClick={() => setFinishModal({ visible: false, name: "", result: 0 })}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "20px" }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: "#0f0f1a", border: "1px solid rgba(34,211,165,0.3)", borderRadius: "20px", padding: "32px 28px", textAlign: "center", maxWidth: "320px", width: "100%", animation: "scaleIn 0.25s ease" }}
-          >
-            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(34,211,165,0.1)", border: "1px solid rgba(34,211,165,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <span style={{ fontSize: "24px" }}>🎯</span>
+      {/* ── Modal — Planilha finalizada ── */}
+      <Modal
+        open={finishModal.visible}
+        onOpenChange={(open) => { if (!open) setFinishModal({ visible: false, name: "", result: 0 }); }}
+      >
+        <ModalContent maxWidth={320} showClose={false}>
+          <ModalBody style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "50%",
+                background: "var(--positive-subtle)",
+                border: "1px solid var(--positive-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+                fontSize: "24px",
+              }}
+            >
+              🎯
             </div>
-            <p style={{ fontSize: "12px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Planilha finalizada</p>
-            <p style={{ fontSize: "18px", fontWeight: "700", color: "#fff", marginBottom: "12px" }}>{finishModal.name}</p>
-            <p style={{ fontSize: "32px", fontWeight: "700", color: finishModal.result >= 0 ? "#22d3a5" : "#f87171", marginBottom: "24px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>
+              Planilha finalizada
+            </p>
+            <p style={{ fontSize: "18px", fontWeight: "700", color: "var(--text)", marginBottom: "12px" }}>
+              {finishModal.name}
+            </p>
+            <p
+              style={{
+                fontSize: "32px",
+                fontWeight: "700",
+                fontVariantNumeric: "tabular-nums",
+                color: finishModal.result >= 0 ? "var(--positive)" : "var(--negative-text)",
+                marginBottom: "24px",
+              }}
+            >
               {finishModal.result >= 0 ? "+" : ""}{fmt(finishModal.result)}
             </p>
-            <button
+          </ModalBody>
+          <ModalFooter style={{ justifyContent: "center" }}>
+            <Button
+              variant="secondary"
               onClick={() => setFinishModal({ visible: false, name: "", result: 0 })}
-              style={{ background: "rgba(34,211,165,0.1)", border: "1px solid rgba(34,211,165,0.3)", borderRadius: "10px", padding: "10px 32px", color: "#22d3a5", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
             >
               OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.9); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

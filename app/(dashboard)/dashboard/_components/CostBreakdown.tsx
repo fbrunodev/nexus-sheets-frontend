@@ -5,14 +5,21 @@ interface CostItem {
 
 interface Props {
   costStats: CostItem[];
+  sheetCount?: number;
 }
 
-const COLORS = ["#AEB8FF", "#6E7BD9", "#3E4796", "#2A3170", "#3A3A50"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
-export default function CostBreakdown({ costStats }: Props) {
+export default function CostBreakdown({ costStats, sheetCount = 0 }: Props) {
   const sorted = [...costStats].sort((a, b) => b.value - a.value);
 
   const displayItems: CostItem[] =
@@ -149,6 +156,28 @@ export default function CostBreakdown({ costStats }: Props) {
               );
             })}
           </div>
+
+          {/* Custo médio por planilha */}
+          {sheetCount > 0 && (
+            <>
+              <div style={{ height: "1px", background: "var(--border)", margin: "12px 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                  Custo médio por planilha
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    fontVariantNumeric: "tabular-nums",
+                    color: "var(--text)",
+                  }}
+                >
+                  {fmt(total / sheetCount)}
+                </span>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

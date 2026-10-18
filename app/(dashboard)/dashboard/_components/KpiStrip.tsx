@@ -26,12 +26,13 @@ interface Props {
   stats: SheetStats | null;
   sheets: RecentSheet[];
   calcSheetResult: (sheet: RecentSheet) => number;
+  totalCosts?: number;
 }
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
-export default function KpiStrip({ stats, sheets, calcSheetResult }: Props) {
+export default function KpiStrip({ stats, sheets, calcSheetResult, totalCosts = 0 }: Props) {
   const grandTotal  = stats?.grand_total ?? 0;
   const total       = stats?.total ?? 0;
   const finished    = stats?.finished ?? 0;
@@ -63,10 +64,16 @@ export default function KpiStrip({ stats, sheets, calcSheetResult }: Props) {
             lineHeight: "1",
             fontVariantNumeric: "tabular-nums",
             color: grandTotal < 0 ? "var(--negative-text)" : "var(--text)",
+            marginBottom: totalCosts > 0 ? "6px" : "0",
           }}
         >
           {grandTotal < 0 && "−"}{fmt(Math.abs(grandTotal))}
         </p>
+        {totalCosts > 0 && (
+          <p style={{ fontSize: "12px", color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>
+            após {fmt(totalCosts)} em custos
+          </p>
+        )}
       </div>
 
       {/* 2 — Lucro médio por planilha */}

@@ -17,6 +17,26 @@
   --positive: #4ADE95;
   --negative-text: #FF7A7E;
   --negative-bar: #E5484D;
+  /* Etapa 1 — tokens adicionais */
+  --overlay: rgba(0,0,0,0.6);
+  --warning: #F5B94A;
+  --primary-bg: #EDEDEF;
+  --primary-text: #0B0B0C;
+  --negative-subtle: rgba(229,72,77,0.10);
+  --negative-border: rgba(229,72,77,0.25);
+  /* Variantes sutis */
+  --positive-subtle: rgba(74,222,149,0.08);
+  --positive-border: rgba(74,222,149,0.25);
+  --warning-subtle: rgba(245,185,74,0.12);
+  --warning-border: rgba(245,185,74,0.30);
+  /* Sombras */
+  --shadow-popover: 0 8px 24px rgba(0,0,0,0.45);
+  /* Cores de gráfico */
+  --chart-1: #AEB8FF;
+  --chart-2: #6E7BD9;
+  --chart-3: #3E4796;
+  --chart-4: #2A3170;
+  --chart-5: #3A3A50;
 }
 
 @media (min-width: 768px) {
@@ -115,6 +135,8 @@ html, body {
 /* --- Layout: sidebar e menu inferior --- */
 .app-sidebar { display: block; }
 .app-mobile-nav { display: none; }
+/* Topbar: oculto no desktop, visível no mobile */
+.app-topbar { display: none; }
 
 .app-content {
   margin-left: 200px;
@@ -123,6 +145,9 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* Sino no header do dashboard: visível no desktop, oculto no mobile (topbar tem o seu) */
+.dash-bell-btn { display: flex; }
 
 .app-main {
   padding: 24px;
@@ -141,6 +166,8 @@ html, body {
   .topbar-menu-btn { display: none !important; }
   .date-long { display: none; }
   .date-short { display: inline; }
+  .app-topbar { display: flex !important; }
+  .dash-bell-btn { display: none !important; }
 }
 
 /* Mostrar data curta só no mobile */
@@ -367,4 +394,100 @@ html, body { overflow-x: hidden; max-width: 100%; }
   inset: 0;
   z-index: 98;
   background: rgba(0, 0, 0, 0.5);
+}
+
+/* ===== PRIMITIVOS UI — classes de suporte ===== */
+
+/* Button */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 8px;
+  font-family: inherit; font-weight: 500; font-size: 14px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  border: 1px solid transparent; text-decoration: none; outline: none;
+  line-height: 1;
+}
+.ui-btn:disabled, .ui-btn[disabled] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.ui-btn-sm { min-height: 32px; padding: 0 12px; font-size: 13px; }
+.ui-btn-lg { min-height: 44px; padding: 0 20px; font-size: 15px; }
+.ui-btn-icon { min-height: 40px; width: 40px; padding: 0; flex-shrink: 0; }
+.ui-btn-icon.ui-btn-sm { min-height: 32px; width: 32px; }
+
+.ui-btn-primary { background: var(--primary-bg); color: var(--primary-text); }
+.ui-btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.ui-btn-primary:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
+.ui-btn-secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.ui-btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
+.ui-btn-secondary:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
+.ui-btn-ghost { background: transparent; color: var(--text-secondary); }
+.ui-btn-ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.ui-btn-ghost:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
+.ui-btn-danger { background: transparent; color: var(--negative-text); }
+.ui-btn-danger:hover:not(:disabled) { background: var(--negative-subtle); }
+.ui-btn-danger:focus-visible { box-shadow: 0 0 0 2px var(--negative-text); }
+
+/* Input & Select */
+.ui-input, .ui-select {
+  display: block; width: 100%; height: 40px; padding: 0 12px;
+  background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  font-family: inherit; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ui-input::placeholder { color: var(--text-muted); }
+.ui-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ui-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ui-input:disabled, .ui-select:disabled { opacity: 0.5; cursor: not-allowed; }
+.ui-select { appearance: none; cursor: pointer; }
+.ui-textarea {
+  display: block; width: 100%; padding: 10px 12px;
+  background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  font-family: inherit; outline: none; resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ui-textarea::placeholder { color: var(--text-muted); }
+.ui-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+
+/* Badge */
+.ui-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 20px; padding: 0 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 500; white-space: nowrap; line-height: 1;
+  flex-shrink: 0;
+}
+.ui-badge-sm { height: 18px; padding: 0 6px; font-size: 11px; }
+.ui-badge-neutral  { background: var(--surface-hover); color: var(--text-secondary); }
+.ui-badge-positive { background: rgba(74,222,149,0.12); color: var(--positive); }
+.ui-badge-negative { background: var(--negative-subtle); color: var(--negative-text); }
+.ui-badge-warning  { background: rgba(245,185,74,0.12); color: var(--warning); }
+
+/* Cell input wrapper — focus highlight via CSS */
+.ui-cell {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; padding: 0 10px;
+  transition: border-color 0.15s;
+}
+.ui-cell:focus-within { border-color: var(--border-strong); }
+
+/* Modal overlay */
+.ui-modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--overlay);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.ui-modal-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%; max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  outline: none;
+  position: relative;
 }

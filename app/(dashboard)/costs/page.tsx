@@ -3,7 +3,22 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { DollarSign, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Modal, ModalContent, ModalBody, ModalFooter, ModalClose } from "@/components/ui/modal";
+
+const CARET =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
+
+const MODAL_LABEL: React.CSSProperties = {
+  display: "block",
+  fontSize: "10px",
+  fontWeight: "600",
+  color: "var(--text-muted)",
+  marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.07em",
+};
 
 interface CostType {
   id: string;
@@ -29,7 +44,6 @@ const MONTH_NAMES = [
 ];
 
 export default function CostsPage() {
-  const isMobile = useIsMobile();
   const now = new Date();
 
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -44,13 +58,8 @@ export default function CostsPage() {
   const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    fetchCostTypes();
-  }, []);
-
-  useEffect(() => {
-    fetchCosts();
-  }, [month, year]);
+  useEffect(() => { fetchCostTypes(); }, []);
+  useEffect(() => { fetchCosts(); }, [month, year]);
 
   async function fetchCostTypes() {
     try {
@@ -123,65 +132,97 @@ export default function CostsPage() {
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-          <DollarSign size={20} color="#22d3a5" />
-          <h1 style={{ fontSize: "24px", fontWeight: "700" }}>Custos</h1>
+          <DollarSign size={20} color="var(--positive)" />
+          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text)" }}>Custos</h1>
         </div>
-        <p style={{ color: "#6060a0", fontSize: "13px" }}>
-          Gerencie seus custos mensais
-        </p>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Gerencie seus custos mensais</p>
       </div>
 
       {/* Filtro mês/ano + total */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "24px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
             onClick={prevMonth}
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 10px", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center" }}
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 10px", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", transition: "border-color 0.15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
           >
             <ChevronLeft size={16} />
           </button>
-          <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 18px", fontSize: "13px", fontWeight: "600", minWidth: "140px", textAlign: "center" }}>
+          <div
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "7px 18px",
+              fontSize: "13px",
+              fontWeight: "600",
+              minWidth: "140px",
+              textAlign: "center",
+              color: "var(--text)",
+            }}
+          >
             {MONTH_NAMES[month - 1]} {year}
           </div>
           <button
             onClick={nextMonth}
-            style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "8px", padding: "7px 10px", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center" }}
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 10px", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", transition: "border-color 0.15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "10px", padding: "10px 20px", textAlign: "center" }}>
-            <p style={{ fontSize: "10px", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>Total do mês</p>
-            <p style={{ fontSize: "20px", fontWeight: "700", color: "#f87171" }}>
+          <Card
+            variant="compact"
+            style={{ padding: "10px 20px", textAlign: "center" }}
+          >
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+              Total do mês
+            </p>
+            <p style={{ fontSize: "20px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--negative-text)" }}>
               R$ {total.toFixed(2).replace(".", ",")}
             </p>
-          </div>
-          <button
+          </Card>
+          <Button
+            variant="primary"
             onClick={() => { setShowModal(true); if (costTypes.length > 0) setNewCostTypeId(costTypes[0].id); }}
-            style={{ display: "flex", alignItems: "center", gap: "7px", background: "#3b82f6", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+            style={{ gap: "7px" }}
           >
             <Plus size={14} />
             Novo Custo
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Lista de custos */}
-      <div style={{ background: "#0f0f1a", border: "1px solid #1a1a2e", borderRadius: "14px", padding: "24px" }}>
+      <Card style={{ padding: "24px" }}>
         {loading ? (
-          <p style={{ color: "#6060a0", fontSize: "13px" }}>Carregando...</p>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Carregando...</p>
         ) : costs.length === 0 ? (
-          <p style={{ color: "#3a3a5c", fontSize: "13px", textAlign: "center", padding: "32px" }}>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "32px" }}>
             Nenhum custo registrado em {MONTH_NAMES[month - 1]} {year}.
           </p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #1a1a2e" }}>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
                 {["Tipo", "Valor", "Descrição", "Data", ""].map((h) => (
-                  <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "#6060a0", letterSpacing: "0.06em" }}>
+                  <th
+                    key={h}
+                    style={{ padding: "10px 12px", textAlign: "left", fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", letterSpacing: "0.06em" }}
+                  >
                     {h}
                   </th>
                 ))}
@@ -191,35 +232,48 @@ export default function CostsPage() {
               {costs.map((c) => (
                 <tr
                   key={c.id}
-                  style={{ borderBottom: "1px solid #1a1a2e" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.01)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  style={{ borderBottom: "1px solid var(--border)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-hover)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <td style={{ padding: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "rgba(34,211,165,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <DollarSign size={13} color="#22d3a5" />
+                      <div
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "7px",
+                          background: "var(--positive-subtle)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <DollarSign size={13} color="var(--positive)" />
                       </div>
-                      <span style={{ fontSize: "13px", fontWeight: "500" }}>{c.cost_type.name}</span>
+                      <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text)" }}>
+                        {c.cost_type.name}
+                      </span>
                     </div>
                   </td>
                   <td style={{ padding: "12px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: "600", color: "#f87171" }}>
+                    <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--negative-text)", fontVariantNumeric: "tabular-nums" }}>
                       R$ {Number(c.value).toFixed(2).replace(".", ",")}
                     </span>
                   </td>
-                  <td style={{ padding: "12px", fontSize: "12px", color: "#6060a0" }}>
+                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                     {c.description || "—"}
                   </td>
-                  <td style={{ padding: "12px", fontSize: "12px", color: "#6060a0" }}>
+                  <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
                     {new Date(c.created_at).toLocaleDateString("pt-BR")}
                   </td>
                   <td style={{ padding: "12px", textAlign: "right" }}>
                     <button
                       onClick={() => deleteCost(c.id)}
-                      style={{ background: "transparent", border: "none", color: "#3a3a5c", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3a5c")}
+                      style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--negative-text)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -229,66 +283,70 @@ export default function CostsPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
       {/* Modal: Novo Custo */}
-      {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "20px" }}>
-          <div style={{ background: "#141422", border: "1px solid #2a2a4a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "400px" }}>
-            <p style={{ fontSize: "16px", fontWeight: "700", color: "#fff", marginBottom: "24px" }}>Novo Custo</p>
-
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Tipo de Custo</p>
-            <select
-              value={newCostTypeId}
-              onChange={(e) => setNewCostTypeId(e.target.value)}
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box", cursor: "pointer" }}
-            >
-              {costTypes.length === 0 && (
-                <option value="">Nenhum tipo cadastrado</option>
-              )}
-              {costTypes.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Valor (R$)</p>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              placeholder="0,00"
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "14px", boxSizing: "border-box" }}
-            />
-
-            <p style={{ fontSize: "10px", fontWeight: "600", color: "#6060a0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>Descrição (opcional)</p>
-            <input
-              type="text"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              placeholder="Ex: Aluguel do servidor"
-              style={{ display: "block", width: "100%", background: "#0a0a16", border: "1px solid #2a2a4a", borderRadius: "8px", padding: "10px 12px", color: "#fff", fontSize: "13px", outline: "none", fontFamily: "Inter, sans-serif", marginBottom: "20px", boxSizing: "border-box" }}
-            />
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => { setShowModal(false); setNewValue(""); setNewDescription(""); }}
-                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "transparent", border: "1px solid #2a2a4a", color: "#6060a0", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+      <Modal
+        open={showModal}
+        onOpenChange={(open) => {
+          if (!open) { setShowModal(false); setNewValue(""); setNewDescription(""); }
+        }}
+      >
+        <ModalContent title="Novo Custo" maxWidth={400}>
+          <ModalBody>
+            <div>
+              <label style={MODAL_LABEL}>Tipo de Custo</label>
+              <select
+                value={newCostTypeId}
+                onChange={(e) => setNewCostTypeId(e.target.value)}
+                className="ui-select"
+                style={{ backgroundImage: CARET, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: "36px" }}
               >
-                Cancelar
-              </button>
-              <button
-                onClick={createCost}
-                disabled={creating || !newCostTypeId || !newValue}
-                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: (creating || !newCostTypeId || !newValue) ? "#1a1a2e" : "#3b82f6", border: "none", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: (creating || !newCostTypeId || !newValue) ? "not-allowed" : "pointer", fontFamily: "Inter, sans-serif" }}
-              >
-                {creating ? "Salvando..." : "Salvar"}
-              </button>
+                {costTypes.length === 0 && <option value="">Nenhum tipo cadastrado</option>}
+                {costTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
-          </div>
-        </div>
-      )}
+
+            <div>
+              <label style={MODAL_LABEL}>Valor (R$)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={newValue}
+                onChange={(e) => setNewValue(e.target.value)}
+                placeholder="0,00"
+                className="ui-input"
+              />
+            </div>
+
+            <div>
+              <label style={MODAL_LABEL}>Descrição (opcional)</label>
+              <input
+                type="text"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Ex: Aluguel do servidor"
+                className="ui-input"
+              />
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </ModalClose>
+            <Button
+              variant="primary"
+              onClick={createCost}
+              disabled={creating || !newCostTypeId || !newValue}
+            >
+              {creating ? "Salvando..." : "Salvar"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

@@ -15,6 +15,12 @@ import {
   Calculator,
 } from "lucide-react";
 
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN: "Administrador",
+  OPERADOR: "Operador",
+  MANAGER: "Gerente",
+};
+
 const navItems = [
   { label: "Visão geral", href: "/dashboard", icon: LayoutDashboard },
   { label: "Planilhas", href: "/sheets", icon: FileSpreadsheet },
@@ -67,13 +73,13 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
               width: "28px",
               height: "28px",
               borderRadius: "8px",
-              background: "#3b82f6",
+              background: "var(--text)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "14px",
               fontWeight: "800",
-              color: "#fff",
+              color: "var(--bg)",
               marginRight: "10px",
               flexShrink: 0,
             }}
@@ -86,7 +92,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
         </div>
         <button
           onClick={onClose}
-          style={{ background: "transparent", border: "none", color: "#6060a0", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
+          style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
           title="Esconder menu"
         >
           <ChevronLeft size={18} />
@@ -174,11 +180,11 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
             {user?.email?.[0]?.toUpperCase() || "U"}
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
-            <p style={{ fontSize: "11px", color: "#fff", fontWeight: "500", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <p style={{ fontSize: "11px", color: "var(--text)", fontWeight: "500", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user?.email?.split("@")[0]}
             </p>
-            <p style={{ fontSize: "10px", color: "#3a3a5c", marginTop: "1px" }}>
-              {user?.role}
+            <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>
+              {ROLE_LABEL[user?.role ?? ""] ?? user?.role}
             </p>
           </div>
         </div>
@@ -193,7 +199,7 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
             padding: "8px 10px",
             borderRadius: "8px",
             fontSize: "13px",
-            color: "#6060a0",
+            color: "var(--text-muted)",
             background: "transparent",
             border: "none",
             cursor: "pointer",
@@ -201,11 +207,11 @@ export default function Sidebar({ onClose }: { onClose: () => void })  {
             transition: "all 0.15s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = "#f87171";
-            e.currentTarget.style.background = "rgba(248,113,113,0.06)";
+            e.currentTarget.style.color = "var(--negative-text)";
+            e.currentTarget.style.background = "var(--negative-subtle)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#6060a0";
+            e.currentTarget.style.color = "var(--text-muted)";
             e.currentTarget.style.background = "transparent";
           }}
         >

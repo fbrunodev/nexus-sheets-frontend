@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import api from "@/services/api";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Bell } from "lucide-react";
 import KpiStrip from "./_components/KpiStrip";
 import OperationResults from "./_components/OperationResults";
 import CostBreakdown from "./_components/CostBreakdown";
@@ -162,6 +162,25 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Sino — desktop only; mobile usa o da topbar */}
+          <button
+            aria-label="Notificações"
+            className="dash-bell-btn"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "8px",
+              background: "var(--surface)",
+              border: "1px solid var(--border-strong)",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <Bell size={16} color="var(--text-secondary)" />
+          </button>
+
           {/* Seletor de período */}
           <div ref={dropdownRef} className="period-wrap">
             <button
@@ -198,7 +217,7 @@ export default function DashboardPage() {
                   overflow: "hidden",
                   zIndex: 20,
                   minWidth: "210px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                  boxShadow: "var(--shadow-popover)",
                 }}
               >
                 {PERIOD_OPTIONS.map((opt) => (
@@ -256,6 +275,7 @@ export default function DashboardPage() {
             stats={stats}
             sheets={sheets}
             calcSheetResult={calcSheetResult}
+            totalCosts={costStats.reduce((s, c) => s + c.value, 0)}
           />
 
           <div
@@ -267,7 +287,7 @@ export default function DashboardPage() {
             }}
           >
             <OperationResults sheets={sheets} calcSheetResult={calcSheetResult} />
-            <CostBreakdown costStats={costStats} />
+            <CostBreakdown costStats={costStats} sheetCount={stats?.total ?? 0} />
           </div>
 
           <RecentSheets
