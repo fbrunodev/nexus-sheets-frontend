@@ -51,6 +51,7 @@ export interface Sheet {
   created_at: string;
   updated_at: string;
   lines: SheetLine[];
+  result: number;
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────

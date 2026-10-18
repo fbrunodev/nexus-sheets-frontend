@@ -44,6 +44,15 @@
     display: none;
   }
 }
+
+/* Monthly Profit chart — responsive helpers */
+.mc-value { display: flex; }
+.mc-mobile-only { display: none; }
+@media (max-width: 767px) {
+  .mc-value { display: none; }
+  .mc-desktop-only { display: none; }
+  .mc-mobile-only { display: block; }
+}
 @theme {
   --font-sans: "Inter", sans-serif;
 
