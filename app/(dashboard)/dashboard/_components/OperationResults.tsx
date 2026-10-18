@@ -128,10 +128,11 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
           ref={containerRef}
           style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, position: "relative" }}
         >
-          {/* Linha do eixo zero — única, atravessa todos os rows e os gaps */}
+          {/* Linha do eixo zero — desktop only (hidden on mobile via CSS) */}
           {hasNeg && axisXPx !== null && (
             <div
               aria-hidden
+              className="op-axis-container-line"
               style={{
                 position: "absolute",
                 left: `${axisXPx}px`,
@@ -179,6 +180,22 @@ export default function OperationResults({ sheets, calcSheetResult }: Props) {
                   className="op-item-bar"
                   style={{ zIndex: 1 }}
                 >
+                  {/* Segmento do eixo zero — mobile only (hidden on desktop via CSS) */}
+                  {hasNeg && (
+                    <div
+                      aria-hidden
+                      className="op-axis-bar-line"
+                      style={{
+                        position: "absolute",
+                        left: `${axisLeft}%`,
+                        top: "-4px",
+                        bottom: "-4px",
+                        width: "1px",
+                        background: "var(--border-strong)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
                   {isPos ? (
                     <div
                       style={{
